@@ -14,13 +14,14 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { NormalizedLandmarkList } from '@mediapipe/pose';
 import { SKELETON_CONNECTIONS, KEY_JOINTS } from '../hooks/usePoseDetection';
+import { ExerciseId, EXERCISES } from '../lib/exercises';
 
 interface CameraFeedProps {
     videoRef: React.RefObject<HTMLVideoElement | null>;
     canvasRef: React.RefObject<HTMLCanvasElement | null>;
     landmarks: NormalizedLandmarkList | null;
     currentAngle: number;
-    exercise: string;
+    exercise: ExerciseId;
     isDetecting: boolean;
 }
 
@@ -36,18 +37,11 @@ export default function CameraFeed({
 
     /**
      * Get the landmark index where the angle label should appear.
-     * This is the "vertex" joint of each exercise.
+     * Uses the exercise config's vertex joint (index [1] of landmarkIndices).
      */
     const getAngleLandmarkIndex = useCallback((): number => {
-        switch (exercise) {
-            case 'curl':
-            case 'pushup':
-                return 13; // elbow
-            case 'squat':
-                return 25; // knee
-            default:
-                return 13;
-        }
+        const config = EXERCISES[exercise];
+        return config ? config.landmarkIndices[1] : 13; // vertex joint
     }, [exercise]);
 
     /**
