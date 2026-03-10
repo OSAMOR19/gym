@@ -1,12 +1,12 @@
 /**
  * Authenticated App Layout — wraps all /dashboard, /programs, /workout, /progress, /profile pages.
  * Redirects to /login if no active session.
- * Includes the Sidebar navigation.
+ * Includes the Sidebar navigation. Main content offsets based on sidebar collapse state.
  */
 
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../lib/auth';
 import Sidebar from '../../components/Sidebar';
@@ -14,12 +14,26 @@ import Sidebar from '../../components/Sidebar';
 export default function AppLayout({ children }: { children: React.ReactNode }) {
     const { user, isLoading } = useAuth();
     const router = useRouter();
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
 
     useEffect(() => {
         if (!isLoading && !user) {
             router.push('/login');
         }
     }, [user, isLoading, router]);
+
+    // Sync with sidebar toggle events
+    useEffect(() => {
+        const saved = localStorage.getItem('sidebar-collapsed');
+        if (saved !== null) setSidebarCollapsed(saved === 'true');
+
+        const handler = (e: Event) => {
+            const detail = (e as CustomEvent).detail;
+            setSidebarCollapsed(detail.collapsed);
+        };
+        window.addEventListener('sidebar-toggle', handler);
+        return () => window.removeEventListener('sidebar-toggle', handler);
+    }, []);
 
     if (isLoading) {
         return (
@@ -41,8 +55,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
             <Sidebar />
 
-            {/* Main content area — offset by sidebar width */}
-            <main className="md:ml-20 lg:ml-64 relative z-10 pb-20 md:pb-0 min-h-screen">
+            {/* Main content area — offset dynamically by sidebar width */}
+            <main
+                className={`relative z-10 pb-20 md:pb-0 min-h-screen transition-all duration-300 ${sidebarCollapsed ? 'md:ml-[60px]' : 'md:ml-56'
+                    }`}
+            >
                 {children}
             </main>
         </div>

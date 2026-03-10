@@ -1,10 +1,11 @@
 /**
- * ProgramCard — Card component for displaying workout programs.
+ * ProgramCard — Grid card with fitness image. Cinematic hover effects.
  */
 
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { Program } from '../lib/programs';
 
 interface ProgramCardProps {
@@ -20,36 +21,50 @@ export default function ProgramCard({ program }: ProgramCardProps) {
 
     return (
         <Link href={`/programs/${program.id}`}>
-            <div className="glass-panel rounded-2xl p-6 hover:bg-white/[0.06] transition-all duration-300 cursor-pointer group h-full">
-                {/* Icon + Level badge */}
-                <div className="flex items-start justify-between mb-4">
+            <div className="group relative rounded-xl overflow-hidden border border-white/5 hover:border-white/15 transition-all duration-500 cursor-pointer">
+                {/* Image */}
+                <div className="relative aspect-[4/5] overflow-hidden">
+                    <Image
+                        src={program.image}
+                        alt={program.name}
+                        fill
+                        sizes="(max-width: 768px) 50vw, 33vw"
+                        className="object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
+                    {/* Gradient overlays */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
                     <div
-                        className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl"
-                        style={{ backgroundColor: `${program.color}15`, boxShadow: `0 0 20px ${program.color}15` }}
-                    >
-                        {program.icon}
-                    </div>
+                        className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-500"
+                        style={{ background: `linear-gradient(135deg, ${program.color}, transparent)` }}
+                    />
+
+                    {/* Level badge — top right */}
                     <span
-                        className="text-[10px] font-semibold tracking-widest uppercase px-3 py-1 rounded-full"
-                        style={{ backgroundColor: `${program.color}15`, color: program.color }}
+                        className="absolute top-3 right-3 text-[9px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-full border backdrop-blur-sm"
+                        style={{ borderColor: `${program.color}50`, color: program.color, backgroundColor: 'rgba(0,0,0,0.5)' }}
                     >
                         {program.level}
                     </span>
                 </div>
 
-                {/* Name + Description */}
-                <h3 className="text-lg font-bold text-white mb-1 group-hover:text-[#22c55e] transition-colors">
-                    {program.name}
-                </h3>
-                <p className="text-white/40 text-sm mb-4 line-clamp-2">{program.description}</p>
+                {/* Content overlay — pinned to bottom */}
+                <div className="absolute bottom-0 left-0 right-0 p-4">
+                    <h3 className="text-base font-bold text-white mb-1 group-hover:text-[#22c55e] transition-colors duration-300">
+                        {program.name}
+                    </h3>
+                    <p className="text-xs text-white/40 mb-3 line-clamp-2 leading-relaxed">{program.description}</p>
 
-                {/* Stats row */}
-                <div className="flex items-center gap-4 text-xs text-white/30">
-                    <span>{program.durationWeeks} weeks</span>
-                    <span className="w-1 h-1 bg-white/20 rounded-full" />
-                    <span>{totalDays} days</span>
-                    <span className="w-1 h-1 bg-white/20 rounded-full" />
-                    <span>{totalExercises} exercises</span>
+                    {/* Meta row */}
+                    <div className="flex items-center gap-3 text-[10px] text-white/25 font-medium">
+                        <span className="flex items-center gap-1">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
+                            {program.durationWeeks}W
+                        </span>
+                        <span className="w-0.5 h-0.5 bg-white/10 rounded-full" />
+                        <span>{totalDays} days</span>
+                        <span className="w-0.5 h-0.5 bg-white/10 rounded-full" />
+                        <span>{totalExercises} ex.</span>
+                    </div>
                 </div>
             </div>
         </Link>

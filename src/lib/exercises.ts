@@ -7,7 +7,7 @@
  *  - angle thresholds for rep detection
  *  - ideal ROM angles for form scoring
  *  - form correction rules (checked by formCorrection.ts)
- *  - description and emoji icon
+ *  - description and short text code
  *
  * MediaPipe Pose landmark reference:
  *  11/12 = shoulders, 13/14 = elbows, 15/16 = wrists
@@ -68,7 +68,7 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
     bicep_curl: {
         id: 'bicep_curl',
         name: 'Bicep Curl',
-        icon: '💪',
+        icon: 'BC',
         category: 'upper',
         description: 'Curl weight toward shoulder by bending at the elbow.',
         repMode: 'standard',
@@ -86,7 +86,7 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
     hammer_curl: {
         id: 'hammer_curl',
         name: 'Hammer Curl',
-        icon: '🔨',
+        icon: 'HC',
         category: 'upper',
         description: 'Curl with neutral grip, targeting the brachialis.',
         repMode: 'standard',
@@ -103,7 +103,7 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
     pushup: {
         id: 'pushup',
         name: 'Push-up',
-        icon: '🫸',
+        icon: 'PU',
         category: 'upper',
         description: 'Lower body to the floor and push back up.',
         repMode: 'standard',
@@ -121,7 +121,7 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
     shoulder_press: {
         id: 'shoulder_press',
         name: 'Shoulder Press',
-        icon: '🏋️',
+        icon: 'SP',
         category: 'upper',
         description: 'Press weight overhead from shoulder height.',
         repMode: 'standard',
@@ -138,7 +138,7 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
     lateral_raise: {
         id: 'lateral_raise',
         name: 'Lateral Raise',
-        icon: '🦅',
+        icon: 'LR',
         category: 'upper',
         description: 'Raise arms to the side until parallel with shoulders.',
         repMode: 'standard',
@@ -155,7 +155,7 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
     tricep_extension: {
         id: 'tricep_extension',
         name: 'Tricep Extension',
-        icon: '💎',
+        icon: 'TE',
         category: 'upper',
         description: 'Extend arm overhead to work the triceps.',
         repMode: 'standard',
@@ -174,7 +174,7 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
     squat: {
         id: 'squat',
         name: 'Squat',
-        icon: '🦵',
+        icon: 'SQ',
         category: 'lower',
         description: 'Lower hips by bending knees while keeping chest upright.',
         repMode: 'standard',
@@ -193,7 +193,7 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
     lunge: {
         id: 'lunge',
         name: 'Lunge',
-        icon: '🚶',
+        icon: 'LU',
         category: 'lower',
         description: 'Step forward and lower until knee is at 90°.',
         repMode: 'standard',
@@ -210,7 +210,7 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
     jump_squat: {
         id: 'jump_squat',
         name: 'Jump Squat',
-        icon: '🦘',
+        icon: 'JS',
         category: 'lower',
         description: 'Squat down then explode upward into a jump.',
         repMode: 'standard',
@@ -227,7 +227,7 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
     calf_raise: {
         id: 'calf_raise',
         name: 'Calf Raise',
-        icon: '🦶',
+        icon: 'CR',
         category: 'lower',
         description: 'Rise onto your toes to work the calves.',
         repMode: 'standard',
@@ -244,7 +244,7 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
     plank: {
         id: 'plank',
         name: 'Plank',
-        icon: '🧘',
+        icon: 'PL',
         category: 'core',
         description: 'Hold a straight body position on your forearms.',
         repMode: 'hold', // Timed hold, not reps
@@ -262,7 +262,7 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
     situp: {
         id: 'situp',
         name: 'Sit-up',
-        icon: '🔄',
+        icon: 'SU',
         category: 'core',
         description: 'Curl torso upward from a lying position.',
         repMode: 'standard',
@@ -277,7 +277,7 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
     mountain_climber: {
         id: 'mountain_climber',
         name: 'Mountain Climber',
-        icon: '⛰️',
+        icon: 'MC',
         category: 'core',
         description: 'Alternate driving knees toward chest in plank position.',
         repMode: 'standard',

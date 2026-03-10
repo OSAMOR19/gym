@@ -35,6 +35,7 @@ export interface Program {
     level: 'beginner' | 'intermediate' | 'advanced';
     durationWeeks: number;
     icon: string;
+    image: string;              // Path to program cover image
     color: string;              // Accent color for the card
     weeks: ProgramWeek[];
 }
@@ -48,7 +49,8 @@ export const PROGRAMS: Program[] = [
         description: 'Build a solid foundation with basic compound movements.',
         level: 'beginner',
         durationWeeks: 4,
-        icon: '🏋️',
+        icon: 'BS',
+        image: '/programs/beginner-strength.png',
         color: '#22c55e',
         weeks: [
             {
@@ -117,7 +119,8 @@ export const PROGRAMS: Program[] = [
         description: 'Hit every muscle group in efficient full-body sessions.',
         level: 'beginner',
         durationWeeks: 3,
-        icon: '💪',
+        icon: 'FB',
+        image: '/programs/full-body.png',
         color: '#38bdf8',
         weeks: [
             {
@@ -151,7 +154,8 @@ export const PROGRAMS: Program[] = [
         description: 'Classic PPL split for balanced muscle development.',
         level: 'intermediate',
         durationWeeks: 4,
-        icon: '🔄',
+        icon: 'PPL',
+        image: '/programs/push-pull-legs.png',
         color: '#a855f7',
         weeks: [
             {
@@ -192,7 +196,8 @@ export const PROGRAMS: Program[] = [
         description: 'Sculpt your arms, shoulders, and chest.',
         level: 'intermediate',
         durationWeeks: 4,
-        icon: '🦾',
+        icon: 'UB',
+        image: '/programs/upper-body.png',
         color: '#f43f5e',
         weeks: [
             {
@@ -224,7 +229,8 @@ export const PROGRAMS: Program[] = [
         description: 'Build a rock-solid core with targeted ab exercises.',
         level: 'beginner',
         durationWeeks: 3,
-        icon: '🎯',
+        icon: 'CS',
+        image: '/programs/core-strength.png',
         color: '#eab308',
         weeks: [
             {
@@ -256,7 +262,8 @@ export const PROGRAMS: Program[] = [
         description: 'Build explosive lower body strength and power.',
         level: 'intermediate',
         durationWeeks: 4,
-        icon: '🦵',
+        icon: 'LP',
+        image: '/programs/leg-power.png',
         color: '#06b6d4',
         weeks: [
             {
