@@ -66,11 +66,28 @@ export default function CameraFeed({
         // Clear the canvas
         ctx.clearRect(0, 0, w, h);
 
-        // Draw the mirrored video frame
+        // Draw the mirrored video frame — "object-fit: cover" behavior
+        // preserves natural aspect ratio so people don't look squished
+        const vw = video.videoWidth || w;
+        const vh = video.videoHeight || h;
+        const canvasAspect = w / h;
+        const videoAspect = vw / vh;
+
+        let sx = 0, sy = 0, sw = vw, sh = vh;
+        if (videoAspect > canvasAspect) {
+            // Video is wider than canvas — crop sides
+            sw = vh * canvasAspect;
+            sx = (vw - sw) / 2;
+        } else {
+            // Video is taller than canvas — crop top/bottom
+            sh = vw / canvasAspect;
+            sy = (vh - sh) / 2;
+        }
+
         ctx.save();
         ctx.translate(w, 0);
         ctx.scale(-1, 1); // Mirror horizontally for a natural selfie view
-        ctx.drawImage(video, 0, 0, w, h);
+        ctx.drawImage(video, sx, sy, sw, sh, 0, 0, w, h);
         ctx.restore();
 
         // If we have landmarks, draw the skeleton
@@ -160,7 +177,7 @@ export default function CameraFeed({
     }, [isDetecting, drawFrame]);
 
     return (
-        <div className="relative w-full aspect-video max-h-[70vh] rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
+        <div className="relative w-full h-full overflow-hidden">
             {/* Hidden video element — camera stream goes here */}
             <video
                 ref={videoRef}
