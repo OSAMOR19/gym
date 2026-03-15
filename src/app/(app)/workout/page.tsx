@@ -29,7 +29,7 @@ import type { Badge } from '../../../lib/gamification';
 export default function WorkoutPage() {
     const {
         videoRef, canvasRef, repCount, currentAngle, formQuality,
-        feedback, timeUnderTension, isDetecting, exerciseId,
+        feedback, timeUnderTension, isDetecting, isLoading, error, exerciseId,
         landmarks, formCorrections, coachTip, holdTime, isHolding,
         setExercise, startDetection, stopDetection, workoutStartTime,
     } = usePoseDetection();
@@ -93,14 +93,19 @@ export default function WorkoutPage() {
 
     // Start with countdown
     const handleStart = useCallback(() => {
+        // Warm up speech synthesis with a silent call (Chrome fix)
+        if (typeof window !== 'undefined' && window.speechSynthesis) {
+            window.speechSynthesis.cancel();
+        }
         setShowCountdown(true);
     }, []);
 
     // Called when countdown finishes
     const handleCountdownComplete = useCallback(() => {
         setShowCountdown(false);
+        speechCoach.announceExercise(currentExercise.name);
         startDetection();
-    }, [startDetection]);
+    }, [startDetection, speechCoach, currentExercise.name]);
 
     // Reset current set (stops detection, resets rep count)
     const handleReset = useCallback(() => {
@@ -344,6 +349,8 @@ export default function WorkoutPage() {
                     currentAngle={currentAngle}
                     exercise={exerciseId}
                     isDetecting={isDetecting}
+                    isLoading={isLoading}
+                    error={error}
                 />
                 <RepCounterDisplay count={repCount} isDetecting={isDetecting} targetReps={targetReps} />
 

@@ -23,6 +23,8 @@ interface CameraFeedProps {
     currentAngle: number;
     exercise: ExerciseId;
     isDetecting: boolean;
+    isLoading?: boolean;
+    error?: string | null;
 }
 
 export default function CameraFeed({
@@ -32,6 +34,8 @@ export default function CameraFeed({
     currentAngle,
     exercise,
     isDetecting,
+    isLoading,
+    error,
 }: CameraFeedProps) {
     const animRef = useRef<number>(0);
 
@@ -194,7 +198,7 @@ export default function CameraFeed({
             />
 
             {/* Placeholder when camera is not active */}
-            {!isDetecting && (
+            {!isDetecting && !error && (
                 <div className="absolute inset-0 flex items-center justify-center bg-[#0f0f0f]">
                     <div className="text-center space-y-4">
                         <div className="w-20 h-20 mx-auto rounded-full border-2 border-[#22c55e]/30 flex items-center justify-center">
@@ -216,6 +220,38 @@ export default function CameraFeed({
                             Camera feed will appear here
                         </p>
                     </div>
+                </div>
+            )}
+
+            {/* Error overlay */}
+            {error && (
+                <div className="absolute inset-0 flex items-center justify-center bg-[#0f0f0f]">
+                    <div className="text-center space-y-4 max-w-sm px-6">
+                        <div className="w-16 h-16 mx-auto rounded-full border-2 border-red-500/40 flex items-center justify-center">
+                            <svg className="w-8 h-8 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                            </svg>
+                        </div>
+                        <p className="text-red-400 text-sm font-medium">{error}</p>
+                        <p className="text-white/30 text-xs">Close other browser tabs using the camera and try again.</p>
+                    </div>
+                </div>
+            )}
+
+            {/* Loading overlay — model is loading but camera is streaming */}
+            {isDetecting && isLoading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-10">
+                    <div className="text-center space-y-3">
+                        <div className="w-10 h-10 mx-auto border-3 border-[#22c55e]/30 border-t-[#22c55e] rounded-full animate-spin" />
+                        <p className="text-white/60 text-xs tracking-[0.2em] uppercase">Loading AI model…</p>
+                    </div>
+                </div>
+            )}
+
+            {/* START MOVING hint — camera running, model loaded, but no landmarks yet */}
+            {isDetecting && !isLoading && !landmarks && !error && (
+                <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                    <p className="text-white/20 text-xs tracking-[0.3em] uppercase font-medium">Start moving!</p>
                 </div>
             )}
         </div>

@@ -35,6 +35,8 @@ export interface PoseState {
     feedback: string;
     timeUnderTension: number;
     isDetecting: boolean;
+    isLoading: boolean;          // True while model loads
+    error: string | null;        // Camera/model error message
     exerciseId: ExerciseId;
     landmarks: NormalizedLandmarkList | null;
     formCorrections: FormCorrection[];
@@ -61,6 +63,8 @@ export function usePoseDetection() {
         feedback: 'Good Form',
         timeUnderTension: 0,
         isDetecting: false,
+        isLoading: false,
+        error: null,
         exerciseId: 'bicep_curl',
         landmarks: null,
         formCorrections: [],
@@ -88,6 +92,7 @@ export function usePoseDetection() {
             coachTip: null,
             holdTime: 0,
             isHolding: false,
+            error: null,
         }));
     }, []);
 
@@ -128,7 +133,10 @@ export function usePoseDetection() {
         const video = videoRef.current;
         if (!video) return;
 
+        setState(prev => ({ ...prev, isLoading: true, error: null }));
+
         try {
+            // Step 1: Get camera access
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' },
             });
@@ -136,6 +144,10 @@ export function usePoseDetection() {
             await video.play();
             isRunningRef.current = true;
 
+            // Show camera feed immediately (before model loads)
+            setState(prev => ({ ...prev, isDetecting: true, workoutStartTime: Date.now() }));
+
+            // Step 2: Load MediaPipe model
             const { Pose } = await import('@mediapipe/pose');
             const pose = new Pose({
                 locateFile: (file: string) =>
@@ -161,16 +173,33 @@ export function usePoseDetection() {
             const processFrame = async () => {
                 if (!isRunningRef.current) return;
                 if (video.readyState >= 2) {
-                    await pose.send({ image: video });
+                    try {
+                        await pose.send({ image: video });
+                    } catch {
+                        // Frame processing error — skip and continue
+                    }
                 }
                 animFrameRef.current = requestAnimationFrame(processFrame);
             };
 
             processFrame();
             resetCoach();
-            setState((prev) => ({ ...prev, isDetecting: true, workoutStartTime: Date.now() }));
-        } catch (err) {
+            setState(prev => ({ ...prev, isLoading: false }));
+        } catch (err: any) {
             console.error('Failed to start pose detection:', err);
+
+            let errorMsg = 'Camera access failed. Please allow camera permission and try again.';
+            if (err?.name === 'NotAllowedError') {
+                errorMsg = 'Camera permission denied. Please allow camera access in your browser settings.';
+            } else if (err?.name === 'NotFoundError') {
+                errorMsg = 'No camera found. Please connect a camera and try again.';
+            } else if (err?.name === 'NotReadableError' || err?.name === 'AbortError') {
+                errorMsg = 'Camera is in use by another app or tab. Close other tabs and try again.';
+            } else if (err?.message?.includes('model')) {
+                errorMsg = 'Failed to load the AI model. Check your internet connection.';
+            }
+
+            setState(prev => ({ ...prev, isLoading: false, isDetecting: false, error: errorMsg }));
         }
     }, [processLandmarks]);
 
@@ -183,7 +212,7 @@ export function usePoseDetection() {
             stream.getTracks().forEach((track) => track.stop());
             video.srcObject = null;
         }
-        setState((prev) => ({ ...prev, isDetecting: false, landmarks: null }));
+        setState((prev) => ({ ...prev, isDetecting: false, isLoading: false, landmarks: null, error: null }));
     }, []);
 
     useEffect(() => {

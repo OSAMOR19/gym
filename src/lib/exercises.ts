@@ -239,11 +239,12 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
         category: 'lower',
         description: 'Rise onto your toes to work the calves.',
         repMode: 'standard',
-        landmarkIndices: [25, 27, 31], // knee → ankle → foot index
-        extendedThreshold: 170,
-        contractedThreshold: 140,
-        idealExtended: 175,
-        idealContracted: 135,
+        landmarkIndices: [23, 25, 27], // hip → knee → ankle (detects leg straightening)
+        secondaryLandmarkIndices: [24, 26, 28], // right side
+        extendedThreshold: 175,   // standing straight
+        contractedThreshold: 155, // slight knee bend at start
+        idealExtended: 180,
+        idealContracted: 155,
         formRules: [],
     },
 
