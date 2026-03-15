@@ -137,3 +137,161 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.2);
 }
+
+/* ─── Scrollbar hide utility ─────────────────────────────────────────────── */
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* ─── Pathway glow animation ─────────────────────────────────────────────── */
+
+@keyframes node-pulse {
+  0%, 100% {
+    box-shadow: 0 0 12px var(--pulse-color, rgba(34,197,94,0.4)),
+                0 0 30px var(--pulse-color, rgba(34,197,94,0.15));
+  }
+  50% {
+    box-shadow: 0 0 20px var(--pulse-color, rgba(34,197,94,0.6)),
+                0 0 50px var(--pulse-color, rgba(34,197,94,0.25));
+  }
+}
+
+.animate-node-pulse {
+  animation: node-pulse 2.5s ease-in-out infinite;
+}
+
+/* ─── Exercise guide animations ──────────────────────────────────────────── */
+
+/* Bicep curl / hammer curl — forearm rotates up and down */
+@keyframes curl-motion {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(-60deg); }
+}
+.anim-curl-arm {
+  animation: curl-motion 2s ease-in-out infinite;
+  transform-origin: 55px 38px;
+}
+
+/* Push-up — body lowers and raises */
+@keyframes pushup-body-motion {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(8px); }
+}
+.anim-pushup-body {
+  animation: pushup-body-motion 2.2s ease-in-out infinite;
+}
+@keyframes pushup-arm-motion {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(15deg); }
+}
+.anim-pushup-arms {
+  animation: pushup-arm-motion 2.2s ease-in-out infinite;
+  transform-origin: 28px 20px;
+}
+
+/* Shoulder press — arms push up and come down */
+@keyframes press-motion {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.anim-press-arms {
+  animation: press-motion 2s ease-in-out infinite;
+}
+
+/* Lateral raise — arms raise and lower */
+@keyframes lateral-motion {
+  0%, 100% { transform: scaleY(1) translateY(0); }
+  50% { transform: scaleY(0.85) translateY(8px); }
+}
+.anim-lateral-arms {
+  animation: lateral-motion 2.2s ease-in-out infinite;
+  transform-origin: 50px 28px;
+}
+
+/* Tricep extension — forearm swings behind head */
+@keyframes tricep-motion {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(30deg); }
+}
+.anim-tricep-arm {
+  animation: tricep-motion 2s ease-in-out infinite;
+  transform-origin: 48px 12px;
+}
+
+/* Squat / lunge — body dips down */
+@keyframes squat-body-motion {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(10px); }
+}
+.anim-squat-body {
+  animation: squat-body-motion 2.5s ease-in-out infinite;
+}
+@keyframes squat-leg-motion {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(0.85); }
+}
+.anim-squat-legs {
+  animation: squat-leg-motion 2.5s ease-in-out infinite;
+  transform-origin: 38px 48px;
+}
+
+/* Jump squat — body bounces up */
+@keyframes jump-motion {
+  0%, 100% { transform: translateY(0); }
+  40% { transform: translateY(6px); }
+  60% { transform: translateY(-10px); }
+  80% { transform: translateY(0); }
+}
+.anim-jump-body {
+  animation: jump-motion 1.8s ease-in-out infinite;
+}
+
+/* Calf raise — body lifts up */
+@keyframes calf-motion {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+.anim-calf-body {
+  animation: calf-motion 1.8s ease-in-out infinite;
+}
+
+/* Plank — subtle breathing pulse */
+@keyframes plank-breathe {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.02); opacity: 0.9; }
+}
+.anim-plank-breathe {
+  animation: plank-breathe 3s ease-in-out infinite;
+}
+
+/* Sit-up — torso curls up and down */
+@keyframes situp-motion {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(-15deg); }
+}
+.anim-situp-body {
+  animation: situp-motion 2.5s ease-in-out infinite;
+  transform-origin: 52px 32px;
+}
+
+/* Mountain climber — legs alternate */
+@keyframes mc-left {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(10px); }
+}
+@keyframes mc-right {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(-10px); }
+}
+.anim-mc-left-leg {
+  animation: mc-left 1s ease-in-out infinite;
+}
+.anim-mc-right-leg {
+  animation: mc-right 1s ease-in-out infinite;
+}

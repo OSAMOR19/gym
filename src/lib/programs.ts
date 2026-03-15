@@ -32,7 +32,7 @@ export interface Program {
     id: string;
     name: string;
     description: string;
-    level: 'beginner' | 'intermediate' | 'advanced';
+    level: 'beginner' | 'intermediate' | 'advanced' | 'senior';
     durationWeeks: number;
     icon: string;
     image: string;              // Path to program cover image
@@ -283,6 +283,118 @@ export const PROGRAMS: Program[] = [
                             { exerciseId: 'jump_squat', targetSets: 4, targetReps: 10 },
                             { exerciseId: 'squat', targetSets: 4, targetReps: 12 },
                             { exerciseId: 'lunge', targetSets: 3, targetReps: 15 },
+                        ],
+                    },
+                ],
+            },
+        ],
+    },
+    {
+        id: 'gentle-mobility',
+        name: 'Gentle Mobility',
+        description: 'Low-impact exercises designed for active seniors and those with mobility concerns.',
+        level: 'senior',
+        durationWeeks: 4,
+        icon: 'GM',
+        image: '/programs/gentle-mobility.png',
+        color: '#8b5cf6',
+        weeks: [
+            {
+                weekNumber: 1,
+                days: [
+                    {
+                        name: 'Day 1: Gentle Start',
+                        exercises: [
+                            { exerciseId: 'calf_raise', targetSets: 2, targetReps: 8 },
+                            { exerciseId: 'squat', targetSets: 2, targetReps: 6 },
+                            { exerciseId: 'plank', targetSets: 2, targetReps: 0, targetHoldSeconds: 15 },
+                        ],
+                    },
+                    {
+                        name: 'Day 2: Light Movement',
+                        exercises: [
+                            { exerciseId: 'bicep_curl', targetSets: 2, targetReps: 8 },
+                            { exerciseId: 'lateral_raise', targetSets: 2, targetReps: 6 },
+                            { exerciseId: 'calf_raise', targetSets: 2, targetReps: 10 },
+                        ],
+                    },
+                ],
+            },
+            {
+                weekNumber: 2,
+                days: [
+                    {
+                        name: 'Day 1: Steady Progress',
+                        exercises: [
+                            { exerciseId: 'squat', targetSets: 2, targetReps: 8 },
+                            { exerciseId: 'bicep_curl', targetSets: 2, targetReps: 10 },
+                            { exerciseId: 'plank', targetSets: 2, targetReps: 0, targetHoldSeconds: 20 },
+                        ],
+                    },
+                    {
+                        name: 'Day 2: Balance Day',
+                        exercises: [
+                            { exerciseId: 'calf_raise', targetSets: 3, targetReps: 10 },
+                            { exerciseId: 'lunge', targetSets: 2, targetReps: 6 },
+                            { exerciseId: 'lateral_raise', targetSets: 2, targetReps: 8 },
+                        ],
+                    },
+                ],
+            },
+        ],
+    },
+    {
+        id: 'active-aging',
+        name: 'Active Aging',
+        description: 'Stay strong and independent with safe, effective strength training.',
+        level: 'senior',
+        durationWeeks: 4,
+        icon: 'AA',
+        image: '/programs/active-aging.png',
+        color: '#14b8a6',
+        weeks: [
+            {
+                weekNumber: 1,
+                days: [
+                    {
+                        name: 'Day 1: Foundation',
+                        exercises: [
+                            { exerciseId: 'squat', targetSets: 2, targetReps: 8 },
+                            { exerciseId: 'pushup', targetSets: 2, targetReps: 5 },
+                            { exerciseId: 'bicep_curl', targetSets: 2, targetReps: 10 },
+                            { exerciseId: 'plank', targetSets: 2, targetReps: 0, targetHoldSeconds: 15 },
+                        ],
+                    },
+                    {
+                        name: 'Day 2: Functional',
+                        exercises: [
+                            { exerciseId: 'lunge', targetSets: 2, targetReps: 6 },
+                            { exerciseId: 'shoulder_press', targetSets: 2, targetReps: 8 },
+                            { exerciseId: 'calf_raise', targetSets: 3, targetReps: 10 },
+                            { exerciseId: 'situp', targetSets: 2, targetReps: 8 },
+                        ],
+                    },
+                ],
+            },
+            {
+                weekNumber: 2,
+                days: [
+                    {
+                        name: 'Day 1: Building Up',
+                        exercises: [
+                            { exerciseId: 'squat', targetSets: 3, targetReps: 8 },
+                            { exerciseId: 'pushup', targetSets: 2, targetReps: 6 },
+                            { exerciseId: 'hammer_curl', targetSets: 2, targetReps: 10 },
+                            { exerciseId: 'plank', targetSets: 2, targetReps: 0, targetHoldSeconds: 20 },
+                        ],
+                    },
+                    {
+                        name: 'Day 2: Endurance',
+                        exercises: [
+                            { exerciseId: 'lunge', targetSets: 2, targetReps: 8 },
+                            { exerciseId: 'lateral_raise', targetSets: 2, targetReps: 8 },
+                            { exerciseId: 'calf_raise', targetSets: 3, targetReps: 12 },
+                            { exerciseId: 'situp', targetSets: 2, targetReps: 10 },
                         ],
                     },
                 ],

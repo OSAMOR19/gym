@@ -1,5 +1,5 @@
 /**
- * Programs Page — Grid card layout with fitness images.
+ * Programs Page — Horizontal scroll carousel with full-viewport cards.
  * Filter tabs at top.
  */
 
@@ -9,7 +9,7 @@ import { useState } from 'react';
 import { PROGRAMS } from '../../../lib/programs';
 import ProgramCard from '../../../components/ProgramCard';
 
-type Filter = 'all' | 'beginner' | 'intermediate';
+type Filter = 'all' | 'beginner' | 'intermediate' | 'senior';
 
 export default function ProgramsPage() {
     const [filter, setFilter] = useState<Filter>('all');
@@ -22,6 +22,7 @@ export default function ProgramsPage() {
         { key: 'all', label: 'All Programs' },
         { key: 'beginner', label: 'Beginner' },
         { key: 'intermediate', label: 'Intermediate' },
+        { key: 'senior', label: 'Senior' },
     ];
 
     return (
@@ -53,8 +54,8 @@ export default function ProgramsPage() {
                 </div>
             </div>
 
-            {/* Card Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {/* Horizontal scroll carousel — full viewport cards */}
+            <div className="flex gap-5 overflow-x-auto snap-x snap-mandatory pb-4 scrollbar-hide -mx-4 px-4">
                 {filtered.map((program) => (
                     <ProgramCard key={program.id} program={program} />
                 ))}
