@@ -5,7 +5,6 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { Program } from '../lib/programs';
 
 interface ProgramCardProps {
@@ -24,12 +23,10 @@ export default function ProgramCard({ program }: ProgramCardProps) {
             <div className="group relative w-[85vw] md:w-[420px] rounded-xl overflow-hidden border border-white/5 hover:border-white/15 transition-all duration-500 cursor-pointer">
                 {/* Image */}
                 <div className="relative aspect-[3/4] overflow-hidden">
-                    <Image
+                    <img
                         src={program.image}
                         alt={program.name}
-                        fill
-                        sizes="(max-width: 768px) 85vw, 420px"
-                        className="object-cover transition-transform duration-700 group-hover:scale-110"
+                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                     />
                     {/* Gradient overlays */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />

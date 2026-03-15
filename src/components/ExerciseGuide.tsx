@@ -262,8 +262,7 @@ const EXERCISE_ILLUSTRATIONS: Record<ExerciseId, { svg: React.ReactNode; tip: st
     },
 };
 
-export default function ExerciseGuide({ exerciseId, isDetecting }: ExerciseGuideProps) {
-    if (!isDetecting) return null;
+export default function ExerciseGuide({ exerciseId }: ExerciseGuideProps) {
 
     const illustration = EXERCISE_ILLUSTRATIONS[exerciseId];
     if (!illustration) return null;

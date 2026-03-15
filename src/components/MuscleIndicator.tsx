@@ -132,8 +132,7 @@ const CATEGORY_COLORS = {
     core: '#f59e0b',
 };
 
-export default function MuscleIndicator({ exerciseId, isDetecting }: MuscleIndicatorProps) {
-    if (!isDetecting) return null;
+export default function MuscleIndicator({ exerciseId }: MuscleIndicatorProps) {
 
     const data = EXERCISE_MUSCLES[exerciseId];
     if (!data) return null;
