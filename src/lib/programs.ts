@@ -292,7 +292,7 @@ export const PROGRAMS: Program[] = [
     {
         id: 'gentle-mobility',
         name: 'Gentle Mobility',
-        description: 'Low-impact exercises designed for active seniors and those with mobility concerns.',
+        description: 'Low-impact standing and seated exercises for joint health, balance, and flexibility.',
         level: 'senior',
         durationWeeks: 4,
         icon: 'GM',
@@ -303,19 +303,19 @@ export const PROGRAMS: Program[] = [
                 weekNumber: 1,
                 days: [
                     {
-                        name: 'Day 1: Gentle Start',
+                        name: 'Day 1: Standing Balance',
                         exercises: [
-                            { exerciseId: 'calf_raise', targetSets: 2, targetReps: 8 },
-                            { exerciseId: 'squat', targetSets: 2, targetReps: 6 },
-                            { exerciseId: 'plank', targetSets: 2, targetReps: 0, targetHoldSeconds: 15 },
+                            { exerciseId: 'calf_raise', targetSets: 2, targetReps: 6 },
+                            { exerciseId: 'squat', targetSets: 2, targetReps: 5 }, // shallow, chair-assisted
+                            { exerciseId: 'lateral_raise', targetSets: 2, targetReps: 5 },
                         ],
                     },
                     {
-                        name: 'Day 2: Light Movement',
+                        name: 'Day 2: Gentle Arms',
                         exercises: [
-                            { exerciseId: 'bicep_curl', targetSets: 2, targetReps: 8 },
-                            { exerciseId: 'lateral_raise', targetSets: 2, targetReps: 6 },
-                            { exerciseId: 'calf_raise', targetSets: 2, targetReps: 10 },
+                            { exerciseId: 'bicep_curl', targetSets: 2, targetReps: 6 },
+                            { exerciseId: 'shoulder_press', targetSets: 2, targetReps: 5 },
+                            { exerciseId: 'calf_raise', targetSets: 2, targetReps: 8 },
                         ],
                     },
                 ],
@@ -326,17 +326,60 @@ export const PROGRAMS: Program[] = [
                     {
                         name: 'Day 1: Steady Progress',
                         exercises: [
-                            { exerciseId: 'squat', targetSets: 2, targetReps: 8 },
-                            { exerciseId: 'bicep_curl', targetSets: 2, targetReps: 10 },
-                            { exerciseId: 'plank', targetSets: 2, targetReps: 0, targetHoldSeconds: 20 },
+                            { exerciseId: 'calf_raise', targetSets: 2, targetReps: 8 },
+                            { exerciseId: 'squat', targetSets: 2, targetReps: 6 },
+                            { exerciseId: 'bicep_curl', targetSets: 2, targetReps: 8 },
                         ],
                     },
                     {
-                        name: 'Day 2: Balance Day',
+                        name: 'Day 2: Balance & Flexibility',
+                        exercises: [
+                            { exerciseId: 'lateral_raise', targetSets: 2, targetReps: 6 },
+                            { exerciseId: 'shoulder_press', targetSets: 2, targetReps: 6 },
+                            { exerciseId: 'calf_raise', targetSets: 2, targetReps: 10 },
+                        ],
+                    },
+                ],
+            },
+            {
+                weekNumber: 3,
+                days: [
+                    {
+                        name: 'Day 1: Building Confidence',
+                        exercises: [
+                            { exerciseId: 'squat', targetSets: 2, targetReps: 8 },
+                            { exerciseId: 'bicep_curl', targetSets: 2, targetReps: 8 },
+                            { exerciseId: 'lateral_raise', targetSets: 2, targetReps: 8 },
+                        ],
+                    },
+                    {
+                        name: 'Day 2: Gentle Cardio',
                         exercises: [
                             { exerciseId: 'calf_raise', targetSets: 3, targetReps: 10 },
-                            { exerciseId: 'lunge', targetSets: 2, targetReps: 6 },
+                            { exerciseId: 'jumping_jacks', targetSets: 2, targetReps: 5 },
+                            { exerciseId: 'shoulder_press', targetSets: 2, targetReps: 6 },
+                        ],
+                    },
+                ],
+            },
+            {
+                weekNumber: 4,
+                days: [
+                    {
+                        name: 'Day 1: Full Routine',
+                        exercises: [
+                            { exerciseId: 'calf_raise', targetSets: 3, targetReps: 10 },
+                            { exerciseId: 'squat', targetSets: 2, targetReps: 8 },
+                            { exerciseId: 'bicep_curl', targetSets: 2, targetReps: 10 },
                             { exerciseId: 'lateral_raise', targetSets: 2, targetReps: 8 },
+                        ],
+                    },
+                    {
+                        name: 'Day 2: Active Day',
+                        exercises: [
+                            { exerciseId: 'jumping_jacks', targetSets: 2, targetReps: 6 },
+                            { exerciseId: 'shoulder_press', targetSets: 2, targetReps: 8 },
+                            { exerciseId: 'calf_raise', targetSets: 3, targetReps: 10 },
                         ],
                     },
                 ],
@@ -346,7 +389,7 @@ export const PROGRAMS: Program[] = [
     {
         id: 'active-aging',
         name: 'Active Aging',
-        description: 'Stay strong and independent with safe, effective strength training.',
+        description: 'Stay strong and independent with functional exercises for daily life.',
         level: 'senior',
         durationWeeks: 4,
         icon: 'AA',
@@ -357,21 +400,27 @@ export const PROGRAMS: Program[] = [
                 weekNumber: 1,
                 days: [
                     {
-                        name: 'Day 1: Foundation',
+                        name: 'Day 1: Leg Strength',
                         exercises: [
-                            { exerciseId: 'squat', targetSets: 2, targetReps: 8 },
-                            { exerciseId: 'pushup', targetSets: 2, targetReps: 5 },
-                            { exerciseId: 'bicep_curl', targetSets: 2, targetReps: 10 },
-                            { exerciseId: 'plank', targetSets: 2, targetReps: 0, targetHoldSeconds: 15 },
+                            { exerciseId: 'calf_raise', targetSets: 2, targetReps: 8 },
+                            { exerciseId: 'squat', targetSets: 2, targetReps: 6 },
+                            { exerciseId: 'lunge', targetSets: 2, targetReps: 4 },
                         ],
                     },
                     {
-                        name: 'Day 2: Functional',
+                        name: 'Day 2: Arm Strength',
                         exercises: [
-                            { exerciseId: 'lunge', targetSets: 2, targetReps: 6 },
-                            { exerciseId: 'shoulder_press', targetSets: 2, targetReps: 8 },
-                            { exerciseId: 'calf_raise', targetSets: 3, targetReps: 10 },
-                            { exerciseId: 'situp', targetSets: 2, targetReps: 8 },
+                            { exerciseId: 'bicep_curl', targetSets: 2, targetReps: 8 },
+                            { exerciseId: 'shoulder_press', targetSets: 2, targetReps: 6 },
+                            { exerciseId: 'tricep_extension', targetSets: 2, targetReps: 6 },
+                        ],
+                    },
+                    {
+                        name: 'Day 3: Light Cardio',
+                        exercises: [
+                            { exerciseId: 'jumping_jacks', targetSets: 2, targetReps: 5 },
+                            { exerciseId: 'calf_raise', targetSets: 2, targetReps: 10 },
+                            { exerciseId: 'lateral_raise', targetSets: 2, targetReps: 6 },
                         ],
                     },
                 ],
@@ -380,21 +429,86 @@ export const PROGRAMS: Program[] = [
                 weekNumber: 2,
                 days: [
                     {
-                        name: 'Day 1: Building Up',
+                        name: 'Day 1: Lower Body Focus',
                         exercises: [
-                            { exerciseId: 'squat', targetSets: 3, targetReps: 8 },
-                            { exerciseId: 'pushup', targetSets: 2, targetReps: 6 },
-                            { exerciseId: 'hammer_curl', targetSets: 2, targetReps: 10 },
-                            { exerciseId: 'plank', targetSets: 2, targetReps: 0, targetHoldSeconds: 20 },
+                            { exerciseId: 'squat', targetSets: 2, targetReps: 8 },
+                            { exerciseId: 'calf_raise', targetSets: 3, targetReps: 10 },
+                            { exerciseId: 'lunge', targetSets: 2, targetReps: 5 },
                         ],
                     },
                     {
-                        name: 'Day 2: Endurance',
+                        name: 'Day 2: Upper Body Focus',
                         exercises: [
-                            { exerciseId: 'lunge', targetSets: 2, targetReps: 8 },
+                            { exerciseId: 'bicep_curl', targetSets: 2, targetReps: 10 },
+                            { exerciseId: 'shoulder_press', targetSets: 2, targetReps: 8 },
                             { exerciseId: 'lateral_raise', targetSets: 2, targetReps: 8 },
+                        ],
+                    },
+                    {
+                        name: 'Day 3: Active Recovery',
+                        exercises: [
+                            { exerciseId: 'jumping_jacks', targetSets: 2, targetReps: 6 },
+                            { exerciseId: 'calf_raise', targetSets: 3, targetReps: 10 },
+                            { exerciseId: 'plank', targetSets: 1, targetReps: 0, targetHoldSeconds: 10 },
+                        ],
+                    },
+                ],
+            },
+            {
+                weekNumber: 3,
+                days: [
+                    {
+                        name: 'Day 1: Functional Strength',
+                        exercises: [
+                            { exerciseId: 'squat', targetSets: 3, targetReps: 8 },
+                            { exerciseId: 'lunge', targetSets: 2, targetReps: 6 },
+                            { exerciseId: 'calf_raise', targetSets: 3, targetReps: 10 },
+                        ],
+                    },
+                    {
+                        name: 'Day 2: Arm Day',
+                        exercises: [
+                            { exerciseId: 'bicep_curl', targetSets: 3, targetReps: 10 },
+                            { exerciseId: 'tricep_extension', targetSets: 2, targetReps: 8 },
+                            { exerciseId: 'shoulder_press', targetSets: 2, targetReps: 8 },
+                        ],
+                    },
+                    {
+                        name: 'Day 3: Gentle Movement',
+                        exercises: [
+                            { exerciseId: 'jumping_jacks', targetSets: 2, targetReps: 8 },
+                            { exerciseId: 'lateral_raise', targetSets: 2, targetReps: 8 },
+                            { exerciseId: 'plank', targetSets: 1, targetReps: 0, targetHoldSeconds: 15 },
+                        ],
+                    },
+                ],
+            },
+            {
+                weekNumber: 4,
+                days: [
+                    {
+                        name: 'Day 1: Independence Training',
+                        exercises: [
+                            { exerciseId: 'squat', targetSets: 3, targetReps: 10 },
+                            { exerciseId: 'lunge', targetSets: 2, targetReps: 6 },
                             { exerciseId: 'calf_raise', targetSets: 3, targetReps: 12 },
-                            { exerciseId: 'situp', targetSets: 2, targetReps: 10 },
+                        ],
+                    },
+                    {
+                        name: 'Day 2: Strength & Tone',
+                        exercises: [
+                            { exerciseId: 'bicep_curl', targetSets: 3, targetReps: 10 },
+                            { exerciseId: 'shoulder_press', targetSets: 2, targetReps: 8 },
+                            { exerciseId: 'tricep_extension', targetSets: 2, targetReps: 8 },
+                            { exerciseId: 'lateral_raise', targetSets: 2, targetReps: 8 },
+                        ],
+                    },
+                    {
+                        name: 'Day 3: Active Cardio',
+                        exercises: [
+                            { exerciseId: 'jumping_jacks', targetSets: 2, targetReps: 10 },
+                            { exerciseId: 'calf_raise', targetSets: 3, targetReps: 12 },
+                            { exerciseId: 'plank', targetSets: 2, targetReps: 0, targetHoldSeconds: 15 },
                         ],
                     },
                 ],

@@ -179,6 +179,19 @@ const RULE_CHECKERS: Record<string, RuleChecker> = {
 
         return knee.x > toe.x + 0.03;
     },
+
+    /**
+     * Arm sync: arms not moving together during jumping jacks.
+     * Checks if left and right wrist Y positions are significantly different.
+     */
+    arm_sync: (lm) => {
+        const wristL = lm[15];
+        const wristR = lm[16];
+        if (!wristL || !wristR) return false;
+
+        const yDiff = Math.abs(wristL.y - wristR.y);
+        return yDiff > 0.12; // Significant difference in arm heights
+    },
 };
 
 // ─── Public API ──────────────────────────────────────────────────────────────

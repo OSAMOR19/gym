@@ -20,7 +20,7 @@ export type ExerciseId =
     | 'bicep_curl' | 'hammer_curl' | 'pushup' | 'shoulder_press'
     | 'lateral_raise' | 'tricep_extension'
     | 'squat' | 'lunge' | 'jump_squat' | 'calf_raise'
-    | 'plank' | 'situp' | 'mountain_climber';
+    | 'plank' | 'situp' | 'mountain_climber' | 'jumping_jacks';
 
 export type ExerciseCategory = 'upper' | 'lower' | 'core';
 
@@ -47,6 +47,9 @@ export interface ExerciseConfig {
     /** Landmark indices: [pointA, pointB (vertex), pointC] for primary angle */
     landmarkIndices: [number, number, number];
 
+    /** Optional secondary landmarks for bilateral exercises (e.g. right arm mirrors left) */
+    secondaryLandmarkIndices?: [number, number, number];
+
     /** Angle above which joint is "extended" (starting position) */
     extendedThreshold: number;
     /** Angle below which joint is "contracted" (peak of movement) */
@@ -72,7 +75,8 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
         category: 'upper',
         description: 'Curl weight toward shoulder by bending at the elbow.',
         repMode: 'standard',
-        landmarkIndices: [11, 13, 15], // shoulder → elbow → wrist
+        landmarkIndices: [11, 13, 15], // left: shoulder → elbow → wrist
+        secondaryLandmarkIndices: [12, 14, 16], // right: shoulder → elbow → wrist
         extendedThreshold: 150,
         contractedThreshold: 50,
         idealExtended: 170,
@@ -91,6 +95,7 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
         description: 'Curl with neutral grip, targeting the brachialis.',
         repMode: 'standard',
         landmarkIndices: [11, 13, 15],
+        secondaryLandmarkIndices: [12, 14, 16],
         extendedThreshold: 150,
         contractedThreshold: 50,
         idealExtended: 170,
@@ -125,7 +130,8 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
         category: 'upper',
         description: 'Press weight overhead from shoulder height.',
         repMode: 'standard',
-        landmarkIndices: [23, 11, 13], // hip → shoulder → elbow
+        landmarkIndices: [23, 11, 13], // left: hip → shoulder → elbow
+        secondaryLandmarkIndices: [24, 12, 14], // right: hip → shoulder → elbow
         extendedThreshold: 160,
         contractedThreshold: 80,
         idealExtended: 175,
@@ -142,7 +148,8 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
         category: 'upper',
         description: 'Raise arms to the side until parallel with shoulders.',
         repMode: 'standard',
-        landmarkIndices: [23, 11, 15], // hip → shoulder → wrist
+        landmarkIndices: [23, 11, 15], // left: hip → shoulder → wrist
+        secondaryLandmarkIndices: [24, 12, 16], // right: hip → shoulder → wrist
         extendedThreshold: 140,
         contractedThreshold: 60,
         idealExtended: 160,
@@ -160,6 +167,7 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
         description: 'Extend arm overhead to work the triceps.',
         repMode: 'standard',
         landmarkIndices: [11, 13, 15],
+        secondaryLandmarkIndices: [12, 14, 16],
         extendedThreshold: 150,
         contractedThreshold: 50,
         idealExtended: 170,
@@ -288,6 +296,24 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
         idealContracted: 60,
         formRules: [
             { id: 'mc_hip_sag', description: 'Hips sagging', correctionMessage: 'Keep your hips level', ruleKey: 'hip_sag' },
+        ],
+    },
+
+    jumping_jacks: {
+        id: 'jumping_jacks',
+        name: 'Jumping Jacks',
+        icon: 'JJ',
+        category: 'core',
+        description: 'Jump while spreading legs and raising arms overhead, then return.',
+        repMode: 'standard',
+        landmarkIndices: [23, 11, 15], // left: hip → shoulder → wrist (arm angle)
+        secondaryLandmarkIndices: [24, 12, 16], // right: hip → shoulder → wrist
+        extendedThreshold: 140,   // arms up = extended (angle at shoulder opens)
+        contractedThreshold: 40,  // arms down = contracted (angle at shoulder closes)
+        idealExtended: 160,
+        idealContracted: 20,
+        formRules: [
+            { id: 'jj_sync', description: 'Arms not synchronized', correctionMessage: 'Raise both arms together', ruleKey: 'arm_sync' },
         ],
     },
 };

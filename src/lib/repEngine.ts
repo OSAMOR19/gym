@@ -63,8 +63,26 @@ export class RepEngine {
             return this.getResult(false);
         }
 
-        // Calculate and smooth the joint angle
-        const rawAngle = calculateAngle(pointA, pointB, pointC);
+        // Calculate primary angle
+        const primaryAngle = calculateAngle(pointA, pointB, pointC);
+
+        // If secondary landmarks exist (bilateral), calculate both angles
+        // and use the more active one (lower angle = more contracted)
+        let rawAngle = primaryAngle;
+
+        if (this.config.secondaryLandmarkIndices) {
+            const [iA2, iB2, iC2] = this.config.secondaryLandmarkIndices;
+            const pA2 = landmarks[iA2];
+            const pB2 = landmarks[iB2];
+            const pC2 = landmarks[iC2];
+
+            if (pA2 && pB2 && pC2) {
+                const secondaryAngle = calculateAngle(pA2, pB2, pC2);
+                // Use the MORE CONTRACTED angle (lower value) — whichever arm is curling
+                rawAngle = Math.min(primaryAngle, secondaryAngle);
+            }
+        }
+
         this.currentAngle = smoothValue(rawAngle, this.smoothedAngle, 0.4);
         this.smoothedAngle = this.currentAngle;
 

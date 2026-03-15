@@ -306,3 +306,25 @@ body {
 .animate-countdown-pulse {
   animation: countdown-pulse 0.9s ease-out forwards;
 }
+
+/* ─── Jumping Jacks animation ────────────────────────── */
+@keyframes jj-arms {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(-45deg); }
+}
+@keyframes jj-arms-right {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(45deg); }
+}
+@keyframes jj-legs {
+  0%, 100% { transform: scaleX(1); }
+  50% { transform: scaleX(1.4); }
+}
+.anim-jj-arms {
+  animation: jj-arms 0.8s ease-in-out infinite;
+  transform-origin: 40px 26px;
+}
+.anim-jj-legs {
+  animation: jj-legs 0.8s ease-in-out infinite;
+  transform-origin: 40px 50px;
+}

@@ -260,6 +260,27 @@ const EXERCISE_ILLUSTRATIONS: Record<ExerciseId, { svg: React.ReactNode; tip: st
             </svg>
         ),
     },
+    jumping_jacks: {
+        tip: 'Arms up, legs apart, jump!',
+        svg: (
+            <svg viewBox="0 0 80 100" fill="none" className="w-full h-full">
+                <g className="anim-jump-body">
+                    <circle cx="40" cy="10" r="8" stroke="#22c55e" strokeWidth="2" />
+                    <line x1="40" y1="18" x2="40" y2="50" stroke="#22c55e" strokeWidth="2" />
+                </g>
+                {/* Animated arms — raising up */}
+                <g className="anim-jj-arms">
+                    <line x1="40" y1="26" x2="18" y2="45" stroke="#38bdf8" strokeWidth="2.5" />
+                    <line x1="40" y1="26" x2="62" y2="45" stroke="#38bdf8" strokeWidth="2.5" />
+                </g>
+                {/* Animated legs — spreading */}
+                <g className="anim-jj-legs">
+                    <line x1="40" y1="50" x2="25" y2="82" stroke="#38bdf8" strokeWidth="2.5" />
+                    <line x1="40" y1="50" x2="55" y2="82" stroke="#38bdf8" strokeWidth="2.5" />
+                </g>
+            </svg>
+        ),
+    },
 };
 
 export default function ExerciseGuide({ exerciseId }: ExerciseGuideProps) {

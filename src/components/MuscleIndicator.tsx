@@ -124,6 +124,15 @@ const EXERCISE_MUSCLES: Record<ExerciseId, { muscles: MuscleGroup[]; category: '
             { name: 'Quads', region: 'secondary' },
         ],
     },
+    jumping_jacks: {
+        category: 'core',
+        muscles: [
+            { name: 'Shoulders', region: 'primary' },
+            { name: 'Calves', region: 'primary' },
+            { name: 'Quads', region: 'secondary' },
+            { name: 'Core', region: 'secondary' },
+        ],
+    },
 };
 
 const CATEGORY_COLORS = {
