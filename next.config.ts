@@ -3,24 +3,28 @@ import path from "path";
 import os from "os";
 
 /**
- * USB-drive-safe config for the KINGSTON external drive.
+ * Next.js config — works on both Vercel and the local KINGSTON USB drive.
  *
- * exFAT / FAT32 filesystems fire phantom change events that make
- * webpack's HMR rebuild the app endlessly. The ONLY reliable fix is
- * to completely disable the file watcher.
- *
- * Trade-off: you must restart the dev server (`yarn dev`) after code changes.
+ * Local USB: distDir on SSD (tmpdir), webpack watcher disabled.
+ * Vercel:    default distDir (.next), Turbopack builds normally.
  */
+const isVercel = !!process.env.VERCEL;
+
 const nextConfig: NextConfig = {
-  distDir: path.join(os.tmpdir(), "gym-next-cache"),
+  // On Vercel use default .next dir; locally use SSD tmpdir (USB is too slow)
+  ...(isVercel ? {} : { distDir: path.join(os.tmpdir(), "gym-next-cache") }),
+
   reactStrictMode: false,
   devIndicators: false,
 
+  // Required in Next.js 16 when a webpack config exists
+  turbopack: {},
+
   webpack: (config, { dev }) => {
     if (dev) {
-      // Ignore ALL files — fully disables watch mode on the USB drive
+      // Disable file watcher on USB drive (phantom FS events cause HMR loops)
       config.watchOptions = {
-        ignored: /.*/,    // regex matching everything → no files watched
+        ignored: /.*/,
       };
     }
     return config;
