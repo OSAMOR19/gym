@@ -386,6 +386,274 @@ export const PROGRAMS: Program[] = [
             },
         ],
     },
+    // ─── NEW PROGRAMS ─────────────────────────────────────────────────────────
+    {
+        id: 'barbell-basics',
+        name: 'Barbell Basics',
+        description: 'Master the big compound barbell lifts for full-body strength.',
+        level: 'intermediate',
+        durationWeeks: 4,
+        icon: 'BB',
+        image: '/programs/beginner-strength.png',
+        color: '#f59e0b',
+        weeks: [
+            {
+                weekNumber: 1,
+                days: [
+                    {
+                        name: 'Day 1: Push',
+                        exercises: [
+                            { exerciseId: 'bench_press', targetSets: 4, targetReps: 8 },
+                            { exerciseId: 'incline_bench_press', targetSets: 3, targetReps: 10 },
+                            { exerciseId: 'overhead_press', targetSets: 3, targetReps: 8 },
+                        ],
+                    },
+                    {
+                        name: 'Day 2: Pull',
+                        exercises: [
+                            { exerciseId: 'deadlift', targetSets: 4, targetReps: 5 },
+                            { exerciseId: 'barbell_row', targetSets: 4, targetReps: 8 },
+                            { exerciseId: 'romanian_deadlift', targetSets: 3, targetReps: 10 },
+                        ],
+                    },
+                    {
+                        name: 'Day 3: Legs',
+                        exercises: [
+                            { exerciseId: 'barbell_squat', targetSets: 4, targetReps: 8 },
+                            { exerciseId: 'front_squat', targetSets: 3, targetReps: 6 },
+                            { exerciseId: 'hip_thrust_barbell', targetSets: 3, targetReps: 12 },
+                        ],
+                    },
+                ],
+            },
+            {
+                weekNumber: 2,
+                days: [
+                    {
+                        name: 'Day 1: Push (Progression)',
+                        exercises: [
+                            { exerciseId: 'bench_press', targetSets: 4, targetReps: 10 },
+                            { exerciseId: 'overhead_press', targetSets: 4, targetReps: 8 },
+                            { exerciseId: 'incline_bench_press', targetSets: 3, targetReps: 12 },
+                        ],
+                    },
+                    {
+                        name: 'Day 2: Pull (Progression)',
+                        exercises: [
+                            { exerciseId: 'deadlift', targetSets: 5, targetReps: 5 },
+                            { exerciseId: 'barbell_row', targetSets: 4, targetReps: 10 },
+                            { exerciseId: 'romanian_deadlift', targetSets: 3, targetReps: 12 },
+                        ],
+                    },
+                    {
+                        name: 'Day 3: Legs (Progression)',
+                        exercises: [
+                            { exerciseId: 'barbell_squat', targetSets: 5, targetReps: 8 },
+                            { exerciseId: 'hip_thrust_barbell', targetSets: 4, targetReps: 12 },
+                            { exerciseId: 'front_squat', targetSets: 3, targetReps: 8 },
+                        ],
+                    },
+                ],
+            },
+        ],
+    },
+    {
+        id: 'dumbbell-sculptor',
+        name: 'Dumbbell Sculptor',
+        description: 'Shape every muscle group with targeted dumbbell exercises.',
+        level: 'beginner',
+        durationWeeks: 3,
+        icon: 'DS',
+        image: '/programs/upper-body.png',
+        color: '#ec4899',
+        weeks: [
+            {
+                weekNumber: 1,
+                days: [
+                    {
+                        name: 'Day 1: Chest & Shoulders',
+                        exercises: [
+                            { exerciseId: 'chest_press', targetSets: 3, targetReps: 12 },
+                            { exerciseId: 'incline_chest_press', targetSets: 3, targetReps: 10 },
+                            { exerciseId: 'dumbbell_fly', targetSets: 3, targetReps: 12 },
+                            { exerciseId: 'front_raise', targetSets: 3, targetReps: 12 },
+                        ],
+                    },
+                    {
+                        name: 'Day 2: Back & Arms',
+                        exercises: [
+                            { exerciseId: 'dumbbell_row', targetSets: 3, targetReps: 12 },
+                            { exerciseId: 'dumbbell_deadlift', targetSets: 3, targetReps: 10 },
+                            { exerciseId: 'bicep_curl', targetSets: 3, targetReps: 12 },
+                            { exerciseId: 'tricep_kickback', targetSets: 3, targetReps: 12 },
+                        ],
+                    },
+                    {
+                        name: 'Day 3: Legs',
+                        exercises: [
+                            { exerciseId: 'goblet_squat', targetSets: 3, targetReps: 12 },
+                            { exerciseId: 'dumbbell_deadlift', targetSets: 3, targetReps: 10 },
+                            { exerciseId: 'walking_lunges', targetSets: 3, targetReps: 12 },
+                            { exerciseId: 'glute_bridge', targetSets: 3, targetReps: 15 },
+                        ],
+                    },
+                ],
+            },
+        ],
+    },
+    {
+        id: 'machine-muscle',
+        name: 'Machine Muscle',
+        description: 'Gym machine circuit — perfect for beginners learning movement patterns.',
+        level: 'beginner',
+        durationWeeks: 3,
+        icon: 'MM',
+        image: '/programs/full-body.png',
+        color: '#8b5cf6',
+        weeks: [
+            {
+                weekNumber: 1,
+                days: [
+                    {
+                        name: 'Day 1: Upper Body Push',
+                        exercises: [
+                            { exerciseId: 'chest_press_machine', targetSets: 3, targetReps: 12 },
+                            { exerciseId: 'cable_lateral_raise', targetSets: 3, targetReps: 12 },
+                            { exerciseId: 'cable_tricep_pushdown', targetSets: 3, targetReps: 15 },
+                        ],
+                    },
+                    {
+                        name: 'Day 2: Upper Body Pull',
+                        exercises: [
+                            { exerciseId: 'lat_pulldown', targetSets: 3, targetReps: 12 },
+                            { exerciseId: 'seated_row', targetSets: 3, targetReps: 12 },
+                            { exerciseId: 'cable_bicep_curl', targetSets: 3, targetReps: 12 },
+                            { exerciseId: 'pec_deck', targetSets: 3, targetReps: 12 },
+                        ],
+                    },
+                    {
+                        name: 'Day 3: Lower Body',
+                        exercises: [
+                            { exerciseId: 'leg_press', targetSets: 4, targetReps: 12 },
+                            { exerciseId: 'leg_extension', targetSets: 3, targetReps: 15 },
+                            { exerciseId: 'leg_curl', targetSets: 3, targetReps: 12 },
+                        ],
+                    },
+                ],
+            },
+        ],
+    },
+    {
+        id: 'cardio-burn',
+        name: 'Cardio Burn',
+        description: 'High-energy functional cardio to torch calories and build conditioning.',
+        level: 'intermediate',
+        durationWeeks: 3,
+        icon: 'CB',
+        image: '/programs/core-strength.png',
+        color: '#ef4444',
+        weeks: [
+            {
+                weekNumber: 1,
+                days: [
+                    {
+                        name: 'Day 1: Power Cardio',
+                        exercises: [
+                            { exerciseId: 'box_jumps', targetSets: 4, targetReps: 10 },
+                            { exerciseId: 'burpees', targetSets: 3, targetReps: 10 },
+                            { exerciseId: 'jump_squat', targetSets: 3, targetReps: 12 },
+                            { exerciseId: 'high_knees', targetSets: 3, targetReps: 30 },
+                        ],
+                    },
+                    {
+                        name: 'Day 2: Endurance Circuit',
+                        exercises: [
+                            { exerciseId: 'jump_rope', targetSets: 3, targetReps: 50 },
+                            { exerciseId: 'kettlebell_swing', targetSets: 4, targetReps: 15 },
+                            { exerciseId: 'battle_ropes', targetSets: 3, targetReps: 20 },
+                            { exerciseId: 'jumping_jacks', targetSets: 3, targetReps: 30 },
+                        ],
+                    },
+                    {
+                        name: 'Day 3: Functional Strength',
+                        exercises: [
+                            { exerciseId: 'farmers_walk', targetSets: 3, targetReps: 20 },
+                            { exerciseId: 'rowing_machine', targetSets: 3, targetReps: 20 },
+                            { exerciseId: 'burpees', targetSets: 4, targetReps: 10 },
+                        ],
+                    },
+                ],
+            },
+        ],
+    },
+    {
+        id: 'core-abs-blast',
+        name: 'Core & Abs Blast',
+        description: 'Targeted ab and core exercises for a rock-solid midsection.',
+        level: 'beginner',
+        durationWeeks: 3,
+        icon: 'CAB',
+        image: '/programs/core-strength.png',
+        color: '#06b6d4',
+        weeks: [
+            {
+                weekNumber: 1,
+                days: [
+                    {
+                        name: 'Day 1: Core Foundation',
+                        exercises: [
+                            { exerciseId: 'plank', targetSets: 3, targetReps: 0, targetHoldSeconds: 30 },
+                            { exerciseId: 'crunches', targetSets: 3, targetReps: 20 },
+                            { exerciseId: 'reverse_crunch', targetSets: 3, targetReps: 15 },
+                            { exerciseId: 'bicycle_crunch', targetSets: 3, targetReps: 20 },
+                        ],
+                    },
+                    {
+                        name: 'Day 2: Abs & Obliques',
+                        exercises: [
+                            { exerciseId: 'russian_twists', targetSets: 3, targetReps: 20 },
+                            { exerciseId: 'toe_touches', targetSets: 3, targetReps: 20 },
+                            { exerciseId: 'flutter_kicks', targetSets: 3, targetReps: 30 },
+                            { exerciseId: 'leg_raises', targetSets: 3, targetReps: 15 },
+                        ],
+                    },
+                    {
+                        name: 'Day 3: Advanced Core',
+                        exercises: [
+                            { exerciseId: 'hanging_leg_raises', targetSets: 3, targetReps: 10 },
+                            { exerciseId: 'ab_rollout', targetSets: 3, targetReps: 8 },
+                            { exerciseId: 'plank_shoulder_taps', targetSets: 3, targetReps: 20 },
+                            { exerciseId: 'mountain_climber', targetSets: 3, targetReps: 20 },
+                        ],
+                    },
+                ],
+            },
+            {
+                weekNumber: 2,
+                days: [
+                    {
+                        name: 'Day 1: Core Progression',
+                        exercises: [
+                            { exerciseId: 'plank', targetSets: 3, targetReps: 0, targetHoldSeconds: 45 },
+                            { exerciseId: 'crunches', targetSets: 4, targetReps: 25 },
+                            { exerciseId: 'reverse_crunch', targetSets: 4, targetReps: 20 },
+                            { exerciseId: 'bicycle_crunch', targetSets: 3, targetReps: 30 },
+                        ],
+                    },
+                    {
+                        name: 'Day 2: Obliques & Lower Abs',
+                        exercises: [
+                            { exerciseId: 'russian_twists', targetSets: 4, targetReps: 25 },
+                            { exerciseId: 'flutter_kicks', targetSets: 4, targetReps: 40 },
+                            { exerciseId: 'leg_raises', targetSets: 4, targetReps: 15 },
+                            { exerciseId: 'toe_touches', targetSets: 3, targetReps: 20 },
+                        ],
+                    },
+                ],
+            },
+        ],
+    },
+    // ─── ORIGINAL active-aging continues ────────────────────────────────────
     {
         id: 'active-aging',
         name: 'Active Aging',

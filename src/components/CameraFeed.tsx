@@ -248,10 +248,18 @@ export default function CameraFeed({
                 </div>
             )}
 
-            {/* START MOVING hint — camera running, model loaded, but no landmarks yet */}
+            {/* Step into frame hint — camera running, model loaded, but no landmarks yet */}
             {isDetecting && !isLoading && !landmarks && !error && (
                 <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-                    <p className="text-white/20 text-xs tracking-[0.3em] uppercase font-medium">Start moving!</p>
+                    <div className="text-center space-y-3">
+                        <div className="mx-auto w-14 h-14 rounded-full border-2 border-[#22c55e]/50 animate-ping" />
+                        <p className="text-white/50 text-xs tracking-[0.25em] uppercase font-medium">
+                            Step into frame
+                        </p>
+                        <p className="text-white/25 text-[10px] tracking-wider">
+                            Stand back so your full body is visible
+                        </p>
+                    </div>
                 </div>
             )}
         </div>

@@ -9,7 +9,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { usePoseDetection } from '../../../hooks/usePoseDetection';
 import { useSpeechCoach } from '../../../hooks/useSpeechCoach';
-import { ExerciseId, EXERCISES, getExercisesByCategory } from '../../../lib/exercises';
+import { ExerciseId, EXERCISES, CATEGORY_LABELS, getExercisesByLabel } from '../../../lib/exercises';
 import { generateWorkoutSummary, resetCoach } from '../../../lib/aiCoach';
 import { recordWorkout } from '../../../lib/gamification';
 import { saveWorkout } from '../../../lib/progressStore';
@@ -50,6 +50,18 @@ export default function WorkoutPage() {
 
     // Countdown
     const [showCountdown, setShowCountdown] = useState(false);
+
+    // Video preview modal — shown when exercise first loads or changes
+    const [showVideoModal, setShowVideoModal] = useState(true);
+    const prevExerciseRef = useRef(exerciseId);
+
+    // Reset modal when exercise changes
+    useEffect(() => {
+        if (exerciseId !== prevExerciseRef.current) {
+            prevExerciseRef.current = exerciseId;
+            setShowVideoModal(true);
+        }
+    }, [exerciseId]);
 
     // Voice coach
     const [voiceEnabled, setVoiceEnabled] = useState(true);
@@ -175,11 +187,15 @@ export default function WorkoutPage() {
         handleEndWorkout();
     }, [repCount, handleEndWorkout]);
 
-    const categories = [
-        { key: 'upper' as const, label: 'UPPER', color: '#38bdf8' },
-        { key: 'lower' as const, label: 'LOWER', color: '#22c55e' },
-        { key: 'core' as const, label: 'CORE', color: '#f59e0b' },
-    ];
+    const labelColors: Record<string, string> = {
+        'Body-weight': '#22c55e',
+        'Dumbbell':    '#38bdf8',
+        'Barbell':     '#f59e0b',
+        'Machine':     '#a855f7',
+        'Cardio':      '#ef4444',
+        'Core':        '#f97316',
+        'Stretch':     '#14b8a6',
+    };
 
     return (
         <div className="h-screen flex flex-col overflow-hidden">
@@ -299,43 +315,49 @@ export default function WorkoutPage() {
 
                 {/* Exercise selector dropdown */}
                 {selectorOpen && !isDetecting && (
-                    <div className="absolute top-full left-0 right-0 bg-[#0a0a0a]/98 backdrop-blur-xl border-b border-white/5 px-4 py-3 z-30 max-h-[40vh] overflow-y-auto">
-                        {categories.map((cat) => (
-                            <div key={cat.key} className="mb-3 last:mb-0">
-                                <p className="text-[8px] font-bold tracking-[0.25em] uppercase mb-1.5" style={{ color: `${cat.color}60` }}>
-                                    {cat.label}
-                                </p>
-                                <div className="flex flex-wrap gap-1.5">
-                                    {getExercisesByCategory(cat.key).map((ex) => {
-                                        const isActive = exerciseId === ex.id;
-                                        return (
-                                            <button
-                                                key={ex.id}
-                                                onClick={() => {
-                                                    setExercise(ex.id);
-                                                    setSelectorOpen(false);
-                                                    speechCoach.reset();
-                                                    setCurrentSet(1);
-                                                    setTotalRepsThisWorkout(0);
-                                                    setCompleteTriggeredRef.current = false;
-                                                }}
-                                                className={`
-                                                    flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-all cursor-pointer
-                                                    ${isActive
-                                                        ? 'bg-[#22c55e]/10 text-[#22c55e] border border-[#22c55e]/30'
-                                                        : 'text-white/30 border border-white/5 hover:border-white/15 hover:text-white/50'}
-                                                `}
-                                            >
-                                                <span className="text-[8px] font-black tracking-wider opacity-50" style={{ fontFamily: 'Orbitron, monospace' }}>
-                                                    {ex.icon}
-                                                </span>
-                                                {ex.name}
-                                            </button>
-                                        );
-                                    })}
+                    <div className="absolute top-full left-0 right-0 bg-[#0a0a0a]/98 backdrop-blur-xl border-b border-white/5 px-4 py-3 z-30 max-h-[50vh] overflow-y-auto">
+                        {CATEGORY_LABELS.map((label) => {
+                            const exercises = getExercisesByLabel(label);
+                            if (exercises.length === 0) return null;
+                            const color = labelColors[label] ?? '#ffffff';
+                            return (
+                                <div key={label} className="mb-3 last:mb-0">
+                                    <p className="text-[8px] font-bold tracking-[0.25em] uppercase mb-1.5" style={{ color: `${color}60` }}>
+                                        {label}
+                                    </p>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {exercises.map((ex) => {
+                                            const isActive = exerciseId === ex.id;
+                                            return (
+                                                <button
+                                                    key={ex.id}
+                                                    onClick={() => {
+                                                        setExercise(ex.id);
+                                                        setSelectorOpen(false);
+                                                        speechCoach.reset();
+                                                        setCurrentSet(1);
+                                                        setTotalRepsThisWorkout(0);
+                                                        setCompleteTriggeredRef.current = false;
+                                                    }}
+                                                    className={`
+                                                        flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-all cursor-pointer
+                                                        ${isActive
+                                                            ? 'border'
+                                                            : 'text-white/30 border border-white/5 hover:border-white/15 hover:text-white/50'}
+                                                    `}
+                                                    style={isActive ? { backgroundColor: `${color}18`, color, borderColor: `${color}40` } : {}}
+                                                >
+                                                    <span className="text-[8px] font-black tracking-wider opacity-50" style={{ fontFamily: 'Orbitron, monospace' }}>
+                                                        {ex.icon}
+                                                    </span>
+                                                    {ex.name}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 )}
             </div>
@@ -384,9 +406,14 @@ export default function WorkoutPage() {
                     </div>
                 )}
 
-                {/* Exercise guide — always visible */}
+                {/* Exercise guide — always visible; shows modal pre-workout */}
                 <div className="absolute right-3 z-10" style={{ top: isDetecting ? '80px' : '12px' }}>
-                    <ExerciseGuide exerciseId={exerciseId} isDetecting={isDetecting} />
+                    <ExerciseGuide
+                        exerciseId={exerciseId}
+                        isDetecting={isDetecting}
+                        showModal={showVideoModal && !isDetecting && !showCountdown}
+                        onModalDismiss={() => setShowVideoModal(false)}
+                    />
                 </div>
 
                 {/* Muscle indicator — always visible */}

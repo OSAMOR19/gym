@@ -1,5 +1,5 @@
 /**
- * Exercise Library — Full exercise definitions for 15 exercises
+ * Exercise Library — Full exercise definitions
  *
  * Each exercise defines:
  *  - category (upper/lower/core)
@@ -17,22 +17,45 @@
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export type ExerciseId =
+    // Original exercises
     | 'bicep_curl' | 'hammer_curl' | 'pushup' | 'shoulder_press'
     | 'lateral_raise' | 'tricep_extension'
     | 'squat' | 'lunge' | 'jump_squat' | 'calf_raise'
-    | 'plank' | 'situp' | 'mountain_climber' | 'jumping_jacks';
+    | 'plank' | 'situp' | 'mountain_climber' | 'jumping_jacks'
+    // Barbell
+    | 'barbell_row' | 'deadlift' | 'bench_press' | 'overhead_press'
+    | 'romanian_deadlift' | 'incline_bench_press' | 'front_squat'
+    | 'hip_thrust_barbell' | 'barbell_squat'
+    // Dumbbell
+    | 'dumbbell_row' | 'goblet_squat' | 'dumbbell_deadlift'
+    | 'overhead_tricep_ext' | 'chest_press' | 'dumbbell_fly'
+    | 'front_raise' | 'tricep_kickback' | 'incline_chest_press'
+    // Body-weight extras
+    | 'walking_lunges' | 'knee_pushup' | 'side_plank' | 'bicycle_crunch'
+    | 'leg_raises' | 'glute_bridge' | 'hip_thrust' | 'high_knees'
+    | 'chin_up' | 'pull_up' | 'burpees' | 'crunches'
+    // Cardio
+    | 'battle_ropes' | 'box_jumps' | 'farmers_walk' | 'jump_rope'
+    | 'kettlebell_swing' | 'rowing_machine'
+    // Core / Abs
+    | 'ab_rollout' | 'flutter_kicks' | 'hanging_leg_raises'
+    | 'plank_shoulder_taps' | 'reverse_crunch' | 'russian_twists' | 'toe_touches'
+    // Machine
+    | 'cable_bicep_curl' | 'cable_lateral_raise' | 'cable_tricep_pushdown'
+    | 'chest_press_machine' | 'lat_pulldown' | 'leg_curl' | 'leg_press'
+    | 'pec_deck' | 'seated_row' | 'leg_extension'
+    // Stretching (hold mode)
+    | 'cobra_stretch' | 'hamstring_stretch' | 'hip_flexor_stretch'
+    | 'quad_stretch' | 'shoulder_stretch';
 
 export type ExerciseCategory = 'upper' | 'lower' | 'core';
 
 export type RepMode = 'standard' | 'hold';
-// 'standard' = angle oscillates between extended/contracted (reps)
-// 'hold' = maintain position for time (e.g. plank)
 
 export interface FormRule {
     id: string;
-    description: string;             // e.g. "Knees collapsing inward"
-    correctionMessage: string;       // e.g. "Push your knees outward"
-    /** Check function built in formCorrection.ts — this is the rule key */
+    description: string;
+    correctionMessage: string;
     ruleKey: string;
 }
 
@@ -43,44 +66,30 @@ export interface ExerciseConfig {
     category: ExerciseCategory;
     description: string;
     repMode: RepMode;
-
-    /** Landmark indices: [pointA, pointB (vertex), pointC] for primary angle */
     landmarkIndices: [number, number, number];
-
-    /** Optional secondary landmarks for bilateral exercises (e.g. right arm mirrors left) */
     secondaryLandmarkIndices?: [number, number, number];
-
-    /** Angle above which joint is "extended" (starting position) */
     extendedThreshold: number;
-    /** Angle below which joint is "contracted" (peak of movement) */
     contractedThreshold: number;
-    /** Ideal extended angle for 100% form score */
     idealExtended: number;
-    /** Ideal contracted angle for 100% form score */
     idealContracted: number;
-
-    /** Form correction rules evaluated each frame */
     formRules: FormRule[];
+    /** Display group shown in the exercise selector */
+    categoryLabel?: string;
 }
 
 // ─── Exercise Definitions ────────────────────────────────────────────────────
 
 export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
-    // ─── Upper Body ──────────────────────────────────────────────────────────
+
+    // ─── Original Upper Body ─────────────────────────────────────────────────
 
     bicep_curl: {
-        id: 'bicep_curl',
-        name: 'Bicep Curl',
-        icon: 'BC',
-        category: 'upper',
+        id: 'bicep_curl', name: 'Bicep Curl', icon: 'BC', category: 'upper',
         description: 'Curl weight toward shoulder by bending at the elbow.',
-        repMode: 'standard',
-        landmarkIndices: [11, 13, 15], // left: shoulder → elbow → wrist
-        secondaryLandmarkIndices: [12, 14, 16], // right: shoulder → elbow → wrist
-        extendedThreshold: 150,
-        contractedThreshold: 50,
-        idealExtended: 170,
-        idealContracted: 35,
+        repMode: 'standard', categoryLabel: 'Dumbbell',
+        landmarkIndices: [11, 13, 15], secondaryLandmarkIndices: [12, 14, 16],
+        extendedThreshold: 150, contractedThreshold: 50,
+        idealExtended: 170, idealContracted: 35,
         formRules: [
             { id: 'curl_elbow_drift', description: 'Elbow moving too much', correctionMessage: 'Keep your elbows pinned to your sides', ruleKey: 'elbow_drift' },
             { id: 'curl_incomplete_rom', description: 'Incomplete range of motion', correctionMessage: 'Fully extend your arm at the bottom', ruleKey: 'incomplete_extension' },
@@ -88,35 +97,24 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
     },
 
     hammer_curl: {
-        id: 'hammer_curl',
-        name: 'Hammer Curl',
-        icon: 'HC',
-        category: 'upper',
+        id: 'hammer_curl', name: 'Hammer Curl', icon: 'HC', category: 'upper',
         description: 'Curl with neutral grip, targeting the brachialis.',
-        repMode: 'standard',
-        landmarkIndices: [11, 13, 15],
-        secondaryLandmarkIndices: [12, 14, 16],
-        extendedThreshold: 150,
-        contractedThreshold: 50,
-        idealExtended: 170,
-        idealContracted: 40,
+        repMode: 'standard', categoryLabel: 'Dumbbell',
+        landmarkIndices: [11, 13, 15], secondaryLandmarkIndices: [12, 14, 16],
+        extendedThreshold: 150, contractedThreshold: 50,
+        idealExtended: 170, idealContracted: 40,
         formRules: [
             { id: 'hammer_elbow_drift', description: 'Elbow moving too much', correctionMessage: 'Keep your elbows pinned to your sides', ruleKey: 'elbow_drift' },
         ],
     },
 
     pushup: {
-        id: 'pushup',
-        name: 'Push-up',
-        icon: 'PU',
-        category: 'upper',
+        id: 'pushup', name: 'Push-up', icon: 'PU', category: 'upper',
         description: 'Lower body to the floor and push back up.',
-        repMode: 'standard',
-        landmarkIndices: [11, 13, 15], // shoulder → elbow → wrist
-        extendedThreshold: 150,
-        contractedThreshold: 80,
-        idealExtended: 170,
-        idealContracted: 60,
+        repMode: 'standard', categoryLabel: 'Body-weight',
+        landmarkIndices: [11, 13, 15],
+        extendedThreshold: 150, contractedThreshold: 80,
+        idealExtended: 170, idealContracted: 60,
         formRules: [
             { id: 'pushup_hip_sag', description: 'Hips sagging', correctionMessage: 'Keep your hips level — engage your core', ruleKey: 'hip_sag' },
             { id: 'pushup_elbow_flare', description: 'Elbows flaring too wide', correctionMessage: 'Tuck your elbows closer to your body', ruleKey: 'elbow_flare' },
@@ -124,73 +122,50 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
     },
 
     shoulder_press: {
-        id: 'shoulder_press',
-        name: 'Shoulder Press',
-        icon: 'SP',
-        category: 'upper',
+        id: 'shoulder_press', name: 'Shoulder Press', icon: 'SP', category: 'upper',
         description: 'Press weight overhead from shoulder height.',
-        repMode: 'standard',
-        landmarkIndices: [23, 11, 13], // left: hip → shoulder → elbow
-        secondaryLandmarkIndices: [24, 12, 14], // right: hip → shoulder → elbow
-        extendedThreshold: 160,
-        contractedThreshold: 80,
-        idealExtended: 175,
-        idealContracted: 70,
+        repMode: 'standard', categoryLabel: 'Dumbbell',
+        landmarkIndices: [23, 11, 13], secondaryLandmarkIndices: [24, 12, 14],
+        extendedThreshold: 160, contractedThreshold: 80,
+        idealExtended: 175, idealContracted: 70,
         formRules: [
             { id: 'press_back_arch', description: 'Excessive back arch', correctionMessage: 'Keep your back straight — engage your core', ruleKey: 'back_arch' },
         ],
     },
 
     lateral_raise: {
-        id: 'lateral_raise',
-        name: 'Lateral Raise',
-        icon: 'LR',
-        category: 'upper',
+        id: 'lateral_raise', name: 'Lateral Raise', icon: 'LR', category: 'upper',
         description: 'Raise arms to the side until parallel with shoulders.',
-        repMode: 'standard',
-        landmarkIndices: [23, 11, 15], // left: hip → shoulder → wrist
-        secondaryLandmarkIndices: [24, 12, 16], // right: hip → shoulder → wrist
-        extendedThreshold: 140,
-        contractedThreshold: 60,
-        idealExtended: 160,
-        idealContracted: 25,
+        repMode: 'standard', categoryLabel: 'Dumbbell',
+        landmarkIndices: [23, 11, 15], secondaryLandmarkIndices: [24, 12, 16],
+        extendedThreshold: 140, contractedThreshold: 60,
+        idealExtended: 160, idealContracted: 25,
         formRules: [
             { id: 'lateral_shrug', description: 'Shrugging shoulders', correctionMessage: 'Keep your shoulders down and relaxed', ruleKey: 'shoulder_shrug' },
         ],
     },
 
     tricep_extension: {
-        id: 'tricep_extension',
-        name: 'Tricep Extension',
-        icon: 'TE',
-        category: 'upper',
+        id: 'tricep_extension', name: 'Tricep Extension', icon: 'TE', category: 'upper',
         description: 'Extend arm overhead to work the triceps.',
-        repMode: 'standard',
-        landmarkIndices: [11, 13, 15],
-        secondaryLandmarkIndices: [12, 14, 16],
-        extendedThreshold: 150,
-        contractedThreshold: 50,
-        idealExtended: 170,
-        idealContracted: 40,
+        repMode: 'standard', categoryLabel: 'Dumbbell',
+        landmarkIndices: [11, 13, 15], secondaryLandmarkIndices: [12, 14, 16],
+        extendedThreshold: 150, contractedThreshold: 50,
+        idealExtended: 170, idealContracted: 40,
         formRules: [
             { id: 'tricep_elbow_drift', description: 'Elbow moving too much', correctionMessage: 'Keep your upper arm still', ruleKey: 'elbow_drift' },
         ],
     },
 
-    // ─── Lower Body ──────────────────────────────────────────────────────────
+    // ─── Original Lower Body ─────────────────────────────────────────────────
 
     squat: {
-        id: 'squat',
-        name: 'Squat',
-        icon: 'SQ',
-        category: 'lower',
+        id: 'squat', name: 'Squat', icon: 'SQ', category: 'lower',
         description: 'Lower hips by bending knees while keeping chest upright.',
-        repMode: 'standard',
-        landmarkIndices: [23, 25, 27], // hip → knee → ankle
-        extendedThreshold: 160,
-        contractedThreshold: 90,
-        idealExtended: 175,
-        idealContracted: 70,
+        repMode: 'standard', categoryLabel: 'Body-weight',
+        landmarkIndices: [23, 25, 27],
+        extendedThreshold: 160, contractedThreshold: 90,
+        idealExtended: 175, idealContracted: 70,
         formRules: [
             { id: 'squat_knee_valgus', description: 'Knees collapsing inward', correctionMessage: 'Push your knees outward over your toes', ruleKey: 'knee_valgus' },
             { id: 'squat_depth', description: 'Not going deep enough', correctionMessage: 'Go lower — aim for parallel or below', ruleKey: 'insufficient_depth' },
@@ -199,69 +174,48 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
     },
 
     lunge: {
-        id: 'lunge',
-        name: 'Lunge',
-        icon: 'LU',
-        category: 'lower',
+        id: 'lunge', name: 'Lunge', icon: 'LU', category: 'lower',
         description: 'Step forward and lower until knee is at 90°.',
-        repMode: 'standard',
+        repMode: 'standard', categoryLabel: 'Body-weight',
         landmarkIndices: [23, 25, 27],
-        extendedThreshold: 160,
-        contractedThreshold: 90,
-        idealExtended: 175,
-        idealContracted: 80,
+        extendedThreshold: 160, contractedThreshold: 90,
+        idealExtended: 175, idealContracted: 80,
         formRules: [
             { id: 'lunge_knee_past_toe', description: 'Knee going past toes', correctionMessage: 'Keep your front knee behind your toes', ruleKey: 'knee_past_toe' },
         ],
     },
 
     jump_squat: {
-        id: 'jump_squat',
-        name: 'Jump Squat',
-        icon: 'JS',
-        category: 'lower',
+        id: 'jump_squat', name: 'Jump Squat', icon: 'JS', category: 'lower',
         description: 'Squat down then explode upward into a jump.',
-        repMode: 'standard',
+        repMode: 'standard', categoryLabel: 'Body-weight',
         landmarkIndices: [23, 25, 27],
-        extendedThreshold: 160,
-        contractedThreshold: 90,
-        idealExtended: 175,
-        idealContracted: 75,
+        extendedThreshold: 160, contractedThreshold: 90,
+        idealExtended: 175, idealContracted: 75,
         formRules: [
             { id: 'jump_squat_depth', description: 'Not going deep enough', correctionMessage: 'Sit deeper before jumping', ruleKey: 'insufficient_depth' },
         ],
     },
 
     calf_raise: {
-        id: 'calf_raise',
-        name: 'Calf Raise',
-        icon: 'CR',
-        category: 'lower',
+        id: 'calf_raise', name: 'Calf Raise', icon: 'CR', category: 'lower',
         description: 'Rise onto your toes to work the calves.',
-        repMode: 'standard',
-        landmarkIndices: [23, 25, 27], // hip → knee → ankle (detects leg straightening)
-        secondaryLandmarkIndices: [24, 26, 28], // right side
-        extendedThreshold: 175,   // standing straight
-        contractedThreshold: 155, // slight knee bend at start
-        idealExtended: 180,
-        idealContracted: 155,
+        repMode: 'standard', categoryLabel: 'Body-weight',
+        landmarkIndices: [23, 25, 27], secondaryLandmarkIndices: [24, 26, 28],
+        extendedThreshold: 175, contractedThreshold: 155,
+        idealExtended: 180, idealContracted: 155,
         formRules: [],
     },
 
-    // ─── Core ────────────────────────────────────────────────────────────────
+    // ─── Original Core ────────────────────────────────────────────────────────
 
     plank: {
-        id: 'plank',
-        name: 'Plank',
-        icon: 'PL',
-        category: 'core',
+        id: 'plank', name: 'Plank', icon: 'PL', category: 'core',
         description: 'Hold a straight body position on your forearms.',
-        repMode: 'hold', // Timed hold, not reps
-        landmarkIndices: [11, 23, 27], // shoulder → hip → ankle
-        extendedThreshold: 170,  // good straight plank
-        contractedThreshold: 140, // threshold for "breaking" position
-        idealExtended: 175,
-        idealContracted: 160,
+        repMode: 'hold', categoryLabel: 'Body-weight',
+        landmarkIndices: [11, 23, 27],
+        extendedThreshold: 170, contractedThreshold: 140,
+        idealExtended: 175, idealContracted: 160,
         formRules: [
             { id: 'plank_hip_sag', description: 'Hips sagging', correctionMessage: 'Lift your hips — keep a straight line', ruleKey: 'hip_sag' },
             { id: 'plank_hip_pike', description: 'Hips too high', correctionMessage: 'Lower your hips into a straight line', ruleKey: 'hip_pike' },
@@ -269,53 +223,702 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
     },
 
     situp: {
-        id: 'situp',
-        name: 'Sit-up',
-        icon: 'SU',
-        category: 'core',
+        id: 'situp', name: 'Sit-up', icon: 'SU', category: 'core',
         description: 'Curl torso upward from a lying position.',
-        repMode: 'standard',
-        landmarkIndices: [11, 23, 25], // shoulder → hip → knee
-        extendedThreshold: 140,
-        contractedThreshold: 70,
-        idealExtended: 160,
-        idealContracted: 50,
+        repMode: 'standard', categoryLabel: 'Body-weight',
+        landmarkIndices: [11, 23, 25],
+        extendedThreshold: 140, contractedThreshold: 70,
+        idealExtended: 160, idealContracted: 50,
         formRules: [],
     },
 
     mountain_climber: {
-        id: 'mountain_climber',
-        name: 'Mountain Climber',
-        icon: 'MC',
-        category: 'core',
+        id: 'mountain_climber', name: 'Mountain Climber', icon: 'MC', category: 'core',
         description: 'Alternate driving knees toward chest in plank position.',
-        repMode: 'standard',
-        landmarkIndices: [11, 23, 25], // shoulder → hip → knee
-        extendedThreshold: 150,
-        contractedThreshold: 80,
-        idealExtended: 170,
-        idealContracted: 60,
+        repMode: 'standard', categoryLabel: 'Body-weight',
+        landmarkIndices: [11, 23, 25],
+        extendedThreshold: 150, contractedThreshold: 80,
+        idealExtended: 170, idealContracted: 60,
         formRules: [
             { id: 'mc_hip_sag', description: 'Hips sagging', correctionMessage: 'Keep your hips level', ruleKey: 'hip_sag' },
         ],
     },
 
     jumping_jacks: {
-        id: 'jumping_jacks',
-        name: 'Jumping Jacks',
-        icon: 'JJ',
-        category: 'core',
+        id: 'jumping_jacks', name: 'Jumping Jacks', icon: 'JJ', category: 'core',
         description: 'Jump while spreading legs and raising arms overhead, then return.',
-        repMode: 'standard',
-        landmarkIndices: [23, 11, 15], // left: hip → shoulder → wrist (arm angle)
-        secondaryLandmarkIndices: [24, 12, 16], // right: hip → shoulder → wrist
-        extendedThreshold: 140,   // arms up = extended (angle at shoulder opens)
-        contractedThreshold: 40,  // arms down = contracted (angle at shoulder closes)
-        idealExtended: 160,
-        idealContracted: 20,
+        repMode: 'standard', categoryLabel: 'Body-weight',
+        landmarkIndices: [23, 11, 15], secondaryLandmarkIndices: [24, 12, 16],
+        extendedThreshold: 140, contractedThreshold: 40,
+        idealExtended: 160, idealContracted: 20,
         formRules: [
             { id: 'jj_sync', description: 'Arms not synchronized', correctionMessage: 'Raise both arms together', ruleKey: 'arm_sync' },
         ],
+    },
+
+    // ─── Barbell ──────────────────────────────────────────────────────────────
+
+    barbell_squat: {
+        id: 'barbell_squat', name: 'Barbell Squat', icon: 'BSQ', category: 'lower',
+        description: 'Bar on traps, sit back and down keeping chest upright.',
+        repMode: 'standard', categoryLabel: 'Barbell',
+        landmarkIndices: [23, 25, 27], secondaryLandmarkIndices: [24, 26, 28],
+        extendedThreshold: 160, contractedThreshold: 90,
+        idealExtended: 175, idealContracted: 70,
+        formRules: [
+            { id: 'bsq_valgus', description: 'Knees caving in', correctionMessage: 'Drive knees out over your toes', ruleKey: 'knee_valgus' },
+            { id: 'bsq_lean', description: 'Excessive forward lean', correctionMessage: 'Keep chest up, elbows forward', ruleKey: 'forward_lean' },
+        ],
+    },
+
+    barbell_row: {
+        id: 'barbell_row', name: 'Barbell Row', icon: 'BR', category: 'upper',
+        description: 'Hinge at hips and row barbell to lower chest.',
+        repMode: 'standard', categoryLabel: 'Barbell',
+        landmarkIndices: [11, 13, 15], secondaryLandmarkIndices: [12, 14, 16],
+        extendedThreshold: 150, contractedThreshold: 60,
+        idealExtended: 170, idealContracted: 45,
+        formRules: [
+            { id: 'br_back', description: 'Back rounding', correctionMessage: 'Keep back flat, hinge from hips', ruleKey: 'back_arch' },
+        ],
+    },
+
+    deadlift: {
+        id: 'deadlift', name: 'Deadlift', icon: 'DL', category: 'lower',
+        description: 'Hip hinge to lift barbell from floor, lock out hips at top.',
+        repMode: 'standard', categoryLabel: 'Barbell',
+        landmarkIndices: [11, 23, 25],
+        extendedThreshold: 160, contractedThreshold: 100,
+        idealExtended: 175, idealContracted: 90,
+        formRules: [
+            { id: 'dl_back', description: 'Lower back rounding', correctionMessage: 'Neutral spine — brace your core hard', ruleKey: 'back_arch' },
+        ],
+    },
+
+    bench_press: {
+        id: 'bench_press', name: 'Bench Press', icon: 'BP', category: 'upper',
+        description: 'Lower barbell to chest and press back up.',
+        repMode: 'standard', categoryLabel: 'Barbell',
+        landmarkIndices: [11, 13, 15], secondaryLandmarkIndices: [12, 14, 16],
+        extendedThreshold: 150, contractedThreshold: 70,
+        idealExtended: 170, idealContracted: 60,
+        formRules: [
+            { id: 'bp_flare', description: 'Elbows flaring wide', correctionMessage: 'Tuck elbows 45 degrees to protect shoulders', ruleKey: 'elbow_flare' },
+        ],
+    },
+
+    overhead_press: {
+        id: 'overhead_press', name: 'Overhead Press', icon: 'OP', category: 'upper',
+        description: 'Press barbell from chin to full lockout overhead.',
+        repMode: 'standard', categoryLabel: 'Barbell',
+        landmarkIndices: [23, 11, 13], secondaryLandmarkIndices: [24, 12, 14],
+        extendedThreshold: 160, contractedThreshold: 80,
+        idealExtended: 175, idealContracted: 70,
+        formRules: [
+            { id: 'op_arch', description: 'Excessive back arch', correctionMessage: 'Brace core, keep ribs down', ruleKey: 'back_arch' },
+        ],
+    },
+
+    romanian_deadlift: {
+        id: 'romanian_deadlift', name: 'Romanian Deadlift', icon: 'RDL', category: 'lower',
+        description: 'Hip hinge with soft knees to feel deep hamstring stretch.',
+        repMode: 'standard', categoryLabel: 'Barbell',
+        landmarkIndices: [11, 23, 25],
+        extendedThreshold: 155, contractedThreshold: 95,
+        idealExtended: 170, idealContracted: 85,
+        formRules: [
+            { id: 'rdl_back', description: 'Rounding lower back', correctionMessage: 'Keep neutral spine throughout', ruleKey: 'back_arch' },
+        ],
+    },
+
+    incline_bench_press: {
+        id: 'incline_bench_press', name: 'Incline Bench Press', icon: 'IBP', category: 'upper',
+        description: 'Inclined bench press targeting upper chest.',
+        repMode: 'standard', categoryLabel: 'Barbell',
+        landmarkIndices: [11, 13, 15], secondaryLandmarkIndices: [12, 14, 16],
+        extendedThreshold: 150, contractedThreshold: 70,
+        idealExtended: 170, idealContracted: 60,
+        formRules: [
+            { id: 'ibp_flare', description: 'Elbows too wide', correctionMessage: 'Keep elbows at 45-70 degrees', ruleKey: 'elbow_flare' },
+        ],
+    },
+
+    front_squat: {
+        id: 'front_squat', name: 'Front Squat', icon: 'FSQ', category: 'lower',
+        description: 'Barbell on front rack, maintaining upright torso.',
+        repMode: 'standard', categoryLabel: 'Barbell',
+        landmarkIndices: [23, 25, 27], secondaryLandmarkIndices: [24, 26, 28],
+        extendedThreshold: 160, contractedThreshold: 90,
+        idealExtended: 175, idealContracted: 70,
+        formRules: [
+            { id: 'fsq_elbows', description: 'Elbows dropping', correctionMessage: 'Keep elbows up, parallel to floor', ruleKey: 'forward_lean' },
+        ],
+    },
+
+    hip_thrust_barbell: {
+        id: 'hip_thrust_barbell', name: 'Hip Thrust (Barbell)', icon: 'HTB', category: 'lower',
+        description: 'Drive hips up with barbell across hips, squeeze glutes at top.',
+        repMode: 'standard', categoryLabel: 'Barbell',
+        landmarkIndices: [11, 23, 25],
+        extendedThreshold: 160, contractedThreshold: 100,
+        idealExtended: 170, idealContracted: 95,
+        formRules: [],
+    },
+
+    // ─── Dumbbell ─────────────────────────────────────────────────────────────
+
+    dumbbell_row: {
+        id: 'dumbbell_row', name: 'Dumbbell Row', icon: 'DR', category: 'upper',
+        description: 'One-arm row, elbow drives back past torso.',
+        repMode: 'standard', categoryLabel: 'Dumbbell',
+        landmarkIndices: [11, 13, 15], secondaryLandmarkIndices: [12, 14, 16],
+        extendedThreshold: 150, contractedThreshold: 55,
+        idealExtended: 170, idealContracted: 40,
+        formRules: [
+            { id: 'dr_rotation', description: 'Excessive torso rotation', correctionMessage: 'Keep hips square to bench', ruleKey: 'back_arch' },
+        ],
+    },
+
+    goblet_squat: {
+        id: 'goblet_squat', name: 'Goblet Squat', icon: 'GS', category: 'lower',
+        description: 'Hold dumbbell at chest and squat deep with upright torso.',
+        repMode: 'standard', categoryLabel: 'Dumbbell',
+        landmarkIndices: [23, 25, 27], secondaryLandmarkIndices: [24, 26, 28],
+        extendedThreshold: 160, contractedThreshold: 90,
+        idealExtended: 175, idealContracted: 70,
+        formRules: [
+            { id: 'gs_valgus', description: 'Knees caving in', correctionMessage: 'Push knees out over toes', ruleKey: 'knee_valgus' },
+        ],
+    },
+
+    dumbbell_deadlift: {
+        id: 'dumbbell_deadlift', name: 'Dumbbell Deadlift', icon: 'DD', category: 'lower',
+        description: 'Deadlift with dumbbells — great for hip hinge mechanics.',
+        repMode: 'standard', categoryLabel: 'Dumbbell',
+        landmarkIndices: [11, 23, 25],
+        extendedThreshold: 160, contractedThreshold: 100,
+        idealExtended: 175, idealContracted: 90,
+        formRules: [
+            { id: 'dd_back', description: 'Rounding back', correctionMessage: 'Flat back, push the floor away', ruleKey: 'back_arch' },
+        ],
+    },
+
+    overhead_tricep_ext: {
+        id: 'overhead_tricep_ext', name: 'Overhead Tricep Ext.', icon: 'OTE', category: 'upper',
+        description: 'Extend dumbbell overhead — keep upper arm vertical.',
+        repMode: 'standard', categoryLabel: 'Dumbbell',
+        landmarkIndices: [11, 13, 15], secondaryLandmarkIndices: [12, 14, 16],
+        extendedThreshold: 150, contractedThreshold: 55,
+        idealExtended: 170, idealContracted: 40,
+        formRules: [
+            { id: 'ote_drift', description: 'Upper arm moving', correctionMessage: 'Keep upper arm still and vertical', ruleKey: 'elbow_drift' },
+        ],
+    },
+
+    chest_press: {
+        id: 'chest_press', name: 'DB Chest Press', icon: 'CP', category: 'upper',
+        description: 'Press dumbbells from chest to full extension.',
+        repMode: 'standard', categoryLabel: 'Dumbbell',
+        landmarkIndices: [11, 13, 15], secondaryLandmarkIndices: [12, 14, 16],
+        extendedThreshold: 150, contractedThreshold: 70,
+        idealExtended: 170, idealContracted: 55,
+        formRules: [
+            { id: 'cp_flare', description: 'Elbows too wide', correctionMessage: 'Bring elbows slightly inward', ruleKey: 'elbow_flare' },
+        ],
+    },
+
+    dumbbell_fly: {
+        id: 'dumbbell_fly', name: 'Dumbbell Fly', icon: 'DF', category: 'upper',
+        description: 'Arc arms wide to stretch chest, then bring together.',
+        repMode: 'standard', categoryLabel: 'Dumbbell',
+        landmarkIndices: [23, 11, 15], secondaryLandmarkIndices: [24, 12, 16],
+        extendedThreshold: 145, contractedThreshold: 55,
+        idealExtended: 160, idealContracted: 20,
+        formRules: [],
+    },
+
+    front_raise: {
+        id: 'front_raise', name: 'Front Raise', icon: 'FR', category: 'upper',
+        description: 'Raise dumbbells front to shoulder height with straight arms.',
+        repMode: 'standard', categoryLabel: 'Dumbbell',
+        landmarkIndices: [23, 11, 15], secondaryLandmarkIndices: [24, 12, 16],
+        extendedThreshold: 140, contractedThreshold: 55,
+        idealExtended: 160, idealContracted: 20,
+        formRules: [
+            { id: 'fr_shrug', description: 'Shrugging shoulders', correctionMessage: 'Keep shoulders down and packed', ruleKey: 'shoulder_shrug' },
+        ],
+    },
+
+    tricep_kickback: {
+        id: 'tricep_kickback', name: 'Tricep Kickback', icon: 'TK', category: 'upper',
+        description: 'Hinge forward, extend arm back fully.',
+        repMode: 'standard', categoryLabel: 'Dumbbell',
+        landmarkIndices: [11, 13, 15], secondaryLandmarkIndices: [12, 14, 16],
+        extendedThreshold: 150, contractedThreshold: 65,
+        idealExtended: 170, idealContracted: 50,
+        formRules: [
+            { id: 'tk_drift', description: 'Upper arm dropping', correctionMessage: 'Keep upper arm parallel to floor', ruleKey: 'elbow_drift' },
+        ],
+    },
+
+    incline_chest_press: {
+        id: 'incline_chest_press', name: 'Incline DB Press', icon: 'ICP', category: 'upper',
+        description: 'Incline dumbbell press for upper chest.',
+        repMode: 'standard', categoryLabel: 'Dumbbell',
+        landmarkIndices: [11, 13, 15], secondaryLandmarkIndices: [12, 14, 16],
+        extendedThreshold: 150, contractedThreshold: 70,
+        idealExtended: 170, idealContracted: 55,
+        formRules: [],
+    },
+
+    // ─── Body-weight extras ───────────────────────────────────────────────────
+
+    walking_lunges: {
+        id: 'walking_lunges', name: 'Walking Lunges', icon: 'WL', category: 'lower',
+        description: 'Step forward into lunge, alternate legs.',
+        repMode: 'standard', categoryLabel: 'Body-weight',
+        landmarkIndices: [23, 25, 27],
+        extendedThreshold: 160, contractedThreshold: 90,
+        idealExtended: 175, idealContracted: 80,
+        formRules: [
+            { id: 'wl_knee', description: 'Knee past toes', correctionMessage: 'Keep front knee behind your toes', ruleKey: 'knee_past_toe' },
+        ],
+    },
+
+    knee_pushup: {
+        id: 'knee_pushup', name: 'Knee Push-up', icon: 'KPU', category: 'upper',
+        description: 'Modified push-up from knees — great for beginners.',
+        repMode: 'standard', categoryLabel: 'Body-weight',
+        landmarkIndices: [11, 13, 15], secondaryLandmarkIndices: [12, 14, 16],
+        extendedThreshold: 150, contractedThreshold: 80,
+        idealExtended: 170, idealContracted: 60,
+        formRules: [
+            { id: 'kpu_sag', description: 'Hips sagging', correctionMessage: 'Keep core engaged, body in straight line', ruleKey: 'hip_sag' },
+        ],
+    },
+
+    side_plank: {
+        id: 'side_plank', name: 'Side Plank', icon: 'SP2', category: 'core',
+        description: 'Hold body in a lateral line on forearm and foot.',
+        repMode: 'hold', categoryLabel: 'Body-weight',
+        landmarkIndices: [11, 23, 27],
+        extendedThreshold: 165, contractedThreshold: 140,
+        idealExtended: 175, idealContracted: 155,
+        formRules: [
+            { id: 'sp_sag', description: 'Hips dropping', correctionMessage: 'Lift hips — keep a straight line', ruleKey: 'hip_sag' },
+        ],
+    },
+
+    bicycle_crunch: {
+        id: 'bicycle_crunch', name: 'Bicycle Crunch', icon: 'BC2', category: 'core',
+        description: 'Alternate elbow to opposite knee with rotation.',
+        repMode: 'standard', categoryLabel: 'Body-weight',
+        landmarkIndices: [11, 23, 25],
+        extendedThreshold: 150, contractedThreshold: 75,
+        idealExtended: 165, idealContracted: 55,
+        formRules: [],
+    },
+
+    leg_raises: {
+        id: 'leg_raises', name: 'Leg Raises', icon: 'LR2', category: 'core',
+        description: 'Lying flat, raise straight legs to 90 degrees and lower.',
+        repMode: 'standard', categoryLabel: 'Body-weight',
+        landmarkIndices: [23, 25, 27],
+        extendedThreshold: 155, contractedThreshold: 85,
+        idealExtended: 170, idealContracted: 75,
+        formRules: [
+            { id: 'lr_arch', description: 'Lower back lifting off floor', correctionMessage: 'Press lower back flat on floor', ruleKey: 'back_arch' },
+        ],
+    },
+
+    glute_bridge: {
+        id: 'glute_bridge', name: 'Glute Bridge', icon: 'GB', category: 'lower',
+        description: 'Lying on back, drive hips to ceiling squeezing glutes.',
+        repMode: 'standard', categoryLabel: 'Body-weight',
+        landmarkIndices: [11, 23, 25],
+        extendedThreshold: 155, contractedThreshold: 100,
+        idealExtended: 165, idealContracted: 90,
+        formRules: [],
+    },
+
+    hip_thrust: {
+        id: 'hip_thrust', name: 'Hip Thrust', icon: 'HT', category: 'lower',
+        description: 'Back on bench, drive hips to full extension.',
+        repMode: 'standard', categoryLabel: 'Body-weight',
+        landmarkIndices: [11, 23, 25],
+        extendedThreshold: 155, contractedThreshold: 100,
+        idealExtended: 170, idealContracted: 90,
+        formRules: [],
+    },
+
+    high_knees: {
+        id: 'high_knees', name: 'High Knees', icon: 'HK', category: 'core',
+        description: 'Run in place driving knees to waist height.',
+        repMode: 'standard', categoryLabel: 'Body-weight',
+        landmarkIndices: [23, 25, 27],
+        extendedThreshold: 155, contractedThreshold: 75,
+        idealExtended: 170, idealContracted: 60,
+        formRules: [],
+    },
+
+    chin_up: {
+        id: 'chin_up', name: 'Chin-up', icon: 'CU', category: 'upper',
+        description: 'Supinated grip pull-up — chin above bar.',
+        repMode: 'standard', categoryLabel: 'Body-weight',
+        landmarkIndices: [11, 13, 15], secondaryLandmarkIndices: [12, 14, 16],
+        extendedThreshold: 155, contractedThreshold: 60,
+        idealExtended: 170, idealContracted: 45,
+        formRules: [
+            { id: 'cu_kip', description: 'Kipping / swinging', correctionMessage: 'Control the movement — no swinging', ruleKey: 'elbow_drift' },
+        ],
+    },
+
+    pull_up: {
+        id: 'pull_up', name: 'Pull-up', icon: 'PUP', category: 'upper',
+        description: 'Pronated grip pull-up — chin over bar.',
+        repMode: 'standard', categoryLabel: 'Body-weight',
+        landmarkIndices: [11, 13, 15], secondaryLandmarkIndices: [12, 14, 16],
+        extendedThreshold: 155, contractedThreshold: 60,
+        idealExtended: 170, idealContracted: 45,
+        formRules: [],
+    },
+
+    burpees: {
+        id: 'burpees', name: 'Burpees', icon: 'BU', category: 'core',
+        description: 'Full body: drop to push-up position, jump and clap.',
+        repMode: 'standard', categoryLabel: 'Body-weight',
+        landmarkIndices: [11, 23, 25],
+        extendedThreshold: 155, contractedThreshold: 80,
+        idealExtended: 170, idealContracted: 65,
+        formRules: [],
+    },
+
+    crunches: {
+        id: 'crunches', name: 'Crunches', icon: 'CR2', category: 'core',
+        description: 'Curl shoulders toward knees, lower controlled.',
+        repMode: 'standard', categoryLabel: 'Body-weight',
+        landmarkIndices: [11, 23, 25],
+        extendedThreshold: 145, contractedThreshold: 75,
+        idealExtended: 160, idealContracted: 60,
+        formRules: [],
+    },
+
+    // ─── Cardio / Functional ──────────────────────────────────────────────────
+
+    battle_ropes: {
+        id: 'battle_ropes', name: 'Battle Ropes', icon: 'BAT', category: 'upper',
+        description: 'Alternate explosive arm waves with battle ropes.',
+        repMode: 'standard', categoryLabel: 'Cardio',
+        landmarkIndices: [23, 11, 15], secondaryLandmarkIndices: [24, 12, 16],
+        extendedThreshold: 145, contractedThreshold: 50,
+        idealExtended: 160, idealContracted: 20,
+        formRules: [
+            { id: 'bat_stance', description: 'Standing too upright', correctionMessage: 'Stay in athletic quarter-squat stance', ruleKey: 'back_arch' },
+        ],
+    },
+
+    box_jumps: {
+        id: 'box_jumps', name: 'Box Jumps', icon: 'BJ', category: 'lower',
+        description: 'Explosive jump onto box, land softly, step down.',
+        repMode: 'standard', categoryLabel: 'Cardio',
+        landmarkIndices: [23, 25, 27], secondaryLandmarkIndices: [24, 26, 28],
+        extendedThreshold: 160, contractedThreshold: 85,
+        idealExtended: 175, idealContracted: 70,
+        formRules: [
+            { id: 'bj_landing', description: 'Stiff landing', correctionMessage: 'Land softly — bend knees to absorb', ruleKey: 'insufficient_depth' },
+        ],
+    },
+
+    farmers_walk: {
+        id: 'farmers_walk', name: "Farmer's Walk", icon: 'FW', category: 'lower',
+        description: 'Walk with heavy dumbbells at sides — upright posture.',
+        repMode: 'standard', categoryLabel: 'Cardio',
+        landmarkIndices: [11, 23, 25],
+        extendedThreshold: 160, contractedThreshold: 120,
+        idealExtended: 175, idealContracted: 155,
+        formRules: [
+            { id: 'fw_lean', description: 'Forward lean', correctionMessage: 'Tall posture, shoulders packed back', ruleKey: 'forward_lean' },
+        ],
+    },
+
+    jump_rope: {
+        id: 'jump_rope', name: 'Jump Rope', icon: 'JR', category: 'core',
+        description: 'Skip rope with small bounces on balls of feet.',
+        repMode: 'standard', categoryLabel: 'Cardio',
+        landmarkIndices: [23, 25, 27],
+        extendedThreshold: 160, contractedThreshold: 130,
+        idealExtended: 175, idealContracted: 145,
+        formRules: [],
+    },
+
+    kettlebell_swing: {
+        id: 'kettlebell_swing', name: 'Kettlebell Swing', icon: 'KB', category: 'lower',
+        description: 'Hip hinge power swing — this is a hinge, not a squat.',
+        repMode: 'standard', categoryLabel: 'Cardio',
+        landmarkIndices: [11, 23, 25],
+        extendedThreshold: 160, contractedThreshold: 95,
+        idealExtended: 175, idealContracted: 80,
+        formRules: [
+            { id: 'kb_squat', description: 'Squatting instead of hinging', correctionMessage: 'Drive from hips — lead with the hinge', ruleKey: 'forward_lean' },
+        ],
+    },
+
+    rowing_machine: {
+        id: 'rowing_machine', name: 'Rowing Machine', icon: 'ROW', category: 'upper',
+        description: 'Drive with legs, lean back, then pull handle to chest.',
+        repMode: 'standard', categoryLabel: 'Cardio',
+        landmarkIndices: [11, 13, 15], secondaryLandmarkIndices: [12, 14, 16],
+        extendedThreshold: 155, contractedThreshold: 55,
+        idealExtended: 170, idealContracted: 40,
+        formRules: [
+            { id: 'row_lean', description: 'Over-leaning back', correctionMessage: 'Stop lean at 11 o clock — do not go past', ruleKey: 'back_arch' },
+        ],
+    },
+
+    // ─── Core / Abs ───────────────────────────────────────────────────────────
+
+    ab_rollout: {
+        id: 'ab_rollout', name: 'Ab Rollout', icon: 'ARO', category: 'core',
+        description: 'Roll wheel out from knees, keeping hips in line.',
+        repMode: 'standard', categoryLabel: 'Core',
+        landmarkIndices: [11, 23, 25],
+        extendedThreshold: 155, contractedThreshold: 90,
+        idealExtended: 165, idealContracted: 75,
+        formRules: [
+            { id: 'aro_arch', description: 'Lower back arching', correctionMessage: 'Do not let hips drop — brace hard', ruleKey: 'hip_sag' },
+        ],
+    },
+
+    flutter_kicks: {
+        id: 'flutter_kicks', name: 'Flutter Kicks', icon: 'FK', category: 'core',
+        description: 'Alternate small leg kicks keeping lower back pressed flat.',
+        repMode: 'standard', categoryLabel: 'Core',
+        landmarkIndices: [23, 25, 27],
+        extendedThreshold: 155, contractedThreshold: 100,
+        idealExtended: 170, idealContracted: 120,
+        formRules: [
+            { id: 'fk_arch', description: 'Lower back lifting', correctionMessage: 'Press lower back flat, engage core', ruleKey: 'back_arch' },
+        ],
+    },
+
+    hanging_leg_raises: {
+        id: 'hanging_leg_raises', name: 'Hanging Leg Raises', icon: 'HLR', category: 'core',
+        description: 'Hang from bar and raise legs to 90 degrees or higher.',
+        repMode: 'standard', categoryLabel: 'Core',
+        landmarkIndices: [23, 25, 27],
+        extendedThreshold: 155, contractedThreshold: 80,
+        idealExtended: 170, idealContracted: 70,
+        formRules: [
+            { id: 'hlr_swing', description: 'Swinging body', correctionMessage: 'Control the movement — no momentum', ruleKey: 'elbow_drift' },
+        ],
+    },
+
+    plank_shoulder_taps: {
+        id: 'plank_shoulder_taps', name: 'Plank Shoulder Taps', icon: 'PST', category: 'core',
+        description: 'In push-up plank, alternate tapping opposite shoulder.',
+        repMode: 'standard', categoryLabel: 'Core',
+        landmarkIndices: [11, 23, 27],
+        extendedThreshold: 168, contractedThreshold: 140,
+        idealExtended: 175, idealContracted: 155,
+        formRules: [
+            { id: 'pst_rotation', description: 'Hips rotating', correctionMessage: 'Brace core — minimize hip movement', ruleKey: 'back_arch' },
+        ],
+    },
+
+    reverse_crunch: {
+        id: 'reverse_crunch', name: 'Reverse Crunch', icon: 'RC', category: 'core',
+        description: 'Curl hips and knees toward chest from lying position.',
+        repMode: 'standard', categoryLabel: 'Core',
+        landmarkIndices: [23, 25, 27],
+        extendedThreshold: 155, contractedThreshold: 80,
+        idealExtended: 170, idealContracted: 65,
+        formRules: [],
+    },
+
+    russian_twists: {
+        id: 'russian_twists', name: 'Russian Twists', icon: 'RT', category: 'core',
+        description: 'Leaned back, rotate torso side to side.',
+        repMode: 'standard', categoryLabel: 'Core',
+        landmarkIndices: [23, 11, 15], secondaryLandmarkIndices: [24, 12, 16],
+        extendedThreshold: 145, contractedThreshold: 55,
+        idealExtended: 160, idealContracted: 25,
+        formRules: [],
+    },
+
+    toe_touches: {
+        id: 'toe_touches', name: 'Toe Touches', icon: 'TT', category: 'core',
+        description: 'Lying flat, reach fingertips up and touch toes.',
+        repMode: 'standard', categoryLabel: 'Core',
+        landmarkIndices: [11, 23, 25],
+        extendedThreshold: 145, contractedThreshold: 75,
+        idealExtended: 160, idealContracted: 55,
+        formRules: [],
+    },
+
+    // ─── Machine exercises ────────────────────────────────────────────────────
+
+    cable_bicep_curl: {
+        id: 'cable_bicep_curl', name: 'Cable Bicep Curl', icon: 'CBC', category: 'upper',
+        description: 'Cable curl for constant tension throughout range of motion.',
+        repMode: 'standard', categoryLabel: 'Machine',
+        landmarkIndices: [11, 13, 15], secondaryLandmarkIndices: [12, 14, 16],
+        extendedThreshold: 150, contractedThreshold: 50,
+        idealExtended: 170, idealContracted: 35,
+        formRules: [
+            { id: 'cbc_drift', description: 'Elbow drifting forward', correctionMessage: 'Keep elbows pinned — do not swing', ruleKey: 'elbow_drift' },
+        ],
+    },
+
+    cable_lateral_raise: {
+        id: 'cable_lateral_raise', name: 'Cable Lateral Raise', icon: 'CLR', category: 'upper',
+        description: 'Single-arm cable raise for constant delt tension.',
+        repMode: 'standard', categoryLabel: 'Machine',
+        landmarkIndices: [23, 11, 15],
+        extendedThreshold: 140, contractedThreshold: 55,
+        idealExtended: 160, idealContracted: 20,
+        formRules: [
+            { id: 'clr_shrug', description: 'Shrugging shoulder', correctionMessage: 'Keep shoulder depressed throughout', ruleKey: 'shoulder_shrug' },
+        ],
+    },
+
+    cable_tricep_pushdown: {
+        id: 'cable_tricep_pushdown', name: 'Cable Tricep Pushdown', icon: 'CTP', category: 'upper',
+        description: 'Push rope or bar down, fully extending triceps.',
+        repMode: 'standard', categoryLabel: 'Machine',
+        landmarkIndices: [11, 13, 15], secondaryLandmarkIndices: [12, 14, 16],
+        extendedThreshold: 150, contractedThreshold: 55,
+        idealExtended: 170, idealContracted: 35,
+        formRules: [
+            { id: 'ctp_lean', description: 'Leaning into the cable', correctionMessage: 'Stand tall, elbows at sides', ruleKey: 'elbow_drift' },
+        ],
+    },
+
+    chest_press_machine: {
+        id: 'chest_press_machine', name: 'Chest Press Machine', icon: 'CPM', category: 'upper',
+        description: 'Machine chest press — great for beginners to learn the pattern.',
+        repMode: 'standard', categoryLabel: 'Machine',
+        landmarkIndices: [11, 13, 15], secondaryLandmarkIndices: [12, 14, 16],
+        extendedThreshold: 150, contractedThreshold: 70,
+        idealExtended: 170, idealContracted: 55,
+        formRules: [],
+    },
+
+    lat_pulldown: {
+        id: 'lat_pulldown', name: 'Lat Pulldown', icon: 'LPD', category: 'upper',
+        description: 'Pull bar to upper chest, slight lean back.',
+        repMode: 'standard', categoryLabel: 'Machine',
+        landmarkIndices: [11, 13, 15], secondaryLandmarkIndices: [12, 14, 16],
+        extendedThreshold: 155, contractedThreshold: 60,
+        idealExtended: 170, idealContracted: 45,
+        formRules: [
+            { id: 'lpd_lean', description: 'Leaning too far back', correctionMessage: 'Slight 10-15 degree lean only — use your lats', ruleKey: 'back_arch' },
+        ],
+    },
+
+    leg_curl: {
+        id: 'leg_curl', name: 'Leg Curl', icon: 'LC', category: 'lower',
+        description: 'Curl legs against pad tracking hamstring contraction.',
+        repMode: 'standard', categoryLabel: 'Machine',
+        landmarkIndices: [23, 25, 27], secondaryLandmarkIndices: [24, 26, 28],
+        extendedThreshold: 155, contractedThreshold: 70,
+        idealExtended: 170, idealContracted: 55,
+        formRules: [],
+    },
+
+    leg_press: {
+        id: 'leg_press', name: 'Leg Press', icon: 'LP2', category: 'lower',
+        description: 'Press platform away with feet hip-width, do not lock knees.',
+        repMode: 'standard', categoryLabel: 'Machine',
+        landmarkIndices: [23, 25, 27], secondaryLandmarkIndices: [24, 26, 28],
+        extendedThreshold: 155, contractedThreshold: 80,
+        idealExtended: 170, idealContracted: 65,
+        formRules: [
+            { id: 'lp2_lockout', description: 'Locking out knees', correctionMessage: 'Soft knees at top — do not fully lock out', ruleKey: 'insufficient_depth' },
+        ],
+    },
+
+    pec_deck: {
+        id: 'pec_deck', name: 'Pec Deck', icon: 'PD', category: 'upper',
+        description: 'Machine fly that isolates the chest muscle.',
+        repMode: 'standard', categoryLabel: 'Machine',
+        landmarkIndices: [23, 11, 15], secondaryLandmarkIndices: [24, 12, 16],
+        extendedThreshold: 145, contractedThreshold: 50,
+        idealExtended: 160, idealContracted: 20,
+        formRules: [],
+    },
+
+    seated_row: {
+        id: 'seated_row', name: 'Seated Row', icon: 'SR', category: 'upper',
+        description: 'Pull handles to torso, squeeze shoulder blades together.',
+        repMode: 'standard', categoryLabel: 'Machine',
+        landmarkIndices: [11, 13, 15], secondaryLandmarkIndices: [12, 14, 16],
+        extendedThreshold: 155, contractedThreshold: 55,
+        idealExtended: 170, idealContracted: 40,
+        formRules: [
+            { id: 'sr_lean', description: 'Rocking torso', correctionMessage: 'Use your back, not momentum', ruleKey: 'back_arch' },
+        ],
+    },
+
+    leg_extension: {
+        id: 'leg_extension', name: 'Leg Extension', icon: 'LE', category: 'lower',
+        description: 'Extend legs against pad to fully contract quads.',
+        repMode: 'standard', categoryLabel: 'Machine',
+        landmarkIndices: [23, 25, 27], secondaryLandmarkIndices: [24, 26, 28],
+        extendedThreshold: 155, contractedThreshold: 80,
+        idealExtended: 170, idealContracted: 170,
+        formRules: [],
+    },
+
+    // ─── Stretching / Mobility (hold mode) ───────────────────────────────────
+
+    cobra_stretch: {
+        id: 'cobra_stretch', name: 'Cobra Stretch', icon: 'COB', category: 'core',
+        description: 'Press up gently from prone, arching the spine back.',
+        repMode: 'hold', categoryLabel: 'Stretch',
+        landmarkIndices: [11, 23, 27],
+        extendedThreshold: 160, contractedThreshold: 130,
+        idealExtended: 170, idealContracted: 140,
+        formRules: [],
+    },
+
+    hamstring_stretch: {
+        id: 'hamstring_stretch', name: 'Hamstring Stretch', icon: 'HST', category: 'lower',
+        description: 'Hinge from hips over straight legs to stretch hamstrings.',
+        repMode: 'hold', categoryLabel: 'Stretch',
+        landmarkIndices: [11, 23, 25],
+        extendedThreshold: 130, contractedThreshold: 80,
+        idealExtended: 140, idealContracted: 90,
+        formRules: [],
+    },
+
+    hip_flexor_stretch: {
+        id: 'hip_flexor_stretch', name: 'Hip Flexor Stretch', icon: 'HFS', category: 'lower',
+        description: 'Low lunge — push front hip forward to open up the hip flexor.',
+        repMode: 'hold', categoryLabel: 'Stretch',
+        landmarkIndices: [23, 25, 27],
+        extendedThreshold: 155, contractedThreshold: 100,
+        idealExtended: 165, idealContracted: 110,
+        formRules: [],
+    },
+
+    quad_stretch: {
+        id: 'quad_stretch', name: 'Quad Stretch', icon: 'QST', category: 'lower',
+        description: 'Standing, pull heel to glute to stretch the quadriceps.',
+        repMode: 'hold', categoryLabel: 'Stretch',
+        landmarkIndices: [23, 25, 27],
+        extendedThreshold: 150, contractedThreshold: 70,
+        idealExtended: 165, idealContracted: 80,
+        formRules: [],
+    },
+
+    shoulder_stretch: {
+        id: 'shoulder_stretch', name: 'Shoulder Stretch', icon: 'SST', category: 'upper',
+        description: 'Pull arm across the body to stretch the rear deltoid.',
+        repMode: 'hold', categoryLabel: 'Stretch',
+        landmarkIndices: [23, 11, 15], secondaryLandmarkIndices: [24, 12, 16],
+        extendedThreshold: 140, contractedThreshold: 50,
+        idealExtended: 155, idealContracted: 60,
+        formRules: [],
     },
 };
 
@@ -324,8 +927,18 @@ export function getExercisesByCategory(category: ExerciseCategory): ExerciseConf
     return Object.values(EXERCISES).filter((e) => e.category === category);
 }
 
+/** Get exercises filtered by categoryLabel (e.g. 'Barbell', 'Machine') */
+export function getExercisesByLabel(label: string): ExerciseConfig[] {
+    return Object.values(EXERCISES).filter((e) => e.categoryLabel === label);
+}
+
 export function getExerciseById(id: ExerciseId): ExerciseConfig {
     return EXERCISES[id];
 }
 
 export const ALL_EXERCISE_IDS = Object.keys(EXERCISES) as ExerciseId[];
+
+/** All unique category labels for the expanded selector */
+export const CATEGORY_LABELS = [
+    'Body-weight', 'Dumbbell', 'Barbell', 'Machine', 'Cardio', 'Core', 'Stretch',
+] as const;
