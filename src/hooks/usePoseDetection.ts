@@ -175,7 +175,6 @@ export function usePoseDetection() {
 
         setState(prev => ({ ...prev, isLoading: true, error: null }));
 
-        // ── Step 1: Camera access (MUST succeed) ─────────────────────────
         try {
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' },
@@ -183,68 +182,52 @@ export function usePoseDetection() {
             video.srcObject = stream;
             await video.play();
             isRunningRef.current = true;
+
+            // Camera is live
+            setState(prev => ({ ...prev, isDetecting: true, isLoading: false, workoutStartTime: Date.now() }));
+
+            // Load AI model in background (non-blocking)
+            loadMediaPipePose().then(Pose => {
+                const pose = new Pose({
+                    locateFile: (file: string) =>
+                        `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`,
+                });
+                pose.setOptions({
+                    modelComplexity: 1,
+                    smoothLandmarks: true,
+                    enableSegmentation: false,
+                    minDetectionConfidence: 0.6,
+                    minTrackingConfidence: 0.5,
+                });
+                pose.onResults((results: any) => {
+                    if (results.poseLandmarks) {
+                        processLandmarks(results.poseLandmarks);
+                    }
+                });
+                poseRef.current = pose;
+                const processFrame = async () => {
+                    if (!isRunningRef.current) return;
+                    if (video.readyState >= 2) {
+                        try { await pose.send({ image: video }); } catch {}
+                    }
+                    animFrameRef.current = requestAnimationFrame(processFrame);
+                };
+                processFrame();
+                resetCoach();
+            }).catch(() => {
+                // AI model failed — camera stays on, user exercises without tracking
+            });
         } catch (err: any) {
-            console.error('[Camera] Failed:', err);
-            let errorMsg = 'Camera access failed. Please allow camera permission and try again.';
+            let errorMsg = 'Camera access failed. Please allow camera permission.';
             if (err?.name === 'NotAllowedError') {
-                errorMsg = 'Camera permission denied. Please allow camera access in your browser settings.';
+                errorMsg = 'Camera permission denied. Allow camera access in browser settings.';
             } else if (err?.name === 'NotFoundError') {
-                errorMsg = 'No camera found. Please connect a camera and try again.';
+                errorMsg = 'No camera found. Please connect a camera.';
             } else if (err?.name === 'NotReadableError' || err?.name === 'AbortError') {
-                errorMsg = 'Camera is in use by another app or tab. Close other tabs and try again.';
+                errorMsg = 'Camera busy. Close other tabs using the camera.';
             }
             setState(prev => ({ ...prev, isLoading: false, isDetecting: false, error: errorMsg }));
-            return; // bail — no camera, nothing to show
         }
-
-        // Camera is live — show it immediately even if AI model fails below
-        setState(prev => ({ ...prev, isDetecting: true, isLoading: true, workoutStartTime: Date.now() }));
-
-        // ── Step 2: AI model loading (best-effort — camera stays on if this fails) ──
-        try {
-            const Pose = await loadMediaPipePose();
-
-            const pose = new Pose({
-                locateFile: (file: string) =>
-                    `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`,
-            });
-
-            pose.setOptions({
-                modelComplexity: 1,
-                smoothLandmarks: true,
-                enableSegmentation: false,
-                minDetectionConfidence: 0.6,
-                minTrackingConfidence: 0.5,
-            });
-
-            pose.onResults((results: any) => {
-                if (results.poseLandmarks) {
-                    processLandmarks(results.poseLandmarks);
-                }
-            });
-
-            poseRef.current = pose;
-
-            const processFrame = async () => {
-                if (!isRunningRef.current) return;
-                if (video.readyState >= 2) {
-                    try {
-                        await pose.send({ image: video });
-                    } catch {
-                        // Frame processing error — skip and continue
-                    }
-                }
-                animFrameRef.current = requestAnimationFrame(processFrame);
-            };
-
-            processFrame();
-            resetCoach();
-        } catch (err: any) {
-            // AI model failed — camera keeps running, user can still exercise
-            console.warn('[AI Model] Failed to load — camera-only mode:', err?.message);
-        }
-
-        setState(prev => ({ ...prev, isLoading: false }));
     }, [processLandmarks]);
 
     const stopDetection = useCallback(() => {

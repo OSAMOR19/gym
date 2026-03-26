@@ -412,7 +412,10 @@ export default function WorkoutPage() {
                         exerciseId={exerciseId}
                         isDetecting={isDetecting}
                         showModal={showVideoModal && !isDetecting && !showCountdown}
-                        onModalDismiss={() => setShowVideoModal(false)}
+                        onModalDismiss={() => {
+                            setShowVideoModal(false);
+                            startDetection();
+                        }}
                     />
                 </div>
 
