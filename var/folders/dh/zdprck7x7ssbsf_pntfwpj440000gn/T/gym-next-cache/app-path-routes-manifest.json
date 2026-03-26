@@ -1,0 +1,15 @@
+{
+  "/_not-found/page": "/_not-found",
+  "/favicon.ico/route": "/favicon.ico",
+  "/_global-error/page": "/_global-error",
+  "/login/page": "/login",
+  "/signup/page": "/signup",
+  "/forgot-password/page": "/forgot-password",
+  "/page": "/",
+  "/(app)/programs/page": "/programs",
+  "/(app)/progress/page": "/progress",
+  "/(app)/workout/page": "/workout",
+  "/(app)/profile/page": "/profile",
+  "/(app)/dashboard/page": "/dashboard",
+  "/(app)/programs/[id]/page": "/programs/[id]"
+}

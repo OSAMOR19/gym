@@ -6,18 +6,58 @@
  *  - Integrates AI Coach for real-time tips
  *  - Uses ExerciseId instead of the old Exercise type
  *  - Returns form corrections and coach tips
+ *  - MediaPipe loaded via CDN script tag (bypasses webpack bundling issues)
  */
 
 'use client';
 
 import { useRef, useState, useCallback, useEffect } from 'react';
-import { NormalizedLandmarkList } from '@mediapipe/pose';
+import type { NormalizedLandmarkList } from '@mediapipe/pose';
 import { RepEngine, RepEngineResult } from '../lib/repEngine';
 import { ExerciseId, EXERCISES } from '../lib/exercises';
 import { LandmarkSmoother } from '../utils/smoothing';
 import { playBeep } from '../utils/audio';
 import { getCoachTip, CoachTip, resetCoach } from '../lib/aiCoach';
 import { FormCorrection } from '../lib/formCorrection';
+
+/**
+ * Load MediaPipe Pose via a CDN <script> tag instead of a dynamic import.
+ * This avoids webpack bundling the native WASM files which break in production.
+ */
+let poseClassPromise: Promise<any> | null = null;
+
+function loadMediaPipePose(): Promise<any> {
+    if (poseClassPromise) return poseClassPromise;
+
+    poseClassPromise = new Promise((resolve, reject) => {
+        // Check if already loaded (e.g., from a previous call)
+        if ((window as any).Pose) {
+            resolve((window as any).Pose);
+            return;
+        }
+
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js';
+        script.crossOrigin = 'anonymous';
+        script.onload = () => {
+            const PoseClass = (window as any).Pose;
+            if (PoseClass) {
+                console.log('[PoseDetection] MediaPipe Pose class loaded from CDN');
+                resolve(PoseClass);
+            } else {
+                reject(new Error('MediaPipe Pose script loaded but Pose class not found on window'));
+            }
+        };
+        script.onerror = () => {
+            poseClassPromise = null; // Allow retry
+            reject(new Error('Failed to load MediaPipe Pose script from CDN'));
+        };
+        document.head.appendChild(script);
+    });
+
+    return poseClassPromise;
+}
+
 
 // Skeleton connections: pairs of landmark indices to draw lines between
 export const SKELETON_CONNECTIONS: [number, number][] = [
@@ -135,20 +175,35 @@ export function usePoseDetection() {
 
         setState(prev => ({ ...prev, isLoading: true, error: null }));
 
+        // ── Step 1: Camera access (MUST succeed) ─────────────────────────
         try {
-            // Step 1: Get camera access
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' },
             });
             video.srcObject = stream;
             await video.play();
             isRunningRef.current = true;
+        } catch (err: any) {
+            console.error('[Camera] Failed:', err);
+            let errorMsg = 'Camera access failed. Please allow camera permission and try again.';
+            if (err?.name === 'NotAllowedError') {
+                errorMsg = 'Camera permission denied. Please allow camera access in your browser settings.';
+            } else if (err?.name === 'NotFoundError') {
+                errorMsg = 'No camera found. Please connect a camera and try again.';
+            } else if (err?.name === 'NotReadableError' || err?.name === 'AbortError') {
+                errorMsg = 'Camera is in use by another app or tab. Close other tabs and try again.';
+            }
+            setState(prev => ({ ...prev, isLoading: false, isDetecting: false, error: errorMsg }));
+            return; // bail — no camera, nothing to show
+        }
 
-            // Show camera feed immediately (before model loads)
-            setState(prev => ({ ...prev, isDetecting: true, workoutStartTime: Date.now() }));
+        // Camera is live — show it immediately even if AI model fails below
+        setState(prev => ({ ...prev, isDetecting: true, isLoading: true, workoutStartTime: Date.now() }));
 
-            // Step 2: Load MediaPipe model
-            const { Pose } = await import('@mediapipe/pose');
+        // ── Step 2: AI model loading (best-effort — camera stays on if this fails) ──
+        try {
+            const Pose = await loadMediaPipePose();
+
             const pose = new Pose({
                 locateFile: (file: string) =>
                     `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`,
@@ -184,23 +239,12 @@ export function usePoseDetection() {
 
             processFrame();
             resetCoach();
-            setState(prev => ({ ...prev, isLoading: false }));
         } catch (err: any) {
-            console.error('Failed to start pose detection:', err);
-
-            let errorMsg = 'Camera access failed. Please allow camera permission and try again.';
-            if (err?.name === 'NotAllowedError') {
-                errorMsg = 'Camera permission denied. Please allow camera access in your browser settings.';
-            } else if (err?.name === 'NotFoundError') {
-                errorMsg = 'No camera found. Please connect a camera and try again.';
-            } else if (err?.name === 'NotReadableError' || err?.name === 'AbortError') {
-                errorMsg = 'Camera is in use by another app or tab. Close other tabs and try again.';
-            } else if (err?.message?.includes('model')) {
-                errorMsg = 'Failed to load the AI model. Check your internet connection.';
-            }
-
-            setState(prev => ({ ...prev, isLoading: false, isDetecting: false, error: errorMsg }));
+            // AI model failed — camera keeps running, user can still exercise
+            console.warn('[AI Model] Failed to load — camera-only mode:', err?.message);
         }
+
+        setState(prev => ({ ...prev, isLoading: false }));
     }, [processLandmarks]);
 
     const stopDetection = useCallback(() => {

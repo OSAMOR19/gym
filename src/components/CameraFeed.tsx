@@ -182,10 +182,11 @@ export default function CameraFeed({
 
     return (
         <div className="relative w-full h-full overflow-hidden">
-            {/* Hidden video element — camera stream goes here */}
+            {/* Video element — shows camera feed directly (mirrored via CSS) */}
             <video
                 ref={videoRef}
-                className="absolute inset-0 w-full h-full object-cover opacity-0"
+                className="absolute inset-0 w-full h-full object-cover"
+                style={{ transform: 'scaleX(-1)' }}
                 autoPlay
                 playsInline
                 muted
@@ -248,18 +249,12 @@ export default function CameraFeed({
                 </div>
             )}
 
-            {/* Step into frame hint — camera running, model loaded, but no landmarks yet */}
+            {/* Subtle hint when model is loaded but no body detected yet */}
             {isDetecting && !isLoading && !landmarks && !error && (
-                <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-                    <div className="text-center space-y-3">
-                        <div className="mx-auto w-14 h-14 rounded-full border-2 border-[#22c55e]/50 animate-ping" />
-                        <p className="text-white/50 text-xs tracking-[0.25em] uppercase font-medium">
-                            Step into frame
-                        </p>
-                        <p className="text-white/25 text-[10px] tracking-wider">
-                            Stand back so your full body is visible
-                        </p>
-                    </div>
+                <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
+                    <p className="text-white/30 text-xs tracking-[0.15em] uppercase font-medium bg-black/40 backdrop-blur-sm rounded-full px-4 py-2">
+                        Stand back so your full body is visible
+                    </p>
                 </div>
             )}
         </div>
