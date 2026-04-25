@@ -142,7 +142,7 @@ export default function WorkoutPage() {
     }, []);
 
     // Handle "End Workout" (from modal or manual stop)
-    const handleEndWorkout = useCallback(() => {
+    const handleEndWorkout = useCallback(async () => {
         setShowSetComplete(false);
         stopDetection();
 
@@ -154,11 +154,11 @@ export default function WorkoutPage() {
             setSummary(ws);
 
             const perfectReps = formQuality >= 90 ? Math.round(totalReps * 0.3) : 0;
-            const result = recordWorkout(totalReps, formQuality, perfectReps);
+            const result = await recordWorkout(totalReps, formQuality, perfectReps);
             setXpGained(result.xpGained);
             setNewBadges(result.newBadges);
 
-            saveWorkout({
+            await saveWorkout({
                 exerciseId,
                 exerciseName: currentExercise.name,
                 reps: totalReps,

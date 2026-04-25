@@ -16,7 +16,10 @@ export default function ProfilePage() {
     const [stats, setStats] = useState<UserStats | null>(null);
 
     useEffect(() => {
-        setStats(loadStats());
+        async function fetchStats() {
+            setStats(await loadStats());
+        }
+        fetchStats();
     }, []);
 
     const xpInfo = stats ? getXPForCurrentLevel(stats.totalXP) : { current: 0, required: 500 };

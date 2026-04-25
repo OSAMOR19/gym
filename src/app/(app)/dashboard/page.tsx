@@ -18,8 +18,11 @@ export default function DashboardPage() {
     const [progressStats, setProgressStats] = useState<ProgressStats | null>(null);
 
     useEffect(() => {
-        setGameStats(loadStats());
-        setProgressStats(getProgressStats());
+        async function fetchDashboardData() {
+            setGameStats(await loadStats());
+            setProgressStats(await getProgressStats());
+        }
+        fetchDashboardData();
     }, []);
 
     const greeting = () => {

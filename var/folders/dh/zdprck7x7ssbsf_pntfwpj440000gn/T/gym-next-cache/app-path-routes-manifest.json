@@ -1,15 +1,17 @@
 {
-  "/_not-found/page": "/_not-found",
-  "/_global-error/page": "/_global-error",
-  "/favicon.ico/route": "/favicon.ico",
-  "/page": "/",
-  "/login/page": "/login",
-  "/forgot-password/page": "/forgot-password",
-  "/signup/page": "/signup",
-  "/(app)/programs/[id]/page": "/programs/[id]",
   "/(app)/dashboard/page": "/dashboard",
-  "/(app)/progress/page": "/progress",
+  "/(app)/profile/page": "/profile",
+  "/(app)/programs/[id]/page": "/programs/[id]",
   "/(app)/programs/page": "/programs",
+  "/(app)/progress/page": "/progress",
   "/(app)/workout/page": "/workout",
-  "/(app)/profile/page": "/profile"
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/auth/callback/route": "/auth/callback",
+  "/favicon.ico/route": "/favicon.ico",
+  "/forgot-password/page": "/forgot-password",
+  "/login/page": "/login",
+  "/page": "/",
+  "/reset-password/page": "/reset-password",
+  "/signup/page": "/signup"
 }

@@ -1,1 +1,55 @@
-{"pages":{},"app":{"/Volumes/KINGSTON/gym/src/app/layout":["static/media/e4af272ccee01ff0-s.p.woff2","static/media/9a4ee768fed045da-s.p.woff2"]},"appUsingSizeAdjust":true,"pagesUsingSizeAdjust":false}
+{
+  "app": {
+    "[project]/src/app/(app)/dashboard/page": [
+      "static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2",
+      "static/media/0acc7fdf55eb3220-s.p.532ccaa1.woff2"
+    ],
+    "[project]/src/app/(app)/profile/page": [
+      "static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2",
+      "static/media/0acc7fdf55eb3220-s.p.532ccaa1.woff2"
+    ],
+    "[project]/src/app/(app)/programs/[id]/page": [
+      "static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2",
+      "static/media/0acc7fdf55eb3220-s.p.532ccaa1.woff2"
+    ],
+    "[project]/src/app/(app)/programs/page": [
+      "static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2",
+      "static/media/0acc7fdf55eb3220-s.p.532ccaa1.woff2"
+    ],
+    "[project]/src/app/(app)/progress/page": [
+      "static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2",
+      "static/media/0acc7fdf55eb3220-s.p.532ccaa1.woff2"
+    ],
+    "[project]/src/app/(app)/workout/page": [
+      "static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2",
+      "static/media/0acc7fdf55eb3220-s.p.532ccaa1.woff2"
+    ],
+    "[project]/src/app/_not-found/page": [
+      "static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2",
+      "static/media/0acc7fdf55eb3220-s.p.532ccaa1.woff2"
+    ],
+    "[project]/src/app/forgot-password/page": [
+      "static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2",
+      "static/media/0acc7fdf55eb3220-s.p.532ccaa1.woff2"
+    ],
+    "[project]/src/app/login/page": [
+      "static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2",
+      "static/media/0acc7fdf55eb3220-s.p.532ccaa1.woff2"
+    ],
+    "[project]/src/app/page": [
+      "static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2",
+      "static/media/0acc7fdf55eb3220-s.p.532ccaa1.woff2"
+    ],
+    "[project]/src/app/reset-password/page": [
+      "static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2",
+      "static/media/0acc7fdf55eb3220-s.p.532ccaa1.woff2"
+    ],
+    "[project]/src/app/signup/page": [
+      "static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2",
+      "static/media/0acc7fdf55eb3220-s.p.532ccaa1.woff2"
+    ]
+  },
+  "appUsingSizeAdjust": true,
+  "pages": {},
+  "pagesUsingSizeAdjust": false
+}

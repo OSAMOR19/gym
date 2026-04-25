@@ -11,7 +11,7 @@ import { useAuth } from '../../lib/auth';
 import AuthLayout from '../../components/AuthLayout';
 
 export default function LoginPage() {
-    const { login } = useAuth();
+    const { login, loginWithGoogle } = useAuth();
     const router = useRouter();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -33,9 +33,10 @@ export default function LoginPage() {
         }
     };
 
-    const handleGoogleSignIn = () => {
-        // TODO: Integrate real Google OAuth
-        setError('Google OAuth coming soon — use email sign-in for now');
+    const handleGoogleSignIn = async () => {
+        setError('');
+        const result = await loginWithGoogle();
+        if (result.error) setError(result.error);
     };
 
     return (

@@ -11,7 +11,7 @@ import { useAuth } from '../../lib/auth';
 import AuthLayout from '../../components/AuthLayout';
 
 export default function SignupPage() {
-    const { signup } = useAuth();
+    const { signup, loginWithGoogle } = useAuth();
     const router = useRouter();
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
@@ -44,8 +44,10 @@ export default function SignupPage() {
         }
     };
 
-    const handleGoogleSignUp = () => {
-        setError('Google OAuth coming soon — use email sign-up for now');
+    const handleGoogleSignUp = async () => {
+        setError('');
+        const result = await loginWithGoogle();
+        if (result.error) setError(result.error);
     };
 
     return (

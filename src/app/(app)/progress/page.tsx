@@ -15,8 +15,11 @@ export default function ProgressPage() {
     const [allWorkouts, setAllWorkouts] = useState<WorkoutRecord[]>([]);
 
     useEffect(() => {
-        setStats(getProgressStats());
-        setAllWorkouts(getAllWorkouts());
+        async function fetchProgress() {
+            setStats(await getProgressStats());
+            setAllWorkouts(await getAllWorkouts());
+        }
+        fetchProgress();
     }, []);
 
     const formatDuration = (seconds: number) => {

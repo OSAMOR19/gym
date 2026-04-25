@@ -1,15 +1,17 @@
 {
-  "/_not-found/page": "app/_not-found/page.js",
-  "/_global-error/page": "app/_global-error/page.js",
-  "/favicon.ico/route": "app/favicon.ico/route.js",
-  "/page": "app/page.js",
-  "/login/page": "app/login/page.js",
-  "/forgot-password/page": "app/forgot-password/page.js",
-  "/signup/page": "app/signup/page.js",
-  "/(app)/programs/[id]/page": "app/(app)/programs/[id]/page.js",
   "/(app)/dashboard/page": "app/(app)/dashboard/page.js",
-  "/(app)/progress/page": "app/(app)/progress/page.js",
+  "/(app)/profile/page": "app/(app)/profile/page.js",
+  "/(app)/programs/[id]/page": "app/(app)/programs/[id]/page.js",
   "/(app)/programs/page": "app/(app)/programs/page.js",
+  "/(app)/progress/page": "app/(app)/progress/page.js",
   "/(app)/workout/page": "app/(app)/workout/page.js",
-  "/(app)/profile/page": "app/(app)/profile/page.js"
+  "/_global-error/page": "app/_global-error/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/auth/callback/route": "app/auth/callback/route.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/forgot-password/page": "app/forgot-password/page.js",
+  "/login/page": "app/login/page.js",
+  "/page": "app/page.js",
+  "/reset-password/page": "app/reset-password/page.js",
+  "/signup/page": "app/signup/page.js"
 }

@@ -7,6 +7,8 @@
  * Badges: milestone achievements
  */
 
+import { createClient } from '../utils/supabase/client';
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export interface Badge {
@@ -26,13 +28,12 @@ export interface UserStats {
     longestStreak: number;
     lastWorkoutDate: string | null;
     earnedBadges: string[];
-    perfectFormReps: number;   // Reps with form > 90%
+    perfectFormReps: number;
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const XP_PER_LEVEL = 500;
-const STORAGE_KEY = 'irontrack_gamification';
 
 // ─── Badge Definitions ───────────────────────────────────────────────────────
 
@@ -132,20 +133,55 @@ function defaultStats(): UserStats {
     };
 }
 
-// ─── Storage ─────────────────────────────────────────────────────────────────
+// ─── Storage (Supabase) ──────────────────────────────────────────────────────
 
-export function loadStats(): UserStats {
+export async function loadStats(): Promise<UserStats> {
     if (typeof window === 'undefined') return defaultStats();
-    try {
-        const data = localStorage.getItem(STORAGE_KEY);
-        return data ? { ...defaultStats(), ...JSON.parse(data) } : defaultStats();
-    } catch {
-        return defaultStats();
-    }
+    
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return defaultStats();
+
+    const { data, error } = await supabase
+        .from('user_stats')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+    if (error || !data) return defaultStats();
+
+    return {
+        totalXP: data.total_xp,
+        level: data.level,
+        totalWorkouts: data.total_workouts,
+        totalReps: data.total_reps,
+        currentStreak: data.current_streak,
+        longestStreak: data.longest_streak,
+        lastWorkoutDate: data.last_workout_date,
+        earnedBadges: data.earned_badges || [],
+        perfectFormReps: data.perfect_form_reps,
+    };
 }
 
-export function saveStats(stats: UserStats): void {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(stats));
+export async function saveStats(stats: UserStats): Promise<void> {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    await supabase
+        .from('user_stats')
+        .update({
+            total_xp: stats.totalXP,
+            level: stats.level,
+            total_workouts: stats.totalWorkouts,
+            total_reps: stats.totalReps,
+            current_streak: stats.currentStreak,
+            longest_streak: stats.longestStreak,
+            last_workout_date: stats.lastWorkoutDate,
+            earned_badges: stats.earnedBadges,
+            perfect_form_reps: stats.perfectFormReps,
+        })
+        .eq('user_id', user.id);
 }
 
 // ─── XP / Level calculations ─────────────────────────────────────────────────
@@ -185,12 +221,12 @@ function isToday(dateStr: string): boolean {
  * Record a completed workout and update all gamification stats.
  * Returns newly earned badges (if any).
  */
-export function recordWorkout(
+export async function recordWorkout(
     reps: number,
     formQuality: number,
     perfectReps: number,
-): { stats: UserStats; newBadges: Badge[]; xpGained: number } {
-    const stats = loadStats();
+): Promise<{ stats: UserStats; newBadges: Badge[]; xpGained: number }> {
+    const stats = await loadStats();
     const xpGained = calculateXPForWorkout(reps, formQuality);
 
     // Update stats
@@ -221,7 +257,7 @@ export function recordWorkout(
         }
     }
 
-    saveStats(stats);
+    await saveStats(stats);
 
     return { stats, newBadges, xpGained };
 }
