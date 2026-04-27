@@ -10,21 +10,21 @@ import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '../../utils/supabase/client';
+import { useToast } from '../../components/Toast';
 import AuthLayout from '../../components/AuthLayout';
 
 export default function ResetPasswordPage() {
     const router = useRouter();
+    const { success, error: toastError } = useToast();
     const [password, setPassword] = useState('');
     const [confirm, setConfirm] = useState('');
     const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         setError('');
-        setSuccess('');
 
         if (password !== confirm) {
             setError('Passwords do not match');
@@ -43,7 +43,7 @@ export default function ResetPasswordPage() {
             setError(updateError.message);
             setLoading(false);
         } else {
-            setSuccess('Password updated! Redirecting to dashboard...');
+            success('Password updated!', 'You are now signed in. Redirecting...');
             setTimeout(() => router.push('/dashboard'), 2000);
         }
     };
@@ -103,9 +103,6 @@ export default function ResetPasswordPage() {
 
                 {error && (
                     <div className="text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-2">{error}</div>
-                )}
-                {success && (
-                    <div className="text-[#22c55e] text-sm bg-[#22c55e]/10 border border-[#22c55e]/20 rounded-xl px-4 py-2">{success}</div>
                 )}
 
                 <button

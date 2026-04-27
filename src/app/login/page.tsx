@@ -8,10 +8,12 @@ import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '../../lib/auth';
+import { useToast } from '../../components/Toast';
 import AuthLayout from '../../components/AuthLayout';
 
 export default function LoginPage() {
     const { login, loginWithGoogle } = useAuth();
+    const { success, error: toastError } = useToast();
     const router = useRouter();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -29,6 +31,7 @@ export default function LoginPage() {
             setError(result.error);
             setLoading(false);
         } else {
+            success('Welcome back!', 'You have been signed in successfully.');
             router.push('/dashboard');
         }
     };
@@ -36,7 +39,7 @@ export default function LoginPage() {
     const handleGoogleSignIn = async () => {
         setError('');
         const result = await loginWithGoogle();
-        if (result.error) setError(result.error);
+        if (result.error) toastError('Google Sign-In Failed', result.error);
     };
 
     return (

@@ -7,26 +7,27 @@
 import { useState, FormEvent } from 'react';
 import Link from 'next/link';
 import { useAuth } from '../../lib/auth';
+import { useToast } from '../../components/Toast';
 import AuthLayout from '../../components/AuthLayout';
 
 export default function ForgotPasswordPage() {
     const { resetPassword } = useAuth();
+    const { success, error: toastError } = useToast();
     const [email, setEmail] = useState('');
     const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
     const [loading, setLoading] = useState(false);
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         setError('');
-        setSuccess('');
         setLoading(true);
 
         const result = await resetPassword(email);
         if (result.error) {
             setError(result.error);
         } else if (result.message) {
-            setSuccess(result.message);
+            success('Email sent!', result.message);
+            setEmail('');
         }
         setLoading(false);
     };
@@ -53,9 +54,6 @@ export default function ForgotPasswordPage() {
 
                 {error && (
                     <div className="text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-2">{error}</div>
-                )}
-                {success && (
-                    <div className="text-[#22c55e] text-sm bg-[#22c55e]/10 border border-[#22c55e]/20 rounded-xl px-4 py-2">{success}</div>
                 )}
 
                 <button type="submit" disabled={loading}

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Orbitron } from "next/font/google";
 import { AuthProvider } from "../lib/auth";
+import { ToastProvider } from "../components/Toast";
 import "./globals.css";
 
 const inter = Inter({
@@ -20,6 +21,15 @@ export const metadata: Metadata = {
   title: "IronTrack AI — AI-Powered Workout Tracker",
   description:
     "Real-time AI pose detection that counts your reps, tracks form quality, and monitors time under tension. Built with MediaPipe Pose.",
+  icons: {
+    icon: [
+      { url: "/icon.png", type: "image/png", sizes: "512x512" },
+    ],
+    apple: [
+      { url: "/icon.png", sizes: "512x512" },
+    ],
+    shortcut: "/icon.png",
+  },
 };
 
 export default function RootLayout({
@@ -32,7 +42,11 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${orbitron.variable} antialiased bg-[#0f0f0f] text-white`}
       >
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <ToastProvider>
+            {children}
+          </ToastProvider>
+        </AuthProvider>
       </body>
     </html>
   );

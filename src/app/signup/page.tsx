@@ -8,10 +8,12 @@ import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '../../lib/auth';
+import { useToast } from '../../components/Toast';
 import AuthLayout from '../../components/AuthLayout';
 
 export default function SignupPage() {
     const { signup, loginWithGoogle } = useAuth();
+    const { success, info, error: toastError } = useToast();
     const router = useRouter();
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
@@ -40,6 +42,7 @@ export default function SignupPage() {
             setError(result.error);
             setLoading(false);
         } else {
+            info('Check your email!', 'We sent a confirmation link to ' + email);
             router.push('/dashboard');
         }
     };
@@ -47,7 +50,7 @@ export default function SignupPage() {
     const handleGoogleSignUp = async () => {
         setError('');
         const result = await loginWithGoogle();
-        if (result.error) setError(result.error);
+        if (result.error) toastError('Google Sign-Up Failed', result.error);
     };
 
     return (
