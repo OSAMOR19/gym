@@ -16,7 +16,7 @@
 
 'use client';
 
-import { useCallback, useRef, useEffect, useState } from 'react';
+import { useCallback, useMemo, useRef, useEffect, useState } from 'react';
 import type { CoachTip } from '../lib/aiCoach';
 
 interface SpeechCoachOptions {
@@ -55,11 +55,12 @@ export function useSpeechCoach(options: SpeechCoachOptions) {
         // Try immediately
         loadVoices();
 
-        // Also listen for async voice loading
-        window.speechSynthesis.onvoiceschanged = loadVoices;
+        // addEventListener so we don't fight CountdownOverlay over the
+        // single onvoiceschanged assignment slot
+        window.speechSynthesis.addEventListener('voiceschanged', loadVoices);
 
         return () => {
-            window.speechSynthesis.onvoiceschanged = null;
+            window.speechSynthesis.removeEventListener('voiceschanged', loadVoices);
         };
     }, []);
 
@@ -204,7 +205,10 @@ export function useSpeechCoach(options: SpeechCoachOptions) {
         };
     }, []);
 
-    return {
+    // Memoized: the workout page re-renders ~30×/sec during detection, and a
+    // fresh object identity every render made every effect depending on this
+    // hook re-fire per frame (the "Very good!" speech loop).
+    return useMemo(() => ({
         onRepChange,
         onCoachTip,
         onFormFeedback,
@@ -213,5 +217,5 @@ export function useSpeechCoach(options: SpeechCoachOptions) {
         announceExercise,
         reset,
         voicesLoaded,
-    };
+    }), [onRepChange, onCoachTip, onFormFeedback, onSetComplete, speakSummary, announceExercise, reset, voicesLoaded]);
 }

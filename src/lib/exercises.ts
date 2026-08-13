@@ -72,6 +72,13 @@ export interface ExerciseConfig {
     contractedThreshold: number;
     idealExtended: number;
     idealContracted: number;
+    /**
+     * Hold-mode only: [min, max] angle range that counts as "holding".
+     * Falls back to [contractedThreshold, extendedThreshold] if omitted.
+     */
+    holdRange?: [number, number];
+    /** Hold-mode only: body line must be roughly horizontal (planks). */
+    holdHorizontal?: boolean;
     formRules: FormRule[];
     /** Display group shown in the exercise selector */
     categoryLabel?: string;
@@ -92,7 +99,6 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
         idealExtended: 170, idealContracted: 35,
         formRules: [
             { id: 'curl_elbow_drift', description: 'Elbow moving too much', correctionMessage: 'Keep your elbows pinned to your sides', ruleKey: 'elbow_drift' },
-            { id: 'curl_incomplete_rom', description: 'Incomplete range of motion', correctionMessage: 'Fully extend your arm at the bottom', ruleKey: 'incomplete_extension' },
         ],
     },
 
@@ -168,7 +174,6 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
         idealExtended: 175, idealContracted: 70,
         formRules: [
             { id: 'squat_knee_valgus', description: 'Knees collapsing inward', correctionMessage: 'Push your knees outward over your toes', ruleKey: 'knee_valgus' },
-            { id: 'squat_depth', description: 'Not going deep enough', correctionMessage: 'Go lower — aim for parallel or below', ruleKey: 'insufficient_depth' },
             { id: 'squat_lean', description: 'Leaning too far forward', correctionMessage: 'Keep your chest up and back straight', ruleKey: 'forward_lean' },
         ],
     },
@@ -193,7 +198,6 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
         extendedThreshold: 160, contractedThreshold: 90,
         idealExtended: 175, idealContracted: 75,
         formRules: [
-            { id: 'jump_squat_depth', description: 'Not going deep enough', correctionMessage: 'Sit deeper before jumping', ruleKey: 'insufficient_depth' },
         ],
     },
 
@@ -201,9 +205,12 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
         id: 'calf_raise', name: 'Calf Raise', icon: 'CR', category: 'lower',
         description: 'Rise onto your toes to work the calves.',
         repMode: 'standard', categoryLabel: 'Body-weight',
-        landmarkIndices: [23, 25, 27], secondaryLandmarkIndices: [24, 26, 28],
-        extendedThreshold: 175, contractedThreshold: 155,
-        idealExtended: 180, idealContracted: 155,
+        // Ankle plantar-flexion (knee–ankle–toe): the knee angle barely moves
+        // during a calf raise, so the old hip-knee-ankle config never counted.
+        // Standing flat ≈ 115°, up on toes ≈ 155°+.
+        landmarkIndices: [25, 27, 31], secondaryLandmarkIndices: [26, 28, 32],
+        extendedThreshold: 150, contractedThreshold: 130,
+        idealExtended: 160, idealContracted: 110,
         formRules: [],
     },
 
@@ -216,6 +223,7 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
         landmarkIndices: [11, 23, 27],
         extendedThreshold: 170, contractedThreshold: 140,
         idealExtended: 175, idealContracted: 160,
+        holdRange: [150, 180], holdHorizontal: true,
         formRules: [
             { id: 'plank_hip_sag', description: 'Hips sagging', correctionMessage: 'Lift your hips — keep a straight line', ruleKey: 'hip_sag' },
             { id: 'plank_hip_pike', description: 'Hips too high', correctionMessage: 'Lower your hips into a straight line', ruleKey: 'hip_pike' },
@@ -236,7 +244,8 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
         id: 'mountain_climber', name: 'Mountain Climber', icon: 'MC', category: 'core',
         description: 'Alternate driving knees toward chest in plank position.',
         repMode: 'standard', categoryLabel: 'Body-weight',
-        landmarkIndices: [11, 23, 25],
+        // Alternating exercise — track both hips or half the reps are missed
+        landmarkIndices: [11, 23, 25], secondaryLandmarkIndices: [12, 24, 26],
         extendedThreshold: 150, contractedThreshold: 80,
         idealExtended: 170, idealContracted: 60,
         formRules: [
@@ -279,7 +288,6 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
         extendedThreshold: 150, contractedThreshold: 60,
         idealExtended: 170, idealContracted: 45,
         formRules: [
-            { id: 'br_back', description: 'Back rounding', correctionMessage: 'Keep back flat, hinge from hips', ruleKey: 'back_arch' },
         ],
     },
 
@@ -291,7 +299,6 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
         extendedThreshold: 160, contractedThreshold: 100,
         idealExtended: 175, idealContracted: 90,
         formRules: [
-            { id: 'dl_back', description: 'Lower back rounding', correctionMessage: 'Neutral spine — brace your core hard', ruleKey: 'back_arch' },
         ],
     },
 
@@ -327,7 +334,6 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
         extendedThreshold: 155, contractedThreshold: 95,
         idealExtended: 170, idealContracted: 85,
         formRules: [
-            { id: 'rdl_back', description: 'Rounding lower back', correctionMessage: 'Keep neutral spine throughout', ruleKey: 'back_arch' },
         ],
     },
 
@@ -375,7 +381,6 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
         extendedThreshold: 150, contractedThreshold: 55,
         idealExtended: 170, idealContracted: 40,
         formRules: [
-            { id: 'dr_rotation', description: 'Excessive torso rotation', correctionMessage: 'Keep hips square to bench', ruleKey: 'back_arch' },
         ],
     },
 
@@ -399,7 +404,6 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
         extendedThreshold: 160, contractedThreshold: 100,
         idealExtended: 175, idealContracted: 90,
         formRules: [
-            { id: 'dd_back', description: 'Rounding back', correctionMessage: 'Flat back, push the floor away', ruleKey: 'back_arch' },
         ],
     },
 
@@ -477,7 +481,8 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
         id: 'walking_lunges', name: 'Walking Lunges', icon: 'WL', category: 'lower',
         description: 'Step forward into lunge, alternate legs.',
         repMode: 'standard', categoryLabel: 'Body-weight',
-        landmarkIndices: [23, 25, 27],
+        // Alternating exercise — track both knees
+        landmarkIndices: [23, 25, 27], secondaryLandmarkIndices: [24, 26, 28],
         extendedThreshold: 160, contractedThreshold: 90,
         idealExtended: 175, idealContracted: 80,
         formRules: [
@@ -504,6 +509,7 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
         landmarkIndices: [11, 23, 27],
         extendedThreshold: 165, contractedThreshold: 140,
         idealExtended: 175, idealContracted: 155,
+        holdRange: [150, 180], holdHorizontal: true,
         formRules: [
             { id: 'sp_sag', description: 'Hips dropping', correctionMessage: 'Lift hips — keep a straight line', ruleKey: 'hip_sag' },
         ],
@@ -513,7 +519,8 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
         id: 'bicycle_crunch', name: 'Bicycle Crunch', icon: 'BC2', category: 'core',
         description: 'Alternate elbow to opposite knee with rotation.',
         repMode: 'standard', categoryLabel: 'Body-weight',
-        landmarkIndices: [11, 23, 25],
+        // Alternating exercise — track both sides
+        landmarkIndices: [11, 23, 25], secondaryLandmarkIndices: [12, 24, 26],
         extendedThreshold: 150, contractedThreshold: 75,
         idealExtended: 165, idealContracted: 55,
         formRules: [],
@@ -523,12 +530,13 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
         id: 'leg_raises', name: 'Leg Raises', icon: 'LR2', category: 'core',
         description: 'Lying flat, raise straight legs to 90 degrees and lower.',
         repMode: 'standard', categoryLabel: 'Body-weight',
-        landmarkIndices: [23, 25, 27],
-        extendedThreshold: 155, contractedThreshold: 85,
-        idealExtended: 170, idealContracted: 75,
-        formRules: [
-            { id: 'lr_arch', description: 'Lower back lifting off floor', correctionMessage: 'Press lower back flat on floor', ruleKey: 'back_arch' },
-        ],
+        // Hip flexion (shoulder–hip–knee): the legs stay straight in a leg
+        // raise, so the old knee-angle config never changed and never counted.
+        // Lying flat ≈ 170°, legs raised to vertical ≈ 95°.
+        landmarkIndices: [11, 23, 25], secondaryLandmarkIndices: [12, 24, 26],
+        extendedThreshold: 150, contractedThreshold: 110,
+        idealExtended: 170, idealContracted: 90,
+        formRules: [],
     },
 
     glute_bridge: {
@@ -555,9 +563,11 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
         id: 'high_knees', name: 'High Knees', icon: 'HK', category: 'core',
         description: 'Run in place driving knees to waist height.',
         repMode: 'standard', categoryLabel: 'Body-weight',
-        landmarkIndices: [23, 25, 27],
-        extendedThreshold: 155, contractedThreshold: 75,
-        idealExtended: 170, idealContracted: 60,
+        // Alternating: track both knees; 75° was too deep for a running knee
+        // drive — most users never triggered a rep
+        landmarkIndices: [23, 25, 27], secondaryLandmarkIndices: [24, 26, 28],
+        extendedThreshold: 150, contractedThreshold: 100,
+        idealExtended: 170, idealContracted: 85,
         formRules: [],
     },
 
@@ -613,7 +623,6 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
         extendedThreshold: 145, contractedThreshold: 50,
         idealExtended: 160, idealContracted: 20,
         formRules: [
-            { id: 'bat_stance', description: 'Standing too upright', correctionMessage: 'Stay in athletic quarter-squat stance', ruleKey: 'back_arch' },
         ],
     },
 
@@ -625,17 +634,20 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
         extendedThreshold: 160, contractedThreshold: 85,
         idealExtended: 175, idealContracted: 70,
         formRules: [
-            { id: 'bj_landing', description: 'Stiff landing', correctionMessage: 'Land softly — bend knees to absorb', ruleKey: 'insufficient_depth' },
         ],
     },
 
     farmers_walk: {
         id: 'farmers_walk', name: "Farmer's Walk", icon: 'FW', category: 'lower',
         description: 'Walk with heavy dumbbells at sides — upright posture.',
-        repMode: 'standard', categoryLabel: 'Cardio',
+        // Time-based, not rep-based: walking never bends the torso to 120°,
+        // so the old rep config could never count anything. Hold = walking
+        // tall with an upright torso.
+        repMode: 'hold', categoryLabel: 'Cardio',
         landmarkIndices: [11, 23, 25],
-        extendedThreshold: 160, contractedThreshold: 120,
-        idealExtended: 175, idealContracted: 155,
+        extendedThreshold: 175, contractedThreshold: 155,
+        idealExtended: 178, idealContracted: 165,
+        holdRange: [155, 180],
         formRules: [
             { id: 'fw_lean', description: 'Forward lean', correctionMessage: 'Tall posture, shoulders packed back', ruleKey: 'forward_lean' },
         ],
@@ -645,9 +657,11 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
         id: 'jump_rope', name: 'Jump Rope', icon: 'JR', category: 'core',
         description: 'Skip rope with small bounces on balls of feet.',
         repMode: 'standard', categoryLabel: 'Cardio',
-        landmarkIndices: [23, 25, 27],
-        extendedThreshold: 160, contractedThreshold: 130,
-        idealExtended: 175, idealContracted: 145,
+        // Small bounces only flex the knee slightly — the old 130° threshold
+        // required a half-squat per skip and never counted
+        landmarkIndices: [23, 25, 27], secondaryLandmarkIndices: [24, 26, 28],
+        extendedThreshold: 168, contractedThreshold: 152,
+        idealExtended: 176, idealContracted: 145,
         formRules: [],
     },
 
@@ -659,7 +673,6 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
         extendedThreshold: 160, contractedThreshold: 95,
         idealExtended: 175, idealContracted: 80,
         formRules: [
-            { id: 'kb_squat', description: 'Squatting instead of hinging', correctionMessage: 'Drive from hips — lead with the hinge', ruleKey: 'forward_lean' },
         ],
     },
 
@@ -671,7 +684,6 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
         extendedThreshold: 155, contractedThreshold: 55,
         idealExtended: 170, idealContracted: 40,
         formRules: [
-            { id: 'row_lean', description: 'Over-leaning back', correctionMessage: 'Stop lean at 11 o clock — do not go past', ruleKey: 'back_arch' },
         ],
     },
 
@@ -693,11 +705,13 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
         id: 'flutter_kicks', name: 'Flutter Kicks', icon: 'FK', category: 'core',
         description: 'Alternate small leg kicks keeping lower back pressed flat.',
         repMode: 'standard', categoryLabel: 'Core',
-        landmarkIndices: [23, 25, 27],
-        extendedThreshold: 155, contractedThreshold: 100,
-        idealExtended: 170, idealContracted: 120,
+        // Hip flexion (shoulder–hip–knee): legs stay straight in flutter
+        // kicks, so the old knee-angle config never changed. Small alternating
+        // raises swing the hip angle between ~140° and ~165°.
+        landmarkIndices: [11, 23, 25], secondaryLandmarkIndices: [12, 24, 26],
+        extendedThreshold: 160, contractedThreshold: 145,
+        idealExtended: 170, idealContracted: 135,
         formRules: [
-            { id: 'fk_arch', description: 'Lower back lifting', correctionMessage: 'Press lower back flat, engage core', ruleKey: 'back_arch' },
         ],
     },
 
@@ -705,12 +719,13 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
         id: 'hanging_leg_raises', name: 'Hanging Leg Raises', icon: 'HLR', category: 'core',
         description: 'Hang from bar and raise legs to 90 degrees or higher.',
         repMode: 'standard', categoryLabel: 'Core',
-        landmarkIndices: [23, 25, 27],
-        extendedThreshold: 155, contractedThreshold: 80,
-        idealExtended: 170, idealContracted: 70,
-        formRules: [
-            { id: 'hlr_swing', description: 'Swinging body', correctionMessage: 'Control the movement — no momentum', ruleKey: 'elbow_drift' },
-        ],
+        // Hip flexion (shoulder–hip–knee): straight-leg raises never bend the
+        // knee, so the old knee-angle config never counted. Hanging straight
+        // ≈ 175°, legs at 90° ≈ 95°.
+        landmarkIndices: [11, 23, 25], secondaryLandmarkIndices: [12, 24, 26],
+        extendedThreshold: 155, contractedThreshold: 110,
+        idealExtended: 175, idealContracted: 90,
+        formRules: [],
     },
 
     plank_shoulder_taps: {
@@ -719,7 +734,7 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
         repMode: 'standard', categoryLabel: 'Core',
         landmarkIndices: [11, 23, 27],
         extendedThreshold: 168, contractedThreshold: 140,
-        idealExtended: 175, idealContracted: 155,
+        idealExtended: 175, idealContracted: 130,
         formRules: [
             { id: 'pst_rotation', description: 'Hips rotating', correctionMessage: 'Brace core — minimize hip movement', ruleKey: 'back_arch' },
         ],
@@ -811,7 +826,6 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
         extendedThreshold: 155, contractedThreshold: 60,
         idealExtended: 170, idealContracted: 45,
         formRules: [
-            { id: 'lpd_lean', description: 'Leaning too far back', correctionMessage: 'Slight 10-15 degree lean only — use your lats', ruleKey: 'back_arch' },
         ],
     },
 
@@ -833,7 +847,6 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
         extendedThreshold: 155, contractedThreshold: 80,
         idealExtended: 170, idealContracted: 65,
         formRules: [
-            { id: 'lp2_lockout', description: 'Locking out knees', correctionMessage: 'Soft knees at top — do not fully lock out', ruleKey: 'insufficient_depth' },
         ],
     },
 
@@ -855,7 +868,6 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
         extendedThreshold: 155, contractedThreshold: 55,
         idealExtended: 170, idealContracted: 40,
         formRules: [
-            { id: 'sr_lean', description: 'Rocking torso', correctionMessage: 'Use your back, not momentum', ruleKey: 'back_arch' },
         ],
     },
 
@@ -865,7 +877,7 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
         repMode: 'standard', categoryLabel: 'Machine',
         landmarkIndices: [23, 25, 27], secondaryLandmarkIndices: [24, 26, 28],
         extendedThreshold: 155, contractedThreshold: 80,
-        idealExtended: 170, idealContracted: 170,
+        idealExtended: 170, idealContracted: 70,
         formRules: [],
     },
 
@@ -878,6 +890,8 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
         landmarkIndices: [11, 23, 27],
         extendedThreshold: 160, contractedThreshold: 130,
         idealExtended: 170, idealContracted: 140,
+        // Prone with chest raised: body line arched, well below standing-straight
+        holdRange: [120, 168], holdHorizontal: true,
         formRules: [],
     },
 
@@ -888,6 +902,8 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
         landmarkIndices: [11, 23, 25],
         extendedThreshold: 130, contractedThreshold: 80,
         idealExtended: 140, idealContracted: 90,
+        // Forward fold: hip angle closes well below standing (~175°)
+        holdRange: [50, 130],
         formRules: [],
     },
 
@@ -898,6 +914,8 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
         landmarkIndices: [23, 25, 27],
         extendedThreshold: 155, contractedThreshold: 100,
         idealExtended: 165, idealContracted: 110,
+        // Low lunge: front knee bent near 90–120°, never standing-straight
+        holdRange: [75, 130],
         formRules: [],
     },
 
@@ -908,6 +926,10 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
         landmarkIndices: [23, 25, 27],
         extendedThreshold: 150, contractedThreshold: 70,
         idealExtended: 165, idealContracted: 80,
+        // Heel pulled to glute: knee angle deeply closed. The old lower-bound
+        // logic had this inverted — the timer ran while standing and paused
+        // during the actual stretch.
+        holdRange: [10, 60],
         formRules: [],
     },
 
@@ -918,6 +940,8 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
         landmarkIndices: [23, 11, 15], secondaryLandmarkIndices: [24, 12, 16],
         extendedThreshold: 140, contractedThreshold: 50,
         idealExtended: 155, idealContracted: 60,
+        // Arm pulled across the chest: raised but not overhead
+        holdRange: [35, 100],
         formRules: [],
     },
 };

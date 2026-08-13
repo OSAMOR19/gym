@@ -37,10 +37,12 @@ export default function CountdownOverlay({ onComplete, voiceEnabled }: Countdown
         };
 
         loadVoices();
-        window.speechSynthesis.onvoiceschanged = loadVoices;
+        // addEventListener instead of assigning onvoiceschanged, so we don't
+        // clobber useSpeechCoach's handler (both are mounted at the same time)
+        window.speechSynthesis.addEventListener('voiceschanged', loadVoices);
 
         return () => {
-            window.speechSynthesis.onvoiceschanged = null;
+            window.speechSynthesis.removeEventListener('voiceschanged', loadVoices);
         };
     }, []);
 
@@ -62,22 +64,30 @@ export default function CountdownOverlay({ onComplete, voiceEnabled }: Countdown
         window.speechSynthesis.speak(utterance);
     }, [voiceEnabled]);
 
+    // Keep the latest callbacks in refs so the countdown effect can depend on
+    // `count` alone. With `phase`/`onComplete` in the deps, the setPhase('go')
+    // re-render used to run the cleanup and clear the GO! timer before it
+    // fired — onComplete never ran and the overlay locked the screen.
+    const speakRef = useRef(speak);
+    const onCompleteRef = useRef(onComplete);
+    useEffect(() => { speakRef.current = speak; }, [speak]);
+    useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
+
     useEffect(() => {
         if (count > 0) {
-            speak(String(count));
-            const timer = setTimeout(() => setCount(count - 1), 1000);
-            return () => clearTimeout(timer);
-        } else if (phase === 'number') {
-            // Show "GO!" for 800ms
-            setPhase('go');
-            speak('Go!');
-            const timer = setTimeout(() => {
-                setPhase('done');
-                onComplete();
-            }, 800);
+            speakRef.current(String(count));
+            const timer = setTimeout(() => setCount(c => c - 1), 1000);
             return () => clearTimeout(timer);
         }
-    }, [count, phase, speak, onComplete]);
+        // count reached 0 — show "GO!" for 800ms, then finish
+        setPhase('go');
+        speakRef.current('Go!');
+        const timer = setTimeout(() => {
+            setPhase('done');
+            onCompleteRef.current();
+        }, 800);
+        return () => clearTimeout(timer);
+    }, [count]);
 
     if (phase === 'done') return null;
 

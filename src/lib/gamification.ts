@@ -163,14 +163,18 @@ export async function loadStats(): Promise<UserStats> {
     };
 }
 
-export async function saveStats(stats: UserStats): Promise<void> {
+/** Returns true if the stats were persisted. */
+export async function saveStats(stats: UserStats): Promise<boolean> {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) return false;
 
-    await supabase
+    // upsert, not update: nothing ever inserts a user_stats row, so a plain
+    // UPDATE matched zero rows for new users and their XP silently vanished.
+    const { error } = await supabase
         .from('user_stats')
-        .update({
+        .upsert({
+            user_id: user.id,
             total_xp: stats.totalXP,
             level: stats.level,
             total_workouts: stats.totalWorkouts,
@@ -180,8 +184,13 @@ export async function saveStats(stats: UserStats): Promise<void> {
             last_workout_date: stats.lastWorkoutDate,
             earned_badges: stats.earnedBadges,
             perfect_form_reps: stats.perfectFormReps,
-        })
-        .eq('user_id', user.id);
+        }, { onConflict: 'user_id' });
+
+    if (error) {
+        console.error('[gamification] Failed to save stats:', error.message);
+        return false;
+    }
+    return true;
 }
 
 // ─── XP / Level calculations ─────────────────────────────────────────────────
@@ -225,7 +234,7 @@ export async function recordWorkout(
     reps: number,
     formQuality: number,
     perfectReps: number,
-): Promise<{ stats: UserStats; newBadges: Badge[]; xpGained: number }> {
+): Promise<{ stats: UserStats; newBadges: Badge[]; xpGained: number; saved: boolean }> {
     const stats = await loadStats();
     const xpGained = calculateXPForWorkout(reps, formQuality);
 
@@ -257,7 +266,7 @@ export async function recordWorkout(
         }
     }
 
-    await saveStats(stats);
+    const saved = await saveStats(stats);
 
-    return { stats, newBadges, xpGained };
+    return { stats, newBadges, xpGained, saved };
 }

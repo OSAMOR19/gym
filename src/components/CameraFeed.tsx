@@ -94,6 +94,15 @@ export default function CameraFeed({
         ctx.drawImage(video, sx, sy, sw, sh, 0, 0, w, h);
         ctx.restore();
 
+        // Landmarks are normalized to the FULL video frame, but the video is
+        // drawn cover-cropped. Apply the same crop + mirror so the skeleton
+        // actually sits on the body instead of drifting off it.
+        const mapX = (nx: number) => w - ((nx * vw - sx) / sw) * w;
+        const mapY = (ny: number) => ((ny * vh - sy) / sh) * h;
+        // MediaPipe reports hallucinated positions for joints it can't see —
+        // don't draw those.
+        const isVisible = (p: { visibility?: number }) => (p.visibility ?? 1) >= 0.5;
+
         // If we have landmarks, draw the skeleton
         if (landmarks && landmarks.length > 0) {
             // ─── Draw connection lines ───────────────────────────────────────
@@ -101,13 +110,12 @@ export default function CameraFeed({
             SKELETON_CONNECTIONS.forEach(([startIdx, endIdx]) => {
                 const start = landmarks[startIdx];
                 const end = landmarks[endIdx];
-                if (!start || !end) return;
+                if (!start || !end || !isVisible(start) || !isVisible(end)) return;
 
-                // Mirror x coordinates to match the flipped video
-                const x1 = (1 - start.x) * w;
-                const y1 = start.y * h;
-                const x2 = (1 - end.x) * w;
-                const y2 = end.y * h;
+                const x1 = mapX(start.x);
+                const y1 = mapY(start.y);
+                const x2 = mapX(end.x);
+                const y2 = mapY(end.y);
 
                 // Neon glow effect
                 ctx.shadowBlur = 15;
@@ -126,10 +134,10 @@ export default function CameraFeed({
             ctx.save();
             KEY_JOINTS.forEach((idx) => {
                 const point = landmarks[idx];
-                if (!point) return;
+                if (!point || !isVisible(point)) return;
 
-                const x = (1 - point.x) * w;
-                const y = point.y * h;
+                const x = mapX(point.x);
+                const y = mapY(point.y);
 
                 // Outer glow
                 ctx.shadowBlur = 20;
@@ -152,9 +160,9 @@ export default function CameraFeed({
             if (currentAngle > 0) {
                 const angleIdx = getAngleLandmarkIndex();
                 const joint = landmarks[angleIdx];
-                if (joint) {
-                    const x = (1 - joint.x) * w;
-                    const y = joint.y * h;
+                if (joint && isVisible(joint)) {
+                    const x = mapX(joint.x);
+                    const y = mapY(joint.y);
 
                     ctx.save();
                     ctx.font = 'bold 18px Inter, sans-serif';

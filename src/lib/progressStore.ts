@@ -91,7 +91,10 @@ export async function saveWorkout(record: Omit<WorkoutRecord, 'id' | 'date'>): P
         .select()
         .single();
 
-    if (error || !data) return null;
+    if (error || !data) {
+        console.error('[progressStore] Failed to save workout:', error?.message);
+        return null;
+    }
 
     return {
         id: data.id,

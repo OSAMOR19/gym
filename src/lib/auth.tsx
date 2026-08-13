@@ -14,7 +14,8 @@ interface AuthContextType {
     user: User | null;
     isLoading: boolean;
     login: (email: string, password: string) => Promise<{ error?: string }>;
-    signup: (name: string, email: string, password: string) => Promise<{ error?: string }>;
+    /** `needsConfirmation` is true when Supabase requires an email confirm before sign-in. */
+    signup: (name: string, email: string, password: string) => Promise<{ error?: string; needsConfirmation?: boolean }>;
     loginWithGoogle: () => Promise<{ error?: string }>;
     logout: () => void;
     resetPassword: (email: string) => Promise<{ error?: string; message?: string }>;
@@ -66,7 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     const signup = useCallback(async (name: string, email: string, password: string) => {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
             email,
             password,
             options: {
@@ -75,7 +76,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
         });
         if (error) return { error: error.message };
-        return {};
+        // No session back from signUp = email confirmation is required;
+        // the caller must NOT push to /dashboard (middleware would bounce it)
+        return { needsConfirmation: !data.session };
     }, []);
 
     const loginWithGoogle = useCallback(async () => {

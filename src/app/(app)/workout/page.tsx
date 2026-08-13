@@ -23,16 +23,19 @@ import MuscleIndicator from '../../../components/MuscleIndicator';
 import SetCompleteModal from '../../../components/SetCompleteModal';
 import CountdownOverlay from '../../../components/CountdownOverlay';
 import WorkoutSummaryDisplay from '../../../components/WorkoutSummary';
+import { useToast } from '../../../components/Toast';
 import type { WorkoutSummary } from '../../../lib/aiCoach';
 import type { Badge } from '../../../lib/gamification';
 
 export default function WorkoutPage() {
     const {
         videoRef, canvasRef, repCount, currentAngle, formQuality,
-        feedback, timeUnderTension, isDetecting, isLoading, error, exerciseId,
+        feedback, timeUnderTension, isDetecting, isLoading, error, modelError, exerciseId,
         landmarks, formCorrections, coachTip, holdTime, isHolding,
-        setExercise, startDetection, stopDetection, workoutStartTime,
+        setExercise, startDetection, stopDetection, endSession, retryModel, workoutStartTime,
     } = usePoseDetection();
+
+    const toast = useToast();
 
     const [showSummary, setShowSummary] = useState(false);
     const [summary, setSummary] = useState<WorkoutSummary | null>(null);
@@ -135,38 +138,59 @@ export default function WorkoutPage() {
         setShowSetComplete(false);
         setCurrentSet(prev => prev + 1);
         setCompleteTriggeredRef.current = false;
+        // Reset the coach's rep memory so milestones fire again for the new set
+        speechCoach.reset();
         // Start countdown for next set
         setTimeout(() => {
             setShowCountdown(true);
         }, 300);
-    }, []);
+    }, [speechCoach]);
 
-    // Handle "End Workout" (from modal or manual stop)
-    const handleEndWorkout = useCallback(async () => {
+    // Guard against double invocation (modal button + manual stop both route
+    // here) — without it a workout could be recorded and XP granted twice.
+    const endingRef = useRef(false);
+
+    /**
+     * Handle "End Workout" (from modal or manual stop).
+     * `finalTotal` is passed by callers that just added reps to the total —
+     * reading `totalRepsThisWorkout` here would see the pre-update value.
+     */
+    const handleEndWorkout = useCallback(async (finalTotal?: number) => {
+        if (endingRef.current) return;
+        endingRef.current = true;
+
         setShowSetComplete(false);
-        stopDetection();
+        endSession();
 
-        const totalReps = totalRepsThisWorkout > 0 ? totalRepsThisWorkout : repCount;
+        const isHold = currentExercise.repMode === 'hold';
+        const totalReps = finalTotal ?? (totalRepsThisWorkout > 0 ? totalRepsThisWorkout : repCount);
+        // Hold exercises produce no reps — credit 1 rep-equivalent per 3s held
+        // so planks/stretches earn XP and show up in history at all.
+        const effectiveReps = isHold ? Math.round(holdTime / 3) : totalReps;
 
-        if (totalReps > 0) {
+        if (effectiveReps > 0) {
             const duration = workoutStartTime ? Math.round((Date.now() - workoutStartTime) / 1000) : 0;
-            const ws = generateWorkoutSummary(totalReps, formQuality, timeUnderTension, duration, currentExercise.name);
+            const ws = generateWorkoutSummary(effectiveReps, formQuality, timeUnderTension, duration, currentExercise.name);
             setSummary(ws);
 
-            const perfectReps = formQuality >= 90 ? Math.round(totalReps * 0.3) : 0;
-            const result = await recordWorkout(totalReps, formQuality, perfectReps);
+            const perfectReps = formQuality >= 90 ? Math.round(effectiveReps * 0.3) : 0;
+            const result = await recordWorkout(effectiveReps, formQuality, perfectReps);
             setXpGained(result.xpGained);
             setNewBadges(result.newBadges);
 
-            await saveWorkout({
+            const record = await saveWorkout({
                 exerciseId,
                 exerciseName: currentExercise.name,
-                reps: totalReps,
+                reps: effectiveReps,
                 formQuality,
-                timeUnderTension,
+                timeUnderTension: isHold ? holdTime : timeUnderTension,
                 duration,
                 xpGained: result.xpGained,
             });
+
+            if (!result.saved || !record) {
+                toast.error('Workout not saved', 'Could not reach the server — your progress may be missing.');
+            }
 
             setShowSummary(true);
             speechCoach.speakSummary(ws.coachNotes);
@@ -177,15 +201,17 @@ export default function WorkoutPage() {
         setCurrentSet(1);
         setTotalRepsThisWorkout(0);
         setCompleteTriggeredRef.current = false;
-    }, [stopDetection, totalRepsThisWorkout, repCount, formQuality, timeUnderTension, currentExercise, exerciseId, workoutStartTime, speechCoach]);
+        endingRef.current = false;
+    }, [endSession, totalRepsThisWorkout, repCount, holdTime, formQuality, timeUnderTension, currentExercise, exerciseId, workoutStartTime, speechCoach, toast]);
 
-    // Manual stop
+    // Manual stop — include the in-progress set's reps in the total
     const handleManualStop = useCallback(() => {
+        const total = totalRepsThisWorkout + repCount;
         if (repCount > 0) {
-            setTotalRepsThisWorkout(prev => prev + repCount);
+            setTotalRepsThisWorkout(total);
         }
-        handleEndWorkout();
-    }, [repCount, handleEndWorkout]);
+        handleEndWorkout(total);
+    }, [repCount, totalRepsThisWorkout, handleEndWorkout]);
 
     const labelColors: Record<string, string> = {
         'Body-weight': '#22c55e',
@@ -376,6 +402,19 @@ export default function WorkoutPage() {
                 />
                 <RepCounterDisplay count={repCount} isDetecting={isDetecting} targetReps={targetReps} />
 
+                {/* AI model failed to load — camera works but reps aren't counted */}
+                {isDetecting && modelError && (
+                    <div className="absolute top-3 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 bg-red-500/15 backdrop-blur-sm border border-red-500/30 rounded-lg px-4 py-2 max-w-[90%]">
+                        <span className="text-xs font-medium text-red-300">{modelError}</span>
+                        <button
+                            onClick={retryModel}
+                            className="text-xs font-bold uppercase tracking-wider text-red-100 bg-red-500/30 hover:bg-red-500/50 rounded-md px-3 py-1 transition-all cursor-pointer flex-shrink-0"
+                        >
+                            Retry
+                        </button>
+                    </div>
+                )}
+
                 {/* Set tracker */}
                 <SetTracker
                     currentSet={currentSet}
@@ -504,7 +543,7 @@ export default function WorkoutPage() {
                     targetReps={targetReps}
                     formQuality={setFormQuality}
                     onNextSet={handleNextSet}
-                    onEndWorkout={handleEndWorkout}
+                    onEndWorkout={() => handleEndWorkout()}
                 />
             )}
 

@@ -22,6 +22,7 @@ export default function SignupPage() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const [confirmationSent, setConfirmationSent] = useState(false);
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
@@ -41,8 +42,14 @@ export default function SignupPage() {
         if (result.error) {
             setError(result.error);
             setLoading(false);
-        } else {
+        } else if (result.needsConfirmation) {
+            // No session yet — pushing to /dashboard would just bounce back
+            // to /login and kill the toast before it could be read
+            setLoading(false);
+            setConfirmationSent(true);
             info('Check your email!', 'We sent a confirmation link to ' + email);
+        } else {
+            success('Account created!', 'Welcome to IronTrack AI.');
             router.push('/dashboard');
         }
     };
@@ -52,6 +59,34 @@ export default function SignupPage() {
         const result = await loginWithGoogle();
         if (result.error) toastError('Google Sign-Up Failed', result.error);
     };
+
+    if (confirmationSent) {
+        return (
+            <AuthLayout>
+                <div className="text-center py-8">
+                    <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-[#22c55e]/10 border border-[#22c55e]/25 flex items-center justify-center">
+                        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                            <polyline points="22,6 12,13 2,6" />
+                        </svg>
+                    </div>
+                    <h2 className="text-2xl font-bold text-white mb-2">Confirm your email</h2>
+                    <p className="text-white/40 text-sm mb-1">We sent a confirmation link to</p>
+                    <p className="text-[#22c55e] font-medium mb-6">{email}</p>
+                    <p className="text-white/30 text-xs max-w-xs mx-auto mb-8">
+                        Click the link in that email to activate your account, then sign in.
+                        For best results, open it on this device.
+                    </p>
+                    <Link
+                        href="/login"
+                        className="inline-block px-6 py-3 rounded-xl bg-[#22c55e] text-black font-bold hover:bg-[#22c55e]/90 transition-all"
+                    >
+                        Go to Sign In
+                    </Link>
+                </div>
+            </AuthLayout>
+        );
+    }
 
     return (
         <AuthLayout>

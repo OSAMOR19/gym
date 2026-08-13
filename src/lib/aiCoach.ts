@@ -84,10 +84,9 @@ export function getCoachTip(
 ): CoachTip | null {
     const now = Date.now();
 
-    // Rate limit tips: at most one every 5 seconds
-    if (now - lastTipTime < 5000) return null;
-
-    // Track rep timing for tempo analysis
+    // Track rep timing for tempo analysis — this must happen BEFORE the tip
+    // rate limit below, otherwise every rep completed within 5s of a tip was
+    // dropped and the tempo score was almost always the hardcoded default.
     if (result.repJustCounted) {
         if (lastRepTime > 0) {
             repTimes.push((now - lastRepTime) / 1000);
@@ -95,6 +94,9 @@ export function getCoachTip(
         lastRepTime = now;
         totalFormScores.push(result.formQuality);
     }
+
+    // Rate limit tips: at most one every 5 seconds
+    if (now - lastTipTime < 5000) return null;
 
     let tip: CoachTip | null = null;
 

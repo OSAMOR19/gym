@@ -4,7 +4,7 @@
 
 'use client';
 
-import { useState, FormEvent } from 'react';
+import { useState, useEffect, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '../../lib/auth';
@@ -20,6 +20,21 @@ export default function LoginPage() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+
+    // Surface auth-callback failures (expired/cross-browser email links).
+    // The callback route redirects here with ?error=..., which was silently
+    // ignored — users clicking a dead reset link saw a plain login form and
+    // no explanation. (window.location instead of useSearchParams to avoid
+    // needing a Suspense boundary for static rendering.)
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('error')) {
+            setError(
+                'That sign-in link didn\'t work — it may have expired or been opened in a different browser. ' +
+                'Please sign in below, or request a new link.'
+            );
+        }
+    }, []);
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();

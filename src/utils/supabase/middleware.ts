@@ -46,13 +46,12 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Example: redirect to login if not logged in and trying to access protected routes
-  // Let's assume all other routes except login, signup, forgot-password, reset-password and public assets need auth...
-  // Or simply, protect /dashboard explicitly
-  if (
-    !user &&
-    pathname.startsWith('/dashboard')
-  ) {
+  // Redirect to login if not logged in and trying to access any app route.
+  // Every (app) group page is protected — previously only /dashboard was,
+  // and /workout, /progress, /profile, /programs relied on a client-side
+  // redirect that flashed the page to logged-out visitors.
+  const protectedPrefixes = ['/dashboard', '/workout', '/progress', '/profile', '/programs']
+  if (!user && protectedPrefixes.some((p) => pathname.startsWith(p))) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)

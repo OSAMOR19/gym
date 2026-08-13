@@ -76,7 +76,8 @@ export interface PoseState {
     timeUnderTension: number;
     isDetecting: boolean;
     isLoading: boolean;          // True while model loads
-    error: string | null;        // Camera/model error message
+    error: string | null;        // Camera error message (blocks the feed)
+    modelError: string | null;   // AI model failed to load — camera still works
     exerciseId: ExerciseId;
     landmarks: NormalizedLandmarkList | null;
     formCorrections: FormCorrection[];
@@ -90,8 +91,11 @@ export function usePoseDetection() {
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const repEngineRef = useRef<RepEngine>(new RepEngine('bicep_curl'));
-    const smootherRef = useRef<LandmarkSmoother>(new LandmarkSmoother(0.4));
+    // α=0.65: MediaPipe already smooths landmarks internally; heavier EMA on
+    // top made the tracked angle lag enough to miss fast reps entirely.
+    const smootherRef = useRef<LandmarkSmoother>(new LandmarkSmoother(0.65));
     const prevRepCount = useRef<number>(0);
+    const lastTipAtRef = useRef<number>(0);
     const animFrameRef = useRef<number>(0);
     const isRunningRef = useRef<boolean>(false);
     const poseRef = useRef<any>(null);
@@ -105,6 +109,7 @@ export function usePoseDetection() {
         isDetecting: false,
         isLoading: false,
         error: null,
+        modelError: null,
         exerciseId: 'bicep_curl',
         landmarks: null,
         formCorrections: [],
@@ -140,8 +145,10 @@ export function usePoseDetection() {
         const smoothed = smootherRef.current.smooth(
             landmarks.map((l) => ({ x: l.x, y: l.y }))
         );
+        // Visibility scores let the engine ignore occluded (hallucinated) joints
+        const visibility = landmarks.map((l) => l.visibility ?? 1);
 
-        const result: RepEngineResult = repEngineRef.current.processFrame(smoothed);
+        const result: RepEngineResult = repEngineRef.current.processFrame(smoothed, visibility);
 
         // Play beep if rep count increased
         if (result.repCount > prevRepCount.current) {
@@ -149,9 +156,13 @@ export function usePoseDetection() {
             prevRepCount.current = result.repCount;
         }
 
-        // Get coach tip
+        // Get coach tip — remember when we last got one so stale tips expire
+        // instead of sticking on screen (and re-triggering speech) forever
         const exerciseConfig = EXERCISES[repEngineRef.current.getExerciseId()];
         const tip = getCoachTip(result, exerciseConfig);
+        const now = Date.now();
+        if (tip) lastTipAtRef.current = now;
+        const keepPrevTip = now - lastTipAtRef.current < 4000;
 
         setState((prev) => ({
             ...prev,
@@ -163,31 +174,37 @@ export function usePoseDetection() {
             isDetecting: true,
             landmarks,
             formCorrections: result.formCorrections,
-            coachTip: tip ?? prev.coachTip,
+            coachTip: tip ?? (keepPrevTip ? prev.coachTip : null),
             holdTime: result.holdTime,
             isHolding: result.isHolding,
         }));
     }, []);
 
-    const startDetection = useCallback(async () => {
-        const video = videoRef.current;
-        if (!video) return;
+    /**
+     * Start (or resume, if the pose instance survived a previous set) the
+     * frame-processing loop for the given video element.
+     */
+    const startFrameLoop = useCallback((video: HTMLVideoElement) => {
+        const pose = poseRef.current;
+        if (!pose || !isRunningRef.current) return;
+        const processFrame = async () => {
+            if (!isRunningRef.current) return;
+            if (video.readyState >= 2) {
+                try { await pose.send({ image: video }); } catch {}
+            }
+            animFrameRef.current = requestAnimationFrame(processFrame);
+        };
+        processFrame();
+    }, []);
 
-        setState(prev => ({ ...prev, isLoading: true, error: null }));
+    /** Load the model (once) and attach it. Safe to call again as a retry. */
+    const loadModel = useCallback((video: HTMLVideoElement) => {
+        setState(prev => ({ ...prev, modelError: null }));
 
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' },
-            });
-            video.srcObject = stream;
-            await video.play();
-            isRunningRef.current = true;
-
-            // Camera is live
-            setState(prev => ({ ...prev, isDetecting: true, isLoading: false, workoutStartTime: Date.now() }));
-
-            // Load AI model in background (non-blocking)
-            loadMediaPipePose().then(Pose => {
+        loadMediaPipePose().then(Pose => {
+            // Reuse the existing instance across sets — each Pose is a WASM
+            // graph holding tens of MB, so recreating it per set leaks badly.
+            if (!poseRef.current) {
                 const pose = new Pose({
                     locateFile: (file: string) =>
                         `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`,
@@ -205,18 +222,73 @@ export function usePoseDetection() {
                     }
                 });
                 poseRef.current = pose;
-                const processFrame = async () => {
-                    if (!isRunningRef.current) return;
-                    if (video.readyState >= 2) {
-                        try { await pose.send({ image: video }); } catch {}
-                    }
-                    animFrameRef.current = requestAnimationFrame(processFrame);
-                };
-                processFrame();
-                resetCoach();
-            }).catch(() => {
-                // AI model failed — camera stays on, user exercises without tracking
+            }
+            startFrameLoop(video);
+            resetCoach();
+        }).catch(() => {
+            // Camera stays on, but the user must know reps won't count.
+            setState(prev => ({
+                ...prev,
+                modelError: 'AI tracking failed to load. Check your connection and retry — reps are not being counted.',
+            }));
+        });
+    }, [processLandmarks, startFrameLoop]);
+
+    /** Retry loading the AI model after a failure (camera keeps running). */
+    const retryModel = useCallback(() => {
+        const video = videoRef.current;
+        if (video && isRunningRef.current) loadModel(video);
+    }, [loadModel]);
+
+    const startDetection = useCallback(async () => {
+        const video = videoRef.current;
+        if (!video || isRunningRef.current) return;
+
+        // Fresh set: clear all per-set rep state. Without this, set 2 resumed
+        // from set 1's count and "completed" after a single rep.
+        repEngineRef.current.reset();
+        smootherRef.current.reset();
+        prevRepCount.current = 0;
+
+        setState(prev => ({
+            ...prev,
+            isLoading: true,
+            error: null,
+            repCount: 0,
+            currentAngle: 0,
+            formQuality: 0,
+            feedback: 'Good Form',
+            timeUnderTension: 0,
+            holdTime: 0,
+            isHolding: false,
+            formCorrections: [],
+            coachTip: null,
+        }));
+
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' },
             });
+            video.srcObject = stream;
+            await video.play();
+            isRunningRef.current = true;
+
+            // Camera is live. Keep the workout clock from the first set —
+            // resetting it here made "duration" measure only the last set.
+            setState(prev => ({
+                ...prev,
+                isDetecting: true,
+                isLoading: false,
+                workoutStartTime: prev.workoutStartTime ?? Date.now(),
+            }));
+
+            // Load AI model in background (non-blocking); resume loop if the
+            // model is already alive from a previous set.
+            if (poseRef.current) {
+                startFrameLoop(video);
+            } else {
+                loadModel(video);
+            }
         } catch (err: any) {
             let errorMsg = 'Camera access failed. Please allow camera permission.';
             if (err?.name === 'NotAllowedError') {
@@ -228,7 +300,7 @@ export function usePoseDetection() {
             }
             setState(prev => ({ ...prev, isLoading: false, isDetecting: false, error: errorMsg }));
         }
-    }, [processLandmarks]);
+    }, [loadModel, startFrameLoop]);
 
     const stopDetection = useCallback(() => {
         isRunningRef.current = false;
@@ -239,11 +311,28 @@ export function usePoseDetection() {
             stream.getTracks().forEach((track) => track.stop());
             video.srcObject = null;
         }
+        // Keep repCount/formQuality in state so the set-complete modal can
+        // show them; startDetection clears them for the next set.
         setState((prev) => ({ ...prev, isDetecting: false, isLoading: false, landmarks: null, error: null }));
     }, []);
 
+    /**
+     * End the whole workout (not just a set): stops the camera and clears the
+     * workout clock so the next workout starts a fresh duration.
+     */
+    const endSession = useCallback(() => {
+        stopDetection();
+        setState((prev) => ({ ...prev, workoutStartTime: null }));
+    }, [stopDetection]);
+
     useEffect(() => {
-        return () => { stopDetection(); };
+        return () => {
+            stopDetection();
+            // Release the WASM graph — without this every visit to the
+            // workout page leaked a full Pose instance.
+            poseRef.current?.close?.();
+            poseRef.current = null;
+        };
     }, [stopDetection]);
 
     return {
@@ -253,5 +342,7 @@ export function usePoseDetection() {
         setExercise,
         startDetection,
         stopDetection,
+        endSession,
+        retryModel,
     };
 }

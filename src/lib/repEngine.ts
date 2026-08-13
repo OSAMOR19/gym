@@ -9,9 +9,11 @@
  */
 
 import { calculateAngle, Point } from '../utils/angles';
-import { smoothValue } from '../utils/smoothing';
 import { ExerciseConfig, ExerciseId, EXERCISES } from './exercises';
 import { evaluateFormRules, FormCorrection } from './formCorrection';
+
+/** Minimum MediaPipe visibility for a landmark to be trusted. */
+const MIN_VISIBILITY = 0.6;
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -48,46 +50,64 @@ export class RepEngine {
     private holdStartTime: number | null = null;
     private totalHoldTime: number = 0;
     private isHolding: boolean = false;
+    // Near-miss tracking: deepest angle reached while still in IDLE, and when
+    // we last told the user they almost made the rep threshold
+    private idleLocalMin: number = 180;
+    private nearMissAt: number = 0;
 
     constructor(exerciseId: ExerciseId) {
         this.config = EXERCISES[exerciseId];
     }
 
-    processFrame(landmarks: Point[]): RepEngineResult {
-        const [iA, iB, iC] = this.config.landmarkIndices;
-        const pointA = landmarks[iA];
-        const pointB = landmarks[iB];
-        const pointC = landmarks[iC];
+    /**
+     * @param landmarks  All 33 smoothed landmark positions
+     * @param visibility Per-landmark MediaPipe visibility scores (0–1).
+     *                   MediaPipe hallucinates positions for occluded joints,
+     *                   so angles are only trusted when all three tracked
+     *                   points are actually visible.
+     */
+    processFrame(landmarks: Point[], visibility?: number[]): RepEngineResult {
+        const vis = (i: number) => visibility?.[i] ?? 1;
+        const sideVisible = ([a, b, c]: [number, number, number]) =>
+            Math.min(vis(a), vis(b), vis(c)) >= MIN_VISIBILITY;
+        const sidePoints = ([a, b, c]: [number, number, number]) =>
+            landmarks[a] && landmarks[b] && landmarks[c]
+                ? ([landmarks[a], landmarks[b], landmarks[c]] as const)
+                : null;
 
-        if (!pointA || !pointB || !pointC) {
-            return this.getResult(false);
+        // Collect the angle from each side whose landmarks are trusted
+        const angles: number[] = [];
+        const primary = sidePoints(this.config.landmarkIndices);
+        if (primary && sideVisible(this.config.landmarkIndices)) {
+            angles.push(calculateAngle(primary[0], primary[1], primary[2]));
         }
-
-        // Calculate primary angle
-        const primaryAngle = calculateAngle(pointA, pointB, pointC);
-
-        // If secondary landmarks exist (bilateral), calculate both angles
-        // and use the more active one (lower angle = more contracted)
-        let rawAngle = primaryAngle;
-
         if (this.config.secondaryLandmarkIndices) {
-            const [iA2, iB2, iC2] = this.config.secondaryLandmarkIndices;
-            const pA2 = landmarks[iA2];
-            const pB2 = landmarks[iB2];
-            const pC2 = landmarks[iC2];
-
-            if (pA2 && pB2 && pC2) {
-                const secondaryAngle = calculateAngle(pA2, pB2, pC2);
-                // Use the MORE CONTRACTED angle (lower value) — whichever arm is curling
-                rawAngle = Math.min(primaryAngle, secondaryAngle);
+            const secondary = sidePoints(this.config.secondaryLandmarkIndices);
+            if (secondary && sideVisible(this.config.secondaryLandmarkIndices)) {
+                angles.push(calculateAngle(secondary[0], secondary[1], secondary[2]));
             }
         }
 
-        this.currentAngle = smoothValue(rawAngle, this.smoothedAngle, 0.4);
-        this.smoothedAngle = this.currentAngle;
+        // No trusted side → freeze the state machine instead of feeding it
+        // hallucinated coordinates (phantom reps).
+        if (angles.length === 0) {
+            const result = this.getResult(false);
+            result.feedback = 'Step back so your full body is visible';
+            return result;
+        }
+
+        // Use the MORE CONTRACTED angle (lower value) among the visible
+        // sides — whichever limb is actively working.
+        const rawAngle = Math.min(...angles);
+
+        // The landmarks are already smoothed twice upstream (MediaPipe's
+        // smoothLandmarks + the hook's EMA); a third EMA here made the angle
+        // lag so much that fast reps never crossed both thresholds.
+        this.currentAngle = rawAngle;
+        this.smoothedAngle = rawAngle;
 
         // Evaluate form correction rules each frame
-        this.lastCorrections = evaluateFormRules(this.config.formRules, landmarks);
+        this.lastCorrections = evaluateFormRules(this.config.formRules, landmarks, visibility);
 
         // Track min/max angles within the current rep
         this.minAngleInRep = Math.min(this.minAngleInRep, this.currentAngle);
@@ -96,8 +116,26 @@ export class RepEngine {
         let repJustCounted = false;
 
         if (this.config.repMode === 'hold') {
-            // ─── Hold mode (plank) ───────────────────────────────────────────
-            const inGoodPosition = this.currentAngle >= this.config.contractedThreshold;
+            // ─── Hold mode (plank / stretches) ───────────────────────────────
+            // The hold position is an angle RANGE, not a single lower bound.
+            // With only `angle >= contractedThreshold`, standing upright
+            // (~180° at every joint) counted as holding for every exercise,
+            // and quad stretch (knee ~30°) never counted at all.
+            const [holdMin, holdMax] = this.config.holdRange
+                ?? [this.config.contractedThreshold, this.config.extendedThreshold];
+            let inGoodPosition =
+                this.currentAngle >= holdMin && this.currentAngle <= holdMax;
+
+            // Planks additionally require the body to be roughly horizontal,
+            // otherwise standing still satisfies the body-line angle too.
+            if (inGoodPosition && this.config.holdHorizontal) {
+                const [hA, , hC] = this.config.landmarkIndices;
+                const a = landmarks[hA];
+                const c = landmarks[hC];
+                if (a && c) {
+                    inGoodPosition = Math.abs(a.y - c.y) < Math.abs(a.x - c.x);
+                }
+            }
 
             if (inGoodPosition && !this.isHolding) {
                 this.holdStartTime = Date.now();
@@ -118,6 +156,19 @@ export class RepEngine {
                         this.tensionStartTime = Date.now();
                         this.minAngleInRep = this.currentAngle;
                         this.maxAngleInRep = this.currentAngle;
+                        this.idleLocalMin = 180;
+                    } else {
+                        // Near-miss: got close to the rep threshold but turned
+                        // back — previously this produced zero feedback and
+                        // the user had no idea why reps weren't counting.
+                        this.idleLocalMin = Math.min(this.idleLocalMin, this.currentAngle);
+                        const closeToThreshold =
+                            this.idleLocalMin < this.config.contractedThreshold + 25;
+                        const turningBack = this.currentAngle > this.idleLocalMin + 15;
+                        if (closeToThreshold && turningBack) {
+                            this.nearMissAt = Date.now();
+                            this.idleLocalMin = 180;
+                        }
                     }
                     break;
 
@@ -188,6 +239,8 @@ export class RepEngine {
         let feedback = 'Good Form';
         if (this.lastCorrections.length > 0) {
             feedback = this.lastCorrections[0].message;
+        } else if (Date.now() - this.nearMissAt < 2500) {
+            feedback = 'Almost — go a little further for the rep to count';
         } else if (avgForm > 0 && avgForm < 70) {
             feedback = 'Fix Your Form';
         }
@@ -220,6 +273,8 @@ export class RepEngine {
         this.holdStartTime = null;
         this.totalHoldTime = 0;
         this.isHolding = false;
+        this.idleLocalMin = 180;
+        this.nearMissAt = 0;
     }
 
     setExercise(exerciseId: ExerciseId): void {
