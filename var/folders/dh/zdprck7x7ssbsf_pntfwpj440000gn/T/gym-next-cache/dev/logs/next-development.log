@@ -1,6 +1,0 @@
-[00:00:03.393] Server  LOG     ✓ Ready in 3.2s
-[00:00:06.416] Server  LOG     ○ Compiling /dashboard ...
-[00:00:12.129] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:00:38.283] Server  LOG     ○ Compiling / ...
-[00:00:38.502] Server  WARN    ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
-[00:00:38.927] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold

@@ -24,6 +24,13 @@
 .DS_Store
 *.pem
 
+# macOS AppleDouble metadata (created when the project lived on an external drive)
+._*
+**/._*
+
+# stray build-cache copy
+/var/
+
 # debug
 npm-debug.log*
 yarn-debug.log*
