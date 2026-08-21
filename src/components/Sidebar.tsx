@@ -151,8 +151,12 @@ export default function Sidebar() {
                 </div>
             </aside>
 
-            {/* ─── Mobile Bottom Nav ──────────────────────────────────────── */}
-            <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0a0a0a]/95 backdrop-blur-lg border-t border-white/5">
+            {/* ─── Mobile Bottom Nav — hidden on the immersive workout screen;
+                 safe-area padding keeps it above the iOS home indicator ────── */}
+            <nav
+                className={`md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0a0a0a]/95 backdrop-blur-lg border-t border-white/5 ${pathname.startsWith('/workout') ? 'hidden' : ''}`}
+                style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+            >
                 <div className="flex items-center justify-around py-2 px-2">
                     {NAV_ITEMS.map((item) => {
                         const isActive = pathname.startsWith(item.href);

@@ -156,7 +156,10 @@ export default function CoachIntakeModal({ open, onClose, onPlanSaved }: CoachIn
         <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
             <div className="absolute inset-0 bg-black/80 backdrop-blur-sm animate-fade-in" onClick={onClose} />
 
-            <div className="relative w-full md:max-w-lg bg-[#0d0d0d] border border-white/10 md:rounded-2xl rounded-t-2xl shadow-2xl animate-fade-in h-[88vh] md:h-[640px] flex flex-col">
+            <div
+                className="relative w-full md:max-w-lg bg-[#0d0d0d] border border-white/10 md:rounded-2xl rounded-t-2xl shadow-2xl animate-fade-in h-[85dvh] md:h-[640px] flex flex-col"
+                style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+            >
                 {/* Header */}
                 <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/5">
                     <div className="flex items-center gap-2.5">

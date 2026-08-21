@@ -221,10 +221,13 @@ export default function ExerciseGuide({ exerciseId, isDetecting, showModal = fal
     useEffect(() => { setImgLoaded(false); }, [gifPath]);
 
     // ── Full-screen preview modal ─────────────────────────────────────────────
+    // Outer scrolls: on short phone screens the content is taller than the
+    // viewport, and without overflow-y-auto the "Got it" button was cut off.
     if (showModal) {
         return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md animate-in fade-in duration-300">
-                <div className="relative max-w-sm w-full mx-4 flex flex-col items-center gap-6">
+            <div className="fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-md animate-in fade-in duration-300">
+                <div className="min-h-full flex items-center justify-center py-8 px-4">
+                <div className="relative max-w-sm w-full flex flex-col items-center gap-4 sm:gap-6">
 
                     {/* Title */}
                     <div className="text-center space-y-1">
@@ -235,7 +238,7 @@ export default function ExerciseGuide({ exerciseId, isDetecting, showModal = fal
                     </div>
 
                     {/* GIF frame */}
-                    <div className="relative w-72 h-72 rounded-2xl overflow-hidden border border-white/10 bg-[#111] shadow-2xl">
+                    <div className="relative w-60 h-60 sm:w-72 sm:h-72 rounded-2xl overflow-hidden border border-white/10 bg-[#111] shadow-2xl">
                         {/* Subtle green glow behind the gif */}
 
                         {gifPath ? (
@@ -286,6 +289,7 @@ export default function ExerciseGuide({ exerciseId, isDetecting, showModal = fal
                     >
                         Got it — Let's Go!
                     </button>
+                </div>
                 </div>
             </div>
         );

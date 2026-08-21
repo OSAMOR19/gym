@@ -24,7 +24,9 @@ export default function ProgressChart({ data, height = 160 }: ProgressChartProps
                 Weekly Activity
             </h3>
 
-            <div className="flex justify-center overflow-x-auto">
+            {/* justify-start while overflowing: with justify-center the left
+                edge of an overflowing chart becomes unreachable on phones */}
+            <div className="flex justify-start sm:justify-center overflow-x-auto">
                 <svg width={chartWidth} height={height + 30} className="overflow-visible">
                     {data.map((d, i) => {
                         const barHeight = (d.reps / maxReps) * height;

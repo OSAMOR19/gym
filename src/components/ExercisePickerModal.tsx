@@ -147,7 +147,10 @@ export default function ExercisePickerModal({
             <div className="absolute inset-0 bg-black/80 backdrop-blur-sm animate-fade-in" onClick={onClose} />
 
             {/* Panel */}
-            <div className="relative w-full md:max-w-5xl bg-[#0d0d0d] border border-white/10 md:rounded-2xl rounded-t-2xl shadow-2xl animate-fade-in max-h-[92vh] flex flex-col">
+            <div
+                className="relative w-full md:max-w-5xl bg-[#0d0d0d] border border-white/10 md:rounded-2xl rounded-t-2xl shadow-2xl animate-fade-in max-h-[90dvh] flex flex-col"
+                style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+            >
                 {/* Header */}
                 <div className="flex items-center justify-between px-5 pt-4 pb-3">
                     <div>

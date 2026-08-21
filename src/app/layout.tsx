@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Orbitron } from "next/font/google";
 import { AuthProvider } from "../lib/auth";
 import { ToastProvider } from "../components/Toast";
@@ -16,6 +16,15 @@ const orbitron = Orbitron({
   display: "swap",
   weight: ["400", "500", "600", "700", "800", "900"],
 });
+
+// Mobile-first: cover the notch/home-indicator areas so fixed bars can pad
+// with env(safe-area-inset-*); keep pinch-zoom available for accessibility.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#0f0f0f",
+};
 
 export const metadata: Metadata = {
   title: "IronTrack — AI-Powered Workout Tracker",

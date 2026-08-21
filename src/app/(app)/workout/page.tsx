@@ -417,10 +417,14 @@ export default function WorkoutPage() {
     }, [repCount, holdTime, currentExercise, totalRepsThisWorkout, handleEndWorkout, captureSet]);
 
     return (
-        <div className="h-screen flex flex-col overflow-hidden">
+        // 100dvh (not vh): on mobile browsers 100vh includes the collapsed
+        // address bar, pushing the bottom controls off-screen
+        <div className="h-[100dvh] flex flex-col overflow-hidden">
             {/* ─── Top bar ────────────────────────────────────────────── */}
             <div className="flex-none bg-[#0a0a0a] border-b border-white/5 z-20 relative">
-                <div className="flex items-center justify-between px-4 py-2.5">
+                {/* flex-wrap: on narrow phones the controls drop to a second
+                    row instead of overflowing off-screen */}
+                <div className="flex flex-wrap items-center justify-between gap-y-2 px-4 py-2.5">
                     {/* Current exercise (clickable to toggle selector) */}
                     <button
                         onClick={() => !isDetecting && setSelectorOpen(!selectorOpen)}
@@ -436,7 +440,7 @@ export default function WorkoutPage() {
                         >
                             {currentExercise.icon}
                         </span>
-                        <span className="text-sm font-semibold text-white">{currentExercise.name}</span>
+                        <span className="text-sm font-semibold text-white truncate max-w-[9.5rem] sm:max-w-none">{currentExercise.name}</span>
                         {!isDetecting && (
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
                                 className={`text-white/20 transition-transform ${selectorOpen ? 'rotate-180' : ''}`}>
@@ -651,9 +655,10 @@ export default function WorkoutPage() {
                     <MuscleIndicator exerciseId={exerciseId} isDetecting={isDetecting} />
                 </div>
 
-                {/* Hold timer */}
+                {/* Hold timer — lifted on mobile so it clears the muscle
+                    indicator (and the program banner, when one is shown) */}
                 {currentExercise.repMode === 'hold' && isDetecting && (
-                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/70 backdrop-blur-sm rounded-full px-6 py-2.5 border border-white/10">
+                    <div className={`absolute ${queue ? 'bottom-[8.25rem]' : 'bottom-20'} md:bottom-6 left-1/2 -translate-x-1/2 bg-black/70 backdrop-blur-sm rounded-full px-6 py-2.5 border border-white/10`}>
                         <span className="font-bold text-xl flex items-center gap-2" style={{ fontFamily: 'Orbitron, monospace' }}>
                             <span className={`w-2.5 h-2.5 rounded-full ${isHolding ? 'bg-[#22c55e] shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-red-400'}`} />
                             <span className={isHolding ? 'text-[#22c55e]' : 'text-red-400'}>{holdTime.toFixed(1)}s</span>
@@ -662,9 +667,10 @@ export default function WorkoutPage() {
                     </div>
                 )}
 
-                {/* Form corrections */}
+                {/* Form corrections — width-capped on mobile so they don't run
+                    under the muscle indicator */}
                 {formCorrections.length > 0 && isDetecting && (
-                    <div className="absolute bottom-4 left-4 space-y-1.5 max-w-sm">
+                    <div className="absolute bottom-4 left-4 space-y-1.5 max-w-[62vw] md:max-w-sm">
                         {formCorrections.map((fc) => (
                             <div key={fc.ruleId} className="flex items-center gap-2 bg-black/70 backdrop-blur-sm border border-amber-500/20 rounded-lg px-3 py-1.5 text-xs text-amber-400/80">
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="flex-shrink-0">
@@ -696,9 +702,10 @@ export default function WorkoutPage() {
                     </div>
                 )}
 
-                {/* Program-day banner */}
+                {/* Program-day banner — lifted on mobile to clear the muscle
+                    indicator */}
                 {queue && (
-                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 bg-black/60 backdrop-blur-sm rounded-full border border-[#38bdf8]/20 px-4 py-1.5 flex items-center gap-2 pointer-events-none">
+                    <div className="absolute bottom-20 md:bottom-4 left-1/2 -translate-x-1/2 z-10 bg-black/60 backdrop-blur-sm rounded-full border border-[#38bdf8]/20 px-4 py-1.5 flex items-center gap-2 pointer-events-none max-w-[85vw]">
                         <span className="text-[9px] font-bold tracking-widest uppercase text-[#38bdf8]">
                             {queue.dayName}
                         </span>

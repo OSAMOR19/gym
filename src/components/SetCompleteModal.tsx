@@ -45,7 +45,7 @@ export default function SetCompleteModal({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md animate-fade-in">
-            <div className="bg-[#111]/95 border border-white/10 rounded-2xl p-8 max-w-sm w-[90%] text-center shadow-2xl">
+            <div className="bg-[#111]/95 border border-white/10 rounded-2xl p-6 sm:p-8 max-w-sm w-[90%] text-center shadow-2xl max-h-[90dvh] overflow-y-auto">
                 {/* Status icon */}
                 <div
                     className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center"
@@ -93,13 +93,14 @@ export default function SetCompleteModal({
                         <p className="text-[9px] text-white/25 tracking-widest uppercase mb-2">
                             How hard was that set?
                         </p>
-                        <div className="flex justify-center gap-1">
+                        {/* flex-1 buttons scale to the card width on any phone */}
+                        <div className="flex gap-1">
                             {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
                                 <button
                                     key={n}
                                     onClick={() => { setRpe(n); onRpe(n); }}
                                     className={`
-                                        w-7 h-8 rounded-md text-[11px] font-bold transition-all cursor-pointer
+                                        flex-1 min-w-0 h-9 rounded-md text-[11px] font-bold transition-all cursor-pointer
                                         ${rpe === n
                                             ? 'bg-[#22c55e] text-black'
                                             : 'bg-white/5 text-white/30 border border-white/5 hover:bg-white/10 hover:text-white/60'}
