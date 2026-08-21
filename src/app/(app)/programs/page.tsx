@@ -9,6 +9,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { PROGRAMS, getProgramById } from '../../../lib/programs';
 import { getCoachPlan, CoachPlan } from '../../../lib/coachIntake';
+import { syncCoachPlan } from '../../../lib/userProfile';
 import ProgramCard from '../../../components/ProgramCard';
 import CoachIntakeModal from '../../../components/CoachIntakeModal';
 
@@ -19,9 +20,11 @@ export default function ProgramsPage() {
     const [coachOpen, setCoachOpen] = useState(false);
     const [plan, setPlan] = useState<CoachPlan | null>(null);
 
-    // localStorage is client-only — read after mount
+    // Local cache renders instantly; the server copy (which follows the user
+    // across devices) reconciles in the background
     useEffect(() => {
         setPlan(getCoachPlan());
+        syncCoachPlan().then(setPlan);
     }, [coachOpen]);
 
     const planProgram = plan ? getProgramById(plan.programId) : null;

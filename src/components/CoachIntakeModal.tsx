@@ -15,6 +15,8 @@ import {
     INTAKE_STEPS, IntakeStep, IntakeAnswers, Recommendation,
     recommendProgram, saveCoachPlan, SAFETY_NOTE,
 } from '../lib/coachIntake';
+import { saveIntakeProfile } from '../lib/userProfile';
+import { logEvent } from '../lib/events';
 
 interface Msg {
     from: 'coach' | 'user';
@@ -107,10 +109,21 @@ export default function CoachIntakeModal({ open, onClose, onPlanSaved }: CoachIn
     }, [stepIndex, coachSay, finish]);
 
     const choosePlan = useCallback((programId: string) => {
-        saveCoachPlan({
-            answers: answersRef.current as IntakeAnswers,
-            programId,
-            savedAt: new Date().toISOString(),
+        const answers = answersRef.current as IntakeAnswers;
+        const savedAt = new Date().toISOString();
+        saveCoachPlan({ answers, programId, savedAt });
+        // Fire-and-forget: the intake becomes part of the persistent profile,
+        // but a slow network must never delay getting the user to their plan
+        void saveIntakeProfile(answers, programId, savedAt);
+        logEvent('INTAKE_COMPLETED', {
+            metadata: {
+                program_id: programId,
+                goal: answers.goal,
+                experience: answers.experience,
+                equipment: answers.equipment,
+                days_per_week: answers.daysPerWeek,
+                limitations: answers.limitations,
+            },
         });
         onPlanSaved?.();
         onClose();

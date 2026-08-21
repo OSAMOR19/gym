@@ -10,6 +10,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../../../lib/auth';
 import { loadStats, UserStats, BADGES, getXPForCurrentLevel } from '../../../lib/gamification';
 import { getCoachPlan, CoachPlan } from '../../../lib/coachIntake';
+import { syncCoachPlan } from '../../../lib/userProfile';
 import { getProgramById } from '../../../lib/programs';
 import AchievementBadge from '../../../components/AchievementBadge';
 import CoachIntakeModal from '../../../components/CoachIntakeModal';
@@ -29,6 +30,7 @@ export default function ProfilePage() {
 
     useEffect(() => {
         setPlan(getCoachPlan());
+        syncCoachPlan().then(setPlan);
     }, [coachOpen]);
 
     const planProgram = plan ? getProgramById(plan.programId) : null;
