@@ -211,11 +211,17 @@ export function getXPForCurrentLevel(xp: number): { current: number; required: n
 
 // ─── Streak calculation ──────────────────────────────────────────────────────
 
+/** Whole calendar days between two dates (local time). */
+function calendarDaysBetween(a: Date, b: Date): number {
+    const dayA = new Date(a.getFullYear(), a.getMonth(), a.getDate());
+    const dayB = new Date(b.getFullYear(), b.getMonth(), b.getDate());
+    return Math.round((dayB.getTime() - dayA.getTime()) / (1000 * 60 * 60 * 24));
+}
+
 function isConsecutiveDay(dateStr: string): boolean {
-    const last = new Date(dateStr);
-    const now = new Date();
-    const diffHours = (now.getTime() - last.getTime()) / (1000 * 60 * 60);
-    return diffHours < 48; // Within 48 hours counts as consecutive
+    // Exactly the previous calendar day — the old "within 48 hours" check
+    // let Mon 8AM → Wed 7AM keep a streak despite skipping Tuesday
+    return calendarDaysBetween(new Date(dateStr), new Date()) === 1;
 }
 
 function isToday(dateStr: string): boolean {
@@ -248,11 +254,9 @@ export async function recordWorkout(
     // Update streak
     const today = new Date().toISOString();
     if (!stats.lastWorkoutDate || !isToday(stats.lastWorkoutDate)) {
-        if (stats.lastWorkoutDate && isConsecutiveDay(stats.lastWorkoutDate)) {
-            stats.currentStreak += 1;
-        } else if (!stats.lastWorkoutDate || !isConsecutiveDay(stats.lastWorkoutDate)) {
-            stats.currentStreak = 1;
-        }
+        stats.currentStreak = stats.lastWorkoutDate && isConsecutiveDay(stats.lastWorkoutDate)
+            ? stats.currentStreak + 1
+            : 1;
         stats.longestStreak = Math.max(stats.longestStreak, stats.currentStreak);
     }
     stats.lastWorkoutDate = today;

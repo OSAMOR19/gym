@@ -74,15 +74,18 @@ export async function saveWorkout(record: Omit<WorkoutRecord, 'id' | 'date'>): P
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
 
+    // The table's numeric columns are integers — TUT/hold times arrive with
+    // 0.1s precision (e.g. 9.5) and Postgres rejects the whole insert:
+    // "invalid input syntax for type integer". Round everything at the boundary.
     const newRecord = {
         user_id: user.id,
         exercise_id: record.exerciseId,
         exercise_name: record.exerciseName,
-        reps: record.reps,
-        form_quality: record.formQuality,
-        time_under_tension: record.timeUnderTension,
-        duration: record.duration,
-        xp_gained: record.xpGained,
+        reps: Math.round(record.reps),
+        form_quality: Math.round(record.formQuality),
+        time_under_tension: Math.round(record.timeUnderTension),
+        duration: Math.round(record.duration),
+        xp_gained: Math.round(record.xpGained),
     };
 
     const { data, error } = await supabase
