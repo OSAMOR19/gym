@@ -19,8 +19,10 @@ import { ExerciseId, EXERCISES } from '../lib/exercises';
 interface CameraFeedProps {
     videoRef: React.RefObject<HTMLVideoElement | null>;
     canvasRef: React.RefObject<HTMLCanvasElement | null>;
-    landmarks: NormalizedLandmarkList | null;
-    currentAngle: number;
+    /** Per-frame landmark stream — a ref, so drawing never re-renders React */
+    landmarksRef: React.RefObject<NormalizedLandmarkList | null>;
+    angleRef: React.RefObject<number>;
+    hasBody: boolean;
     exercise: ExerciseId;
     isDetecting: boolean;
     isLoading?: boolean;
@@ -30,8 +32,9 @@ interface CameraFeedProps {
 export default function CameraFeed({
     videoRef,
     canvasRef,
-    landmarks,
-    currentAngle,
+    landmarksRef,
+    angleRef,
+    hasBody,
     exercise,
     isDetecting,
     isLoading,
@@ -104,6 +107,7 @@ export default function CameraFeed({
         const isVisible = (p: { visibility?: number }) => (p.visibility ?? 1) >= 0.5;
 
         // If we have landmarks, draw the skeleton
+        const landmarks = landmarksRef.current;
         if (landmarks && landmarks.length > 0) {
             // ─── Draw connection lines ───────────────────────────────────────
             ctx.save();
@@ -157,6 +161,7 @@ export default function CameraFeed({
             ctx.restore();
 
             // ─── Draw angle label near the vertex joint ──────────────────────
+            const currentAngle = Math.round(angleRef.current ?? 0);
             if (currentAngle > 0) {
                 const angleIdx = getAngleLandmarkIndex();
                 const joint = landmarks[angleIdx];
@@ -175,14 +180,16 @@ export default function CameraFeed({
                 }
             }
         }
+    }, [canvasRef, videoRef, landmarksRef, angleRef, getAngleLandmarkIndex]);
 
-        animRef.current = requestAnimationFrame(drawFrame);
-    }, [canvasRef, videoRef, landmarks, currentAngle, getAngleLandmarkIndex]);
-
+    // Drive the draw loop from the effect (drawFrame renders one frame)
     useEffect(() => {
-        if (isDetecting) {
-            animRef.current = requestAnimationFrame(drawFrame);
-        }
+        if (!isDetecting) return;
+        const loop = () => {
+            drawFrame();
+            animRef.current = requestAnimationFrame(loop);
+        };
+        animRef.current = requestAnimationFrame(loop);
         return () => {
             if (animRef.current) cancelAnimationFrame(animRef.current);
         };
@@ -252,13 +259,13 @@ export default function CameraFeed({
                 <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-10">
                     <div className="text-center space-y-3">
                         <div className="w-10 h-10 mx-auto border-3 border-[#22c55e]/30 border-t-[#22c55e] rounded-full animate-spin" />
-                        <p className="text-white/60 text-xs tracking-[0.2em] uppercase">Loading AI model…</p>
+                        <p className="text-white/60 text-xs tracking-[0.2em] uppercase">Starting motion tracking…</p>
                     </div>
                 </div>
             )}
 
             {/* Subtle hint when model is loaded but no body detected yet */}
-            {isDetecting && !isLoading && !landmarks && !error && (
+            {isDetecting && !isLoading && !hasBody && !error && (
                 <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
                     <p className="text-white/30 text-xs tracking-[0.15em] uppercase font-medium bg-black/40 backdrop-blur-sm rounded-full px-4 py-2">
                         Stand back so your full body is visible

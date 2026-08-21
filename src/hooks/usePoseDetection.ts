@@ -79,8 +79,15 @@ export interface PoseState {
     error: string | null;        // Camera error message (blocks the feed)
     modelError: string | null;   // AI model failed to load — camera still works
     exerciseId: ExerciseId;
-    landmarks: NormalizedLandmarkList | null;
+    /**
+     * Whether a body is currently detected. The landmarks themselves flow
+     * through `landmarksRef` (not state) so the 30fps landmark stream doesn't
+     * re-render the whole page on every camera frame.
+     */
+    hasBody: boolean;
     formCorrections: FormCorrection[];
+    /** Live "turn side-on / face the camera" hint from the engine's facing check */
+    positionHint: string | null;
     coachTip: CoachTip | null;
     holdTime: number;
     isHolding: boolean;
@@ -97,6 +104,11 @@ export function usePoseDetection() {
     const prevRepCount = useRef<number>(0);
     const lastTipAtRef = useRef<number>(0);
     const animFrameRef = useRef<number>(0);
+    // Per-frame data consumed by the canvas overlay directly — deliberately
+    // NOT React state (see PoseState.hasBody)
+    const landmarksRef = useRef<NormalizedLandmarkList | null>(null);
+    const angleRef = useRef<number>(0);
+    const lastStateUpdateRef = useRef<number>(0);
     const isRunningRef = useRef<boolean>(false);
     const poseRef = useRef<any>(null);
 
@@ -111,8 +123,9 @@ export function usePoseDetection() {
         error: null,
         modelError: null,
         exerciseId: 'bicep_curl',
-        landmarks: null,
+        hasBody: false,
         formCorrections: [],
+        positionHint: null,
         coachTip: null,
         holdTime: 0,
         isHolding: false,
@@ -132,8 +145,9 @@ export function usePoseDetection() {
             formQuality: 0,
             feedback: 'Good Form',
             timeUnderTension: 0,
-            landmarks: null,
+            hasBody: false,
             formCorrections: [],
+            positionHint: null,
             coachTip: null,
             holdTime: 0,
             isHolding: false,
@@ -164,20 +178,41 @@ export function usePoseDetection() {
         if (tip) lastTipAtRef.current = now;
         const keepPrevTip = now - lastTipAtRef.current < 4000;
 
-        setState((prev) => ({
-            ...prev,
-            repCount: result.repCount,
-            currentAngle: result.currentAngle,
-            formQuality: result.formQuality,
-            feedback: result.feedback,
-            timeUnderTension: result.timeUnderTension,
-            isDetecting: true,
-            landmarks,
-            formCorrections: result.formCorrections,
-            coachTip: tip ?? (keepPrevTip ? prev.coachTip : null),
-            holdTime: result.holdTime,
-            isHolding: result.isHolding,
-        }));
+        // Per-frame data goes to refs (read by the canvas overlay's own rAF
+        // loop) — React state only updates on meaningful changes or at 4Hz,
+        // instead of re-rendering the entire page 30×/sec.
+        landmarksRef.current = landmarks;
+        angleRef.current = result.currentAngle;
+
+        setState((prev) => {
+            const significant =
+                result.repCount !== prev.repCount ||
+                result.feedback !== prev.feedback ||
+                result.isHolding !== prev.isHolding ||
+                result.formCorrections.length !== prev.formCorrections.length ||
+                result.positionHint !== prev.positionHint ||
+                (tip !== null && tip !== prev.coachTip) ||
+                !prev.hasBody;
+            if (!significant && now - lastStateUpdateRef.current < 250) {
+                return prev;
+            }
+            lastStateUpdateRef.current = now;
+            return {
+                ...prev,
+                repCount: result.repCount,
+                currentAngle: result.currentAngle,
+                formQuality: result.formQuality,
+                feedback: result.feedback,
+                timeUnderTension: result.timeUnderTension,
+                isDetecting: true,
+                hasBody: true,
+                formCorrections: result.formCorrections,
+                positionHint: result.positionHint,
+                coachTip: tip ?? (keepPrevTip ? prev.coachTip : null),
+                holdTime: result.holdTime,
+                isHolding: result.isHolding,
+            };
+        });
     }, []);
 
     /**
@@ -229,7 +264,7 @@ export function usePoseDetection() {
             // Camera stays on, but the user must know reps won't count.
             setState(prev => ({
                 ...prev,
-                modelError: 'AI tracking failed to load. Check your connection and retry — reps are not being counted.',
+                modelError: 'Motion tracking failed to load. Check your connection and retry — reps are not being counted.',
             }));
         });
     }, [processLandmarks, startFrameLoop]);
@@ -313,7 +348,8 @@ export function usePoseDetection() {
         }
         // Keep repCount/formQuality in state so the set-complete modal can
         // show them; startDetection clears them for the next set.
-        setState((prev) => ({ ...prev, isDetecting: false, isLoading: false, landmarks: null, error: null }));
+        landmarksRef.current = null;
+        setState((prev) => ({ ...prev, isDetecting: false, isLoading: false, hasBody: false, error: null }));
     }, []);
 
     /**
@@ -338,6 +374,8 @@ export function usePoseDetection() {
     return {
         videoRef,
         canvasRef,
+        landmarksRef,
+        angleRef,
         ...state,
         setExercise,
         startDetection,

@@ -11,6 +11,7 @@
 import { calculateAngle, Point } from '../utils/angles';
 import { ExerciseConfig, ExerciseId, EXERCISES } from './exercises';
 import { evaluateFormRules, FormCorrection } from './formCorrection';
+import { getCameraGuide } from './cameraGuide';
 
 /** Minimum MediaPipe visibility for a landmark to be trusted. */
 const MIN_VISIBILITY = 0.6;
@@ -30,6 +31,8 @@ export interface RepEngineResult {
     holdTime: number;          // For plank-style exercises (seconds)
     isHolding: boolean;        // Whether the user is in the hold position
     repJustCounted: boolean;   // True on the frame a rep was counted
+    /** Set when the user's orientation contradicts the exercise's best camera view */
+    positionHint: string | null;
 }
 
 // ─── RepEngine Class ─────────────────────────────────────────────────────────
@@ -54,6 +57,10 @@ export class RepEngine {
     // we last told the user they almost made the rep threshold
     private idleLocalMin: number = 180;
     private nearMissAt: number = 0;
+    // Facing check: warn when orientation has contradicted the exercise's
+    // best camera view for a sustained stretch
+    private mismatchSince: number | null = null;
+    private positionHint: string | null = null;
 
     constructor(exerciseId: ExerciseId) {
         this.config = EXERCISES[exerciseId];
@@ -99,6 +106,8 @@ export class RepEngine {
         // Use the MORE CONTRACTED angle (lower value) among the visible
         // sides — whichever limb is actively working.
         const rawAngle = Math.min(...angles);
+
+        this.updateFacingCheck(landmarks, vis);
 
         // The landmarks are already smoothed twice upstream (MediaPipe's
         // smoothLandmarks + the hook's EMA); a third EMA here made the angle
@@ -203,6 +212,46 @@ export class RepEngine {
         return this.getResult(repJustCounted);
     }
 
+    /**
+     * Estimate whether the user faces the camera or stands side-on, and set a
+     * positioning hint when it contradicts this exercise's best view.
+     *
+     * Facing metric: on-screen shoulder width relative to torso length —
+     * facing the camera the shoulders span roughly a torso-length; side-on
+     * they nearly overlap. Warnings only fire when we're confident (outside
+     * the ambiguous middle band) and the mismatch has lasted a few seconds.
+     */
+    private updateFacingCheck(landmarks: Point[], vis: (i: number) => number): void {
+        const guide = getCameraGuide(this.config.id);
+        const shoulderL = landmarks[11];
+        const shoulderR = landmarks[12];
+        const hipL = landmarks[23];
+
+        const clear = () => { this.mismatchSince = null; this.positionHint = null; };
+
+        if (guide.view === 'angle' || !shoulderL || !shoulderR || !hipL
+            || vis(11) < 0.6 || vis(12) < 0.6 || vis(23) < 0.6) {
+            clear();
+            return;
+        }
+
+        const torso = Math.hypot(shoulderL.x - hipL.x, shoulderL.y - hipL.y);
+        if (torso < 0.01) { clear(); return; }
+        const ratio = Math.abs(shoulderL.x - shoulderR.x) / torso;
+
+        const facing: 'front' | 'side' | null = ratio > 0.6 ? 'front' : ratio < 0.32 ? 'side' : null;
+        const mismatch = facing !== null && facing !== guide.view;
+
+        if (!mismatch) { clear(); return; }
+        const now = Date.now();
+        if (this.mismatchSince === null) this.mismatchSince = now;
+        if (now - this.mismatchSince > 2500) {
+            this.positionHint = guide.view === 'side'
+                ? 'Turn side-on to the camera so your reps track properly'
+                : 'Face the camera for this exercise';
+        }
+    }
+
     private calculateFormScore(): number {
         const contractedScore = Math.max(
             0,
@@ -256,6 +305,7 @@ export class RepEngine {
             holdTime: Math.round(currentHold * 10) / 10,
             isHolding: this.isHolding,
             repJustCounted,
+            positionHint: this.positionHint,
         };
     }
 
@@ -275,6 +325,8 @@ export class RepEngine {
         this.isHolding = false;
         this.idleLocalMin = 180;
         this.nearMissAt = 0;
+        this.mismatchSince = null;
+        this.positionHint = null;
     }
 
     setExercise(exerciseId: ExerciseId): void {
