@@ -6,12 +6,12 @@
 
 'use client';
 
-import { use, useState } from 'react';
+import { use, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getProgramById } from '../../../../lib/programs';
-import { EXERCISES } from '../../../../lib/exercises';
-import DayNode from '../../../../components/DayNode';
-import ExerciseCard from '../../../../components/ExerciseCard';
+import { EXERCISES, ExerciseId } from '../../../../lib/exercises';
+import { setWorkoutQueue, getCompletedDays } from '../../../../lib/workoutQueue';
+import { EXERCISE_VIDEOS } from '../../../../components/ExerciseGuide';
 
 interface FlatDay {
     weekNumber: number;
@@ -25,6 +25,13 @@ export default function ProgramDetailPage({ params }: { params: Promise<{ id: st
     const router = useRouter();
     const program = getProgramById(id);
     const [selectedDay, setSelectedDay] = useState<number | null>(null);
+    const [hoveredDay, setHoveredDay] = useState<number | null>(null);
+    const [completedDays, setCompletedDays] = useState<number[]>([]);
+
+    // localStorage is client-only — read after mount
+    useEffect(() => {
+        setCompletedDays(getCompletedDays(id));
+    }, [id]);
 
     if (!program) {
         return (
@@ -49,19 +56,36 @@ export default function ProgramDetailPage({ params }: { params: Promise<{ id: st
 
     const totalExercises = flatDays.reduce((sum, d) => sum + d.exercises.length, 0);
 
-    // All days are unlocked so users can do multiple per day
-    // First day pulses as "current", rest are "available" and tappable
+    // All days stay unlocked so users can do multiple per day; completed days
+    // are marked, and the first uncompleted day pulses as "current"
+    const firstUncompleted = flatDays.findIndex((d) => !completedDays.includes(d.dayIndex));
     const getDayState = (idx: number): 'completed' | 'current' | 'available' | 'locked' => {
-        if (idx === 0) return 'current';
+        if (completedDays.includes(idx)) return 'completed';
+        if (idx === firstUncompleted) return 'current';
         return 'available';
     };
 
-    // Zigzag pattern: rows of 3 nodes, alternating left-to-right and right-to-left
-    const NODES_PER_ROW = 3;
-    const rows: FlatDay[][] = [];
-    for (let i = 0; i < flatDays.length; i += NODES_PER_ROW) {
-        rows.push(flatDays.slice(i, i + NODES_PER_ROW));
-    }
+    /** Hand the selected day's exercises to the workout page and go there. */
+    const startDay = (dayIndex: number) => {
+        const day = flatDays[dayIndex];
+        if (!day || !program) return;
+        setWorkoutQueue({
+            programId: program.id,
+            programName: program.name,
+            dayIndex,
+            dayName: day.dayName,
+            items: day.exercises.map((ex) => ({
+                exerciseId: ex.exerciseId as ExerciseId,
+                targetSets: ex.targetSets,
+                targetReps: ex.targetReps,
+                targetHoldSeconds: ex.targetHoldSeconds,
+            })),
+        });
+        router.push('/workout');
+    };
+
+    /** "Day 3: Upper Body" → "Upper Body" (the cell already shows the number) */
+    const dayTitle = (name: string) => name.replace(/^Day \d+:\s*/i, '');
 
     return (
         <div className="max-w-5xl mx-auto p-4 md:p-6">
@@ -81,7 +105,7 @@ export default function ProgramDetailPage({ params }: { params: Promise<{ id: st
                 {/* Background accent */}
                 <div
                     className="absolute inset-0 opacity-[0.03]"
-                    style={{ background: `linear-gradient(135deg, ${program.color}, transparent 50%)` }}
+                    style={{ background: program.color }}
                 />
 
                 {/* Ghost code */}
@@ -118,7 +142,8 @@ export default function ProgramDetailPage({ params }: { params: Promise<{ id: st
                             >
                                 {program.level}
                             </span>
-                            <span>{program.durationWeeks} weeks</span>
+                            {/* Derived from actual data — durationWeeks was often wrong */}
+                            <span>{program.weeks.length} week{program.weeks.length > 1 ? 's' : ''}</span>
                             <span className="w-0.5 h-0.5 bg-white/10 rounded-full" />
                             <span>{flatDays.length} days</span>
                             <span className="w-0.5 h-0.5 bg-white/10 rounded-full" />
@@ -134,71 +159,123 @@ export default function ProgramDetailPage({ params }: { params: Promise<{ id: st
                 <h2 className="text-xs font-bold text-white/30 tracking-widest uppercase">Your Pathway</h2>
             </div>
 
-            {/* ─── Zigzag Pathway ──────────────────────────────────────────── */}
-            <div className="relative mb-8">
-                {rows.map((row, rowIdx) => {
-                    const isReversed = rowIdx % 2 === 1;
-                    const displayRow = isReversed ? [...row].reverse() : row;
-
+            {/* ─── Calendar pathway — one section per week, day tiles in a grid.
+                 Hover a tile (desktop) for a quick exercise preview; tap to
+                 open the full day panel below. ─────────────────────────────── */}
+            <div className="space-y-7 mb-8">
+                {program.weeks.map((week) => {
+                    const weekDays = flatDays.filter((d) => d.weekNumber === week.weekNumber);
+                    const doneInWeek = weekDays.filter((d) => completedDays.includes(d.dayIndex)).length;
                     return (
-                        <div key={rowIdx}>
-                            {/* Row of day nodes */}
-                            <div
-                                className={`flex items-center ${isReversed ? 'justify-end' : 'justify-start'} gap-6 md:gap-10 mb-2`}
-                            >
-                                {displayRow.map((day) => (
-                                    <DayNode
-                                        key={day.dayIndex}
-                                        dayNumber={day.dayIndex + 1}
-                                        dayName={day.dayName}
-                                        exerciseCount={day.exercises.length}
-                                        state={getDayState(day.dayIndex)}
-                                        color={program.color}
-                                        isSelected={selectedDay === day.dayIndex}
-                                        onClick={() =>
-                                            setSelectedDay(
-                                                selectedDay === day.dayIndex ? null : day.dayIndex
-                                            )
-                                        }
-                                    />
-                                ))}
+                        <div key={week.weekNumber}>
+                            {/* Week header */}
+                            <div className="flex items-center gap-3 mb-3">
+                                <span className="text-[10px] font-bold tracking-widest uppercase" style={{ color: `${program.color}90` }}>
+                                    Week {week.weekNumber}
+                                </span>
+                                <div className="flex-1 h-px bg-white/5" />
+                                <span className="text-[9px] text-white/20 tracking-wider uppercase">
+                                    {doneInWeek}/{weekDays.length} done
+                                </span>
                             </div>
 
-                            {/* Connector line between rows */}
-                            {rowIdx < rows.length - 1 && (
-                                <div className={`flex ${isReversed ? 'justify-start' : 'justify-end'} px-10 my-1`}>
-                                    <svg width="40" height="40" viewBox="0 0 40 40" className="text-white/10">
-                                        <path
-                                            d={isReversed
-                                                ? 'M30 0 C30 20, 10 20, 10 40'
-                                                : 'M10 0 C10 20, 30 20, 30 40'
-                                            }
-                                            stroke="currentColor"
-                                            strokeWidth="2"
-                                            strokeDasharray="4 4"
-                                            fill="none"
-                                        />
-                                    </svg>
-                                </div>
-                            )}
+                            {/* Day tiles */}
+                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                                {weekDays.map((day) => {
+                                    const state = getDayState(day.dayIndex);
+                                    const isSelected = selectedDay === day.dayIndex;
+                                    const firstConfig = EXERCISES[day.exercises[0]?.exerciseId as keyof typeof EXERCISES];
+                                    const previewGif = firstConfig ? EXERCISE_VIDEOS[firstConfig.id] ?? null : null;
 
-                            {/* Week separator */}
-                            {rowIdx < rows.length - 1 && (() => {
-                                const lastDayInRow = row[row.length - 1];
-                                const firstDayInNextRow = rows[rowIdx + 1][0];
-                                if (lastDayInRow && firstDayInNextRow && lastDayInRow.weekNumber !== firstDayInNextRow.weekNumber) {
+                                    const cellStyle: React.CSSProperties = isSelected
+                                        ? { borderColor: program.color, backgroundColor: `${program.color}10` }
+                                        : state === 'completed'
+                                            ? { borderColor: `${program.color}35`, backgroundColor: `${program.color}08` }
+                                            : state === 'current'
+                                                ? { borderColor: `${program.color}50` }
+                                                : {};
+
                                     return (
-                                        <div className="flex items-center gap-3 my-4 px-4">
-                                            <div className="flex-1 h-px bg-white/5" />
-                                            <span className="text-[9px] text-white/15 tracking-widest uppercase font-bold">
-                                                Week {firstDayInNextRow.weekNumber}
-                                            </span>
-                                            <div className="flex-1 h-px bg-white/5" />
-                                        </div>
+                                        <button
+                                            key={day.dayIndex}
+                                            onClick={() => setSelectedDay(isSelected ? null : day.dayIndex)}
+                                            onMouseEnter={() => setHoveredDay(day.dayIndex)}
+                                            onMouseLeave={() => setHoveredDay(null)}
+                                            className={`
+                                                relative text-left rounded-xl border p-3.5 transition-all cursor-pointer
+                                                ${isSelected || state === 'completed' || state === 'current'
+                                                    ? ''
+                                                    : 'border-white/8 hover:border-white/20 hover:bg-white/[0.02]'}
+                                            `}
+                                            style={cellStyle}
+                                        >
+                                            {/* Day number + status */}
+                                            <div className="flex items-start justify-between mb-2">
+                                                <span
+                                                    className="text-2xl font-black leading-none"
+                                                    style={{
+                                                        fontFamily: 'Orbitron, monospace',
+                                                        color: state === 'completed' ? program.color : 'rgba(255,255,255,0.85)',
+                                                    }}
+                                                >
+                                                    {String(day.dayIndex + 1).padStart(2, '0')}
+                                                </span>
+                                                {state === 'completed' && (
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={program.color} strokeWidth="2.5" strokeLinecap="round">
+                                                        <polyline points="20,6 9,17 4,12" />
+                                                    </svg>
+                                                )}
+                                                {state === 'current' && (
+                                                    <span
+                                                        className="w-2.5 h-2.5 rounded-full animate-pulse"
+                                                        style={{ backgroundColor: program.color, boxShadow: `0 0 8px ${program.color}80` }}
+                                                    />
+                                                )}
+                                            </div>
+
+                                            <p className="text-[11px] font-semibold text-white/70 leading-tight mb-1.5 line-clamp-2 min-h-[2em]">
+                                                {dayTitle(day.dayName)}
+                                            </p>
+                                            <p className="text-[9px] text-white/25 tracking-wider uppercase">
+                                                {day.exercises.length} exercise{day.exercises.length > 1 ? 's' : ''}
+                                            </p>
+
+                                            {/* Hover preview (desktop) — rendered only while hovered
+                                                so its GIF isn't fetched for every tile up-front */}
+                                            {hoveredDay === day.dayIndex && (
+                                                <div className="hidden md:block absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-60 z-30 pointer-events-none">
+                                                    <div className="bg-[#101010] border border-white/10 rounded-xl p-2.5 shadow-2xl animate-fade-in">
+                                                        {previewGif && (
+                                                            <img
+                                                                src={previewGif}
+                                                                alt={firstConfig?.name ?? ''}
+                                                                className="w-full h-28 object-cover rounded-lg mb-2 bg-[#161616]"
+                                                            />
+                                                        )}
+                                                        <div className="space-y-1">
+                                                            {day.exercises.slice(0, 3).map((ex, i) => {
+                                                                const cfg = EXERCISES[ex.exerciseId as keyof typeof EXERCISES];
+                                                                if (!cfg) return null;
+                                                                return (
+                                                                    <div key={i} className="flex items-center justify-between text-[10px]">
+                                                                        <span className="text-white/70 truncate">{cfg.name}</span>
+                                                                        <span className="text-white/30 font-bold ml-2 flex-shrink-0" style={{ fontFamily: 'Orbitron, monospace' }}>
+                                                                            {ex.targetHoldSeconds ? `${ex.targetHoldSeconds}s` : `${ex.targetSets}×${ex.targetReps}`}
+                                                                        </span>
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                            {day.exercises.length > 3 && (
+                                                                <p className="text-[9px] text-white/25">+{day.exercises.length - 3} more</p>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </button>
                                     );
-                                }
-                                return null;
-                            })()}
+                                })}
+                            </div>
                         </div>
                     );
                 })}
@@ -239,26 +316,48 @@ export default function ProgramDetailPage({ params }: { params: Promise<{ id: st
                         </button>
                     </div>
 
-                    <div className="space-y-1.5">
+                    {/* Swipeable demo previews — see what you'll do before starting */}
+                    <div className="flex gap-3 overflow-x-auto snap-x pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                         {flatDays[selectedDay].exercises.map((ex, exIdx) => {
                             const config = EXERCISES[ex.exerciseId as keyof typeof EXERCISES];
                             if (!config) return null;
+                            const gif = EXERCISE_VIDEOS[config.id] ?? null;
                             return (
-                                <ExerciseCard
-                                    key={exIdx}
-                                    exercise={config}
-                                    targetSets={ex.targetSets}
-                                    targetReps={ex.targetReps || undefined}
-                                    targetHold={ex.targetHoldSeconds}
-                                    compact
-                                />
+                                <div key={exIdx} className="snap-start flex-shrink-0 w-44">
+                                    <div className="relative h-32 rounded-lg overflow-hidden bg-[#161616] border border-white/5 flex items-center justify-center">
+                                        {gif ? (
+                                            <img
+                                                src={gif}
+                                                alt={config.name}
+                                                loading="lazy"
+                                                className="w-full h-full object-cover"
+                                            />
+                                        ) : (
+                                            <span
+                                                className="text-xl font-black tracking-wider opacity-25"
+                                                style={{ color: program.color, fontFamily: 'Orbitron, monospace' }}
+                                            >
+                                                {config.icon}
+                                            </span>
+                                        )}
+                                        <span
+                                            className="absolute bottom-1.5 right-1.5 text-[9px] font-bold rounded-md px-1.5 py-0.5 bg-black/70 backdrop-blur-sm"
+                                            style={{ color: program.color, fontFamily: 'Orbitron, monospace' }}
+                                        >
+                                            {ex.targetHoldSeconds ? `${ex.targetHoldSeconds}s` : `${ex.targetSets}×${ex.targetReps}`}
+                                        </span>
+                                    </div>
+                                    <p className="text-[11px] font-medium text-white/70 mt-1.5 leading-tight truncate">
+                                        {exIdx + 1}. {config.name}
+                                    </p>
+                                </div>
                             );
                         })}
                     </div>
 
                     {/* Start this day's workout */}
                     <button
-                        onClick={() => router.push('/workout')}
+                        onClick={() => startDay(selectedDay)}
                         className="w-full flex items-center justify-center gap-2 py-3 mt-4 rounded-xl font-bold text-sm border transition-all cursor-pointer"
                         style={{
                             backgroundColor: `${program.color}10`,
@@ -274,9 +373,9 @@ export default function ProgramDetailPage({ params }: { params: Promise<{ id: st
                 </div>
             )}
 
-            {/* ─── Start Workout (global) ──────────────────────────────────── */}
+            {/* ─── Start Workout (global) — continues at the next uncompleted day */}
             <button
-                onClick={() => router.push('/workout')}
+                onClick={() => startDay(firstUncompleted >= 0 ? firstUncompleted : 0)}
                 className="w-full flex items-center justify-center gap-2 py-4 rounded-xl bg-[#22c55e]/10 text-[#22c55e] font-bold text-sm border border-[#22c55e]/25 hover:bg-[#22c55e]/20 transition-all cursor-pointer"
             >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="5,3 19,12 5,21" /></svg>

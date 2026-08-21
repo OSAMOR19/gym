@@ -20,7 +20,7 @@ export default function ProgramCard({ program }: ProgramCardProps) {
 
     return (
         <Link href={`/programs/${program.id}`} className="flex-shrink-0 snap-center">
-            <div className="group relative w-[85vw] md:w-[420px] rounded-xl overflow-hidden border border-white/5 hover:border-white/15 transition-all duration-500 cursor-pointer">
+            <div className="group relative w-[92vw] md:w-[460px] rounded-xl overflow-hidden border border-white/5 hover:border-white/15 transition-all duration-500 cursor-pointer">
                 {/* Image */}
                 <div className="relative aspect-[3/4] overflow-hidden">
                     <img
@@ -32,7 +32,7 @@ export default function ProgramCard({ program }: ProgramCardProps) {
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
                     <div
                         className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-500"
-                        style={{ background: `linear-gradient(135deg, ${program.color}, transparent)` }}
+                        style={{ background: program.color }}
                     />
 
                     {/* Level badge — top right */}
@@ -55,7 +55,7 @@ export default function ProgramCard({ program }: ProgramCardProps) {
                     <div className="flex items-center gap-3 text-[11px] text-white/25 font-medium">
                         <span className="flex items-center gap-1">
                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
-                            {program.durationWeeks}W
+                            {program.weeks.length}W
                         </span>
                         <span className="w-0.5 h-0.5 bg-white/10 rounded-full" />
                         <span>{totalDays} days</span>

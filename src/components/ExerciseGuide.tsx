@@ -14,6 +14,7 @@
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { ExerciseId, EXERCISES } from '../lib/exercises';
+import { getCameraGuide } from '../lib/cameraGuide';
 
 // ─── Video / GIF map ────────────────────────────────────────────────────────
 // Maps every ExerciseId to its GIF path under /public/videosillustrations/
@@ -29,7 +30,6 @@ export const EXERCISE_VIDEOS: Partial<Record<ExerciseId, string>> = {
     squat:               '/videosillustrations/body-weight/squat.gif',
     lunge:               '/videosillustrations/body-weight/lunges.gif',
     jump_squat:          '/videosillustrations/body-weight/jump-squat.gif',
-    calf_raise:          '/videosillustrations/body-weight/crunches.gif', // placeholder
     plank:               '/videosillustrations/body-weight/plank.gif',
     situp:               '/videosillustrations/body-weight/sit-up.gif',
     mountain_climber:    '/videosillustrations/body-weight/mountain-climbers.gif',
@@ -73,7 +73,7 @@ export const EXERCISE_VIDEOS: Partial<Record<ExerciseId, string>> = {
     // ── Cardio / Functional ──────────────────────────────────────────────────
     battle_ropes:     '/videosillustrations/cardio-function/Battle Ropes.gif',
     box_jumps:        '/videosillustrations/cardio-function/Box Jumps.gif',
-    farmers_walk:     "/videosillustrations/cardio-function/Farmer's Walk.gif",
+    farmers_walk:     '/videosillustrations/cardio-function/farmers-walk.gif',
     jump_rope:        '/videosillustrations/cardio-function/Jump Rope.gif',
     kettlebell_swing: '/videosillustrations/cardio-function/Kettlebell Swings.gif',
     rowing_machine:   '/videosillustrations/cardio-function/Rowing Machine.gif',
@@ -214,6 +214,7 @@ export default function ExerciseGuide({ exerciseId, isDetecting, showModal = fal
     const gifPath = EXERCISE_VIDEOS[exerciseId] ?? null;
     const tip     = EXERCISE_TIPS[exerciseId] ?? 'Focus on controlled movement';
     const name    = EXERCISES[exerciseId]?.name ?? exerciseId;
+    const cameraGuide = getCameraGuide(exerciseId);
 
     // Preload next – when gif path changes, reset "loaded" state
     const [imgLoaded, setImgLoaded] = useState(false);
@@ -236,7 +237,6 @@ export default function ExerciseGuide({ exerciseId, isDetecting, showModal = fal
                     {/* GIF frame */}
                     <div className="relative w-72 h-72 rounded-2xl overflow-hidden border border-white/10 bg-[#111] shadow-2xl">
                         {/* Subtle green glow behind the gif */}
-                        <div className="absolute inset-0 bg-gradient-to-b from-[#22c55e]/5 to-transparent pointer-events-none z-10" />
 
                         {gifPath ? (
                             <Image
@@ -258,8 +258,19 @@ export default function ExerciseGuide({ exerciseId, isDetecting, showModal = fal
                         )}
                     </div>
 
+                    {/* Camera setup — orientation decides whether reps track at all */}
+                    <div className="flex items-start gap-2.5 bg-amber-500/[0.07] border border-amber-500/20 rounded-xl px-4 py-3 max-w-xs w-full">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" className="flex-shrink-0 mt-0.5">
+                            <path d="M23 7l-7 5 7 5V7z" /><rect x="1" y="5" width="15" height="14" rx="2" />
+                        </svg>
+                        <div>
+                            <p className="text-[9px] font-bold tracking-widest uppercase text-amber-400/70 mb-0.5">Camera setup</p>
+                            <p className="text-sm text-white/60 leading-snug">{cameraGuide.tip}</p>
+                        </div>
+                    </div>
+
                     {/* Tip */}
-                    <div className="flex items-start gap-2.5 bg-white/5 border border-white/8 rounded-xl px-4 py-3 max-w-xs">
+                    <div className="flex items-start gap-2.5 bg-white/5 border border-white/8 rounded-xl px-4 py-3 max-w-xs w-full">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" className="flex-shrink-0 mt-0.5">
                             <circle cx="12" cy="12" r="10" />
                             <line x1="12" y1="8" x2="12" y2="12" />
@@ -306,6 +317,10 @@ export default function ExerciseGuide({ exerciseId, isDetecting, showModal = fal
             </div>
             <p className="text-[7px] text-white/35 text-center mt-1.5 leading-tight font-medium px-0.5 line-clamp-2">
                 {tip}
+            </p>
+            {/* Camera orientation reminder */}
+            <p className="text-[7px] font-bold text-amber-400/60 text-center mt-1 tracking-wider uppercase">
+                {cameraGuide.label}
             </p>
         </div>
     );
