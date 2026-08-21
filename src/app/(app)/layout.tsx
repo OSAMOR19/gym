@@ -7,14 +7,20 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '../../lib/auth';
 import Sidebar from '../../components/Sidebar';
+import CoachChat from '../../components/CoachChat';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
     const { user, isLoading } = useAuth();
     const router = useRouter();
+    const pathname = usePathname();
     const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+    // The workout screen is immersive: it owns the full viewport, the mobile
+    // bottom nav is hidden there (Sidebar does the same check), so no bottom
+    // padding — this is what stopped overlays from hiding behind the nav.
+    const isWorkout = pathname.startsWith('/workout');
 
     useEffect(() => {
         if (!isLoading && !user) {
@@ -56,11 +62,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
             {/* Main content area — offset dynamically by sidebar width */}
             <main
-                className={`relative z-10 pb-20 md:pb-0 min-h-screen transition-all duration-300 ${sidebarCollapsed ? 'md:ml-[60px]' : 'md:ml-56'
+                className={`relative z-10 min-h-screen transition-all duration-300 ${isWorkout ? '' : 'pb-24 md:pb-0'} ${sidebarCollapsed ? 'md:ml-[60px]' : 'md:ml-56'
                     }`}
             >
                 {children}
             </main>
+
+            {/* AI coach — floating button on every screen except the camera */}
+            <CoachChat />
         </div>
     );
 }
