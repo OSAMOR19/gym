@@ -29,29 +29,28 @@ export interface WorkoutSummary {
 // ─── Real-time coaching messages ─────────────────────────────────────────────
 
 const ENCOURAGEMENT_MESSAGES = [
-    { message: 'Great rep! 🔥', icon: '🔥' },
-    { message: 'Perfect form!', icon: '✨' },
-    { message: 'You\'re crushing it!', icon: '💪' },
-    { message: 'Keep that energy!', icon: '⚡' },
-    { message: 'Beast mode activated!', icon: '🦁' },
-    { message: 'Excellent control!', icon: '🎯' },
+    { message: 'Great rep', icon: '' },
+    { message: 'Clean form', icon: '' },
+    { message: 'Strong pace — keep it up', icon: '' },
+    { message: 'Good depth on that one', icon: '' },
+    { message: 'Excellent control', icon: '' },
 ];
 
 const TECHNIQUE_TIPS: Record<string, CoachTip[]> = {
     slowDown: [
-        { message: 'Slow down the lowering phase', type: 'technique', icon: '🐢' },
-        { message: 'Control the eccentric — time under tension matters', type: 'technique', icon: '⏱️' },
+        { message: 'Slow down the lowering phase', type: 'technique', icon: '' },
+        { message: 'Control the way down — that half counts too', type: 'technique', icon: '' },
     ],
     engageCore: [
-        { message: 'Engage your core', type: 'technique', icon: '🎯' },
-        { message: 'Brace your abs throughout the movement', type: 'technique', icon: '💎' },
+        { message: 'Engage your core', type: 'technique', icon: '' },
+        { message: 'Brace your abs through the movement', type: 'technique', icon: '' },
     ],
     breathe: [
-        { message: 'Remember to breathe — exhale on exertion', type: 'technique', icon: '💨' },
+        { message: 'Exhale on the push', type: 'technique', icon: '' },
     ],
     fullRom: [
-        { message: 'Focus on full range of motion', type: 'technique', icon: '📏' },
-        { message: 'Go through the complete movement', type: 'technique', icon: '🔄' },
+        { message: 'Work the full range of motion', type: 'technique', icon: '' },
+        { message: 'Finish each rep — all the way out, all the way in', type: 'technique', icon: '' },
     ],
 };
 
@@ -111,7 +110,7 @@ export function getCoachTip(
         tip = {
             message: result.formCorrections[0].message,
             type: 'warning',
-            icon: '⚠️',
+            icon: '',
         };
     }
 

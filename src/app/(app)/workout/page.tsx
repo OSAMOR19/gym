@@ -9,10 +9,12 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { usePoseDetection } from '../../../hooks/usePoseDetection';
 import { useSpeechCoach } from '../../../hooks/useSpeechCoach';
-import { ExerciseId, EXERCISES, CATEGORY_LABELS, getExercisesByLabel } from '../../../lib/exercises';
+import { EXERCISES } from '../../../lib/exercises';
 import { generateWorkoutSummary, resetCoach } from '../../../lib/aiCoach';
 import { recordWorkout } from '../../../lib/gamification';
 import { saveWorkout } from '../../../lib/progressStore';
+import { getWorkoutQueue, clearWorkoutQueue, markDayCompleted, WorkoutQueue } from '../../../lib/workoutQueue';
+import { getCameraGuide } from '../../../lib/cameraGuide';
 import CameraFeed from '../../../components/CameraFeed';
 import RepCounterDisplay from '../../../components/RepCounter';
 import SetTracker from '../../../components/SetTracker';
@@ -23,15 +25,16 @@ import MuscleIndicator from '../../../components/MuscleIndicator';
 import SetCompleteModal from '../../../components/SetCompleteModal';
 import CountdownOverlay from '../../../components/CountdownOverlay';
 import WorkoutSummaryDisplay from '../../../components/WorkoutSummary';
+import ExercisePickerModal from '../../../components/ExercisePickerModal';
 import { useToast } from '../../../components/Toast';
 import type { WorkoutSummary } from '../../../lib/aiCoach';
 import type { Badge } from '../../../lib/gamification';
 
 export default function WorkoutPage() {
     const {
-        videoRef, canvasRef, repCount, currentAngle, formQuality,
+        videoRef, canvasRef, landmarksRef, angleRef, repCount, formQuality,
         feedback, timeUnderTension, isDetecting, isLoading, error, modelError, exerciseId,
-        landmarks, formCorrections, coachTip, holdTime, isHolding,
+        hasBody, formCorrections, positionHint, coachTip, holdTime, isHolding,
         setExercise, startDetection, stopDetection, endSession, retryModel, workoutStartTime,
     } = usePoseDetection();
 
@@ -46,10 +49,31 @@ export default function WorkoutPage() {
     // Set/rep tracking
     const [targetReps, setTargetReps] = useState(10);
     const [targetSets, setTargetSets] = useState(3);
+    const [targetHoldSeconds, setTargetHoldSeconds] = useState(30);
     const [currentSet, setCurrentSet] = useState(1);
     const [showSetComplete, setShowSetComplete] = useState(false);
     const [setFormQuality, setSetFormQuality] = useState(0);
     const [totalRepsThisWorkout, setTotalRepsThisWorkout] = useState(0);
+
+    // Program-day queue (set by "Start Day N" on a program page)
+    const [queue, setQueue] = useState<WorkoutQueue | null>(null);
+    const [queueIndex, setQueueIndex] = useState(0);
+
+    // Consume a pending program day on mount
+    useEffect(() => {
+        const pending = getWorkoutQueue();
+        if (!pending) return;
+        setQueue(pending);
+        setQueueIndex(0);
+        const first = pending.items[0];
+        setExercise(first.exerciseId);
+        setTargetSets(first.targetSets);
+        if (first.targetReps > 0) setTargetReps(first.targetReps);
+        if (first.targetHoldSeconds) setTargetHoldSeconds(first.targetHoldSeconds);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    const nextQueueItem = queue?.items[queueIndex + 1] ?? null;
 
     // Countdown
     const [showCountdown, setShowCountdown] = useState(false);
@@ -99,6 +123,26 @@ export default function WorkoutPage() {
         prevRepCountRef.current = repCount;
     }, [repCount, targetReps, formQuality, speechCoach, stopDetection]);
 
+    // Hold exercises: complete the set when the hold target is reached.
+    // Previously hold sets had no finish condition at all — the only way out
+    // was the manual Stop button.
+    const isHoldExercise = currentExercise.repMode === 'hold';
+    useEffect(() => {
+        if (!isHoldExercise || !isDetecting) return;
+        if (holdTime >= targetHoldSeconds && !setCompleteTriggeredRef.current) {
+            setCompleteTriggeredRef.current = true;
+            setSetFormQuality(formQuality);
+            // Credit 1 rep-equivalent per 3s held so holds earn XP consistently
+            setTotalRepsThisWorkout(prev => prev + Math.max(1, Math.round(holdTime / 3)));
+
+            setTimeout(() => {
+                stopDetection();
+                setShowSetComplete(true);
+                speechCoach.onSetComplete();
+            }, 400);
+        }
+    }, [isHoldExercise, isDetecting, holdTime, targetHoldSeconds, formQuality, speechCoach, stopDetection]);
+
     // Feed coach tips to speech coach
     useEffect(() => {
         if (coachTip) {
@@ -118,9 +162,9 @@ export default function WorkoutPage() {
     // Called when countdown finishes
     const handleCountdownComplete = useCallback(() => {
         setShowCountdown(false);
-        speechCoach.announceExercise(currentExercise.name);
+        speechCoach.announceExercise(currentExercise.name, getCameraGuide(exerciseId).speech);
         startDetection();
-    }, [startDetection, speechCoach, currentExercise.name]);
+    }, [startDetection, speechCoach, currentExercise.name, exerciseId]);
 
     // Reset current set (stops detection, resets rep count)
     const handleReset = useCallback(() => {
@@ -133,18 +177,32 @@ export default function WorkoutPage() {
         }, 300);
     }, [stopDetection, speechCoach]);
 
-    // Handle "Next Set" from the modal
+    // Handle "Next Set" from the modal — or, when the exercise's sets are all
+    // done and a program day is loaded, advance to the day's next exercise
     const handleNextSet = useCallback(() => {
         setShowSetComplete(false);
-        setCurrentSet(prev => prev + 1);
         setCompleteTriggeredRef.current = false;
-        // Reset the coach's rep memory so milestones fire again for the new set
         speechCoach.reset();
+
+        if (currentSet >= targetSets && queue && nextQueueItem) {
+            // Advance to the next exercise in the program day
+            const next = nextQueueItem;
+            setQueueIndex(prev => prev + 1);
+            setExercise(next.exerciseId);
+            setTargetSets(next.targetSets);
+            if (next.targetReps > 0) setTargetReps(next.targetReps);
+            if (next.targetHoldSeconds) setTargetHoldSeconds(next.targetHoldSeconds);
+            setCurrentSet(1);
+            setShowVideoModal(true); // show the new exercise's demo before starting
+            return;
+        }
+
+        setCurrentSet(prev => prev + 1);
         // Start countdown for next set
         setTimeout(() => {
             setShowCountdown(true);
         }, 300);
-    }, [speechCoach]);
+    }, [speechCoach, currentSet, targetSets, queue, nextQueueItem, setExercise]);
 
     // Guard against double invocation (modal button + manual stop both route
     // here) — without it a workout could be recorded and XP granted twice.
@@ -163,14 +221,21 @@ export default function WorkoutPage() {
         endSession();
 
         const isHold = currentExercise.repMode === 'hold';
-        const totalReps = finalTotal ?? (totalRepsThisWorkout > 0 ? totalRepsThisWorkout : repCount);
-        // Hold exercises produce no reps — credit 1 rep-equivalent per 3s held
-        // so planks/stretches earn XP and show up in history at all.
-        const effectiveReps = isHold ? Math.round(holdTime / 3) : totalReps;
+        // Contribution of the current (possibly unfinished) set. Hold sets
+        // credit 1 rep-equivalent per 3s held so they earn XP consistently.
+        // Completed sets are already accumulated in totalRepsThisWorkout.
+        const currentContribution = setCompleteTriggeredRef.current
+            ? 0
+            : isHold ? Math.round(holdTime / 3) : repCount;
+        const effectiveReps = finalTotal
+            ?? (totalRepsThisWorkout > 0 ? totalRepsThisWorkout : currentContribution);
 
         if (effectiveReps > 0) {
             const duration = workoutStartTime ? Math.round((Date.now() - workoutStartTime) / 1000) : 0;
-            const ws = generateWorkoutSummary(effectiveReps, formQuality, timeUnderTension, duration, currentExercise.name);
+            // Program days are recorded under the day's name; free workouts
+            // under the exercise name
+            const recordName = queue ? `${queue.programName} — ${queue.dayName}` : currentExercise.name;
+            const ws = generateWorkoutSummary(effectiveReps, formQuality, timeUnderTension, duration, recordName);
             setSummary(ws);
 
             const perfectReps = formQuality >= 90 ? Math.round(effectiveReps * 0.3) : 0;
@@ -180,7 +245,7 @@ export default function WorkoutPage() {
 
             const record = await saveWorkout({
                 exerciseId,
-                exerciseName: currentExercise.name,
+                exerciseName: recordName,
                 reps: effectiveReps,
                 formQuality,
                 timeUnderTension: isHold ? holdTime : timeUnderTension,
@@ -196,32 +261,32 @@ export default function WorkoutPage() {
             speechCoach.speakSummary(ws.coachNotes);
         }
 
+        // Program day finished (last exercise, all sets) → mark it on the pathway
+        if (queue && !nextQueueItem && currentSet >= targetSets) {
+            markDayCompleted(queue.programId, queue.dayIndex);
+        }
+        clearWorkoutQueue();
+        setQueue(null);
+        setQueueIndex(0);
+
         resetCoach();
         speechCoach.reset();
         setCurrentSet(1);
         setTotalRepsThisWorkout(0);
         setCompleteTriggeredRef.current = false;
         endingRef.current = false;
-    }, [endSession, totalRepsThisWorkout, repCount, holdTime, formQuality, timeUnderTension, currentExercise, exerciseId, workoutStartTime, speechCoach, toast]);
+    }, [endSession, totalRepsThisWorkout, repCount, holdTime, formQuality, timeUnderTension, currentExercise, exerciseId, workoutStartTime, speechCoach, toast, queue, nextQueueItem, currentSet, targetSets]);
 
-    // Manual stop — include the in-progress set's reps in the total
+    // Manual stop — include the in-progress set's contribution in the total
     const handleManualStop = useCallback(() => {
-        const total = totalRepsThisWorkout + repCount;
-        if (repCount > 0) {
+        const isHold = currentExercise.repMode === 'hold';
+        const currentContribution = isHold ? Math.round(holdTime / 3) : repCount;
+        const total = totalRepsThisWorkout + currentContribution;
+        if (currentContribution > 0) {
             setTotalRepsThisWorkout(total);
         }
-        handleEndWorkout(total);
-    }, [repCount, totalRepsThisWorkout, handleEndWorkout]);
-
-    const labelColors: Record<string, string> = {
-        'Body-weight': '#22c55e',
-        'Dumbbell':    '#38bdf8',
-        'Barbell':     '#f59e0b',
-        'Machine':     '#a855f7',
-        'Cardio':      '#ef4444',
-        'Core':        '#f97316',
-        'Stretch':     '#14b8a6',
-    };
+        handleEndWorkout(total > 0 ? total : undefined);
+    }, [repCount, holdTime, currentExercise, totalRepsThisWorkout, handleEndWorkout]);
 
     return (
         <div className="h-screen flex flex-col overflow-hidden">
@@ -339,62 +404,34 @@ export default function WorkoutPage() {
                     </div>
                 </div>
 
-                {/* Exercise selector dropdown */}
-                {selectorOpen && !isDetecting && (
-                    <div className="absolute top-full left-0 right-0 bg-[#0a0a0a]/98 backdrop-blur-xl border-b border-white/5 px-4 py-3 z-30 max-h-[50vh] overflow-y-auto">
-                        {CATEGORY_LABELS.map((label) => {
-                            const exercises = getExercisesByLabel(label);
-                            if (exercises.length === 0) return null;
-                            const color = labelColors[label] ?? '#ffffff';
-                            return (
-                                <div key={label} className="mb-3 last:mb-0">
-                                    <p className="text-[8px] font-bold tracking-[0.25em] uppercase mb-1.5" style={{ color: `${color}60` }}>
-                                        {label}
-                                    </p>
-                                    <div className="flex flex-wrap gap-1.5">
-                                        {exercises.map((ex) => {
-                                            const isActive = exerciseId === ex.id;
-                                            return (
-                                                <button
-                                                    key={ex.id}
-                                                    onClick={() => {
-                                                        setExercise(ex.id);
-                                                        setSelectorOpen(false);
-                                                        speechCoach.reset();
-                                                        setCurrentSet(1);
-                                                        setTotalRepsThisWorkout(0);
-                                                        setCompleteTriggeredRef.current = false;
-                                                    }}
-                                                    className={`
-                                                        flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-all cursor-pointer
-                                                        ${isActive
-                                                            ? 'border'
-                                                            : 'text-white/30 border border-white/5 hover:border-white/15 hover:text-white/50'}
-                                                    `}
-                                                    style={isActive ? { backgroundColor: `${color}18`, color, borderColor: `${color}40` } : {}}
-                                                >
-                                                    <span className="text-[8px] font-black tracking-wider opacity-50" style={{ fontFamily: 'Orbitron, monospace' }}>
-                                                        {ex.icon}
-                                                    </span>
-                                                    {ex.name}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                )}
             </div>
+
+            {/* Exercise picker — swipeable card modal */}
+            <ExercisePickerModal
+                open={selectorOpen && !isDetecting}
+                activeExerciseId={exerciseId}
+                onClose={() => setSelectorOpen(false)}
+                onSelect={(id) => {
+                    setExercise(id);
+                    speechCoach.reset();
+                    setCurrentSet(1);
+                    setTotalRepsThisWorkout(0);
+                    setCompleteTriggeredRef.current = false;
+                    // Picking an exercise manually abandons the program day
+                    clearWorkoutQueue();
+                    setQueue(null);
+                    setQueueIndex(0);
+                }}
+            />
 
             {/* ─── Camera feed ────────────────────────────────────────── */}
             <div className="flex-1 relative overflow-hidden bg-black">
                 <CameraFeed
                     videoRef={videoRef}
                     canvasRef={canvasRef}
-                    landmarks={landmarks}
-                    currentAngle={currentAngle}
+                    landmarksRef={landmarksRef}
+                    angleRef={angleRef}
+                    hasBody={hasBody}
                     exercise={exerciseId}
                     isDetecting={isDetecting}
                     isLoading={isLoading}
@@ -432,8 +469,20 @@ export default function WorkoutPage() {
                     </div>
                 )}
 
+                {/* Wrong camera orientation — reps are being missed */}
+                {isDetecting && positionHint && (
+                    <div className="absolute top-14 left-1/2 -translate-x-1/2 z-20">
+                        <div className="bg-amber-500/15 backdrop-blur-sm border border-amber-500/30 rounded-lg px-4 py-2 flex items-center gap-2 animate-fade-in">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round">
+                                <path d="M23 7l-7 5 7 5V7z" /><rect x="1" y="5" width="15" height="14" rx="2" />
+                            </svg>
+                            <span className="text-xs font-bold text-amber-400">{positionHint}</span>
+                        </div>
+                    </div>
+                )}
+
                 {/* Form quality warning */}
-                {isDetecting && formQuality < 40 && repCount > 0 && (
+                {isDetecting && !positionHint && formQuality < 40 && repCount > 0 && (
                     <div className="absolute top-14 left-1/2 -translate-x-1/2 z-20 animate-pulse">
                         <div className="bg-red-500/20 backdrop-blur-sm border border-red-500/30 rounded-lg px-4 py-2 flex items-center gap-2">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round">
@@ -469,6 +518,7 @@ export default function WorkoutPage() {
                         <span className="font-bold text-xl flex items-center gap-2" style={{ fontFamily: 'Orbitron, monospace' }}>
                             <span className={`w-2.5 h-2.5 rounded-full ${isHolding ? 'bg-[#22c55e] shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-red-400'}`} />
                             <span className={isHolding ? 'text-[#22c55e]' : 'text-red-400'}>{holdTime.toFixed(1)}s</span>
+                            <span className="text-white/25 text-sm">/ {targetHoldSeconds}s</span>
                         </span>
                     </div>
                 )}
@@ -507,6 +557,18 @@ export default function WorkoutPage() {
                     </div>
                 )}
 
+                {/* Program-day banner */}
+                {queue && (
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 bg-black/60 backdrop-blur-sm rounded-full border border-[#38bdf8]/20 px-4 py-1.5 flex items-center gap-2 pointer-events-none">
+                        <span className="text-[9px] font-bold tracking-widest uppercase text-[#38bdf8]">
+                            {queue.dayName}
+                        </span>
+                        <span className="text-[9px] text-white/30">
+                            Exercise {queueIndex + 1}/{queue.items.length}
+                        </span>
+                    </div>
+                )}
+
                 {/* Pre-camera stats */}
                 {!isDetecting && !showSetComplete && !showSummary && (
                     <div className="absolute top-3 left-3 bg-black/50 backdrop-blur-sm rounded-lg border border-white/5 px-3 py-2 z-10">
@@ -539,9 +601,11 @@ export default function WorkoutPage() {
                 <SetCompleteModal
                     currentSet={currentSet}
                     totalSets={targetSets}
-                    repsCompleted={repCount}
+                    repsCompleted={isHoldExercise ? Math.round(holdTime) : repCount}
                     targetReps={targetReps}
                     formQuality={setFormQuality}
+                    mode={isHoldExercise ? 'hold' : 'reps'}
+                    nextExerciseName={nextQueueItem ? EXERCISES[nextQueueItem.exerciseId].name : undefined}
                     onNextSet={handleNextSet}
                     onEndWorkout={() => handleEndWorkout()}
                 />

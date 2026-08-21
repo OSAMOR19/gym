@@ -113,10 +113,11 @@ export function useSpeechCoach(options: SpeechCoachOptions) {
         window.speechSynthesis.speak(utterance);
     }, [enabled]);
 
-    // Speak exercise name when workout starts
-    const announceExercise = useCallback((exerciseName: string) => {
+    // Speak exercise name (and camera positioning) when workout starts
+    const announceExercise = useCallback((exerciseName: string, positionSpeech?: string) => {
         if (!enabled) return;
-        speak(`Let's do ${exerciseName}. Get ready!`, true);
+        const position = positionSpeech ? ` ${positionSpeech}` : '';
+        speak(`Let's do ${exerciseName}.${position} Get ready!`, true);
     }, [enabled, speak]);
 
     // Handle rep count changes — key milestones

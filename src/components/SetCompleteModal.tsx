@@ -11,6 +11,10 @@ interface SetCompleteModalProps {
     repsCompleted: number;
     targetReps: number;
     formQuality: number;
+    /** 'hold' shows the count as seconds held instead of reps */
+    mode?: 'reps' | 'hold';
+    /** When set, the last set advances to this exercise instead of ending (program days) */
+    nextExerciseName?: string;
     onNextSet: () => void;
     onEndWorkout: () => void;
 }
@@ -21,10 +25,13 @@ export default function SetCompleteModal({
     repsCompleted,
     targetReps,
     formQuality,
+    mode = 'reps',
+    nextExerciseName,
     onNextSet,
     onEndWorkout,
 }: SetCompleteModalProps) {
     const isLastSet = currentSet >= totalSets;
+    const hasNextExercise = isLastSet && !!nextExerciseName;
     const formLabel = formQuality >= 80 ? 'Excellent' : formQuality >= 60 ? 'Good' : 'Needs Work';
     const formColor = formQuality >= 80 ? '#22c55e' : formQuality >= 60 ? '#f59e0b' : '#ef4444';
 
@@ -46,7 +53,11 @@ export default function SetCompleteModal({
                     Set {currentSet} Complete
                 </h2>
                 <p className="text-sm text-white/30 mb-6">
-                    {isLastSet ? 'Final set — great workout!' : `${totalSets - currentSet} set${totalSets - currentSet > 1 ? 's' : ''} remaining`}
+                    {hasNextExercise
+                        ? `Exercise done — next up: ${nextExerciseName}`
+                        : isLastSet
+                            ? 'Final set — great workout!'
+                            : `${totalSets - currentSet} set${totalSets - currentSet > 1 ? 's' : ''} remaining`}
                 </p>
 
                 {/* Stats row */}
@@ -55,7 +66,7 @@ export default function SetCompleteModal({
                         <p className="text-2xl font-black text-white" style={{ fontFamily: 'Orbitron, monospace' }}>
                             {repsCompleted}
                         </p>
-                        <p className="text-[9px] text-white/25 tracking-widest uppercase mt-0.5">Reps</p>
+                        <p className="text-[9px] text-white/25 tracking-widest uppercase mt-0.5">{mode === 'hold' ? 'Seconds Held' : 'Reps'}</p>
                     </div>
                     <div className="w-px bg-white/10" />
                     <div className="text-center">
@@ -70,25 +81,25 @@ export default function SetCompleteModal({
 
                 {/* Action buttons */}
                 <div className="flex flex-col gap-2.5">
-                    {!isLastSet && (
+                    {(!isLastSet || hasNextExercise) && (
                         <button
                             onClick={onNextSet}
                             className="w-full py-3 rounded-xl font-bold text-sm tracking-wider uppercase bg-[#22c55e] text-black hover:bg-[#16a34a] transition-all cursor-pointer shadow-[0_0_25px_rgba(34,197,94,0.25)]"
                         >
-                            Next Set →
+                            {hasNextExercise ? `Next: ${nextExerciseName} →` : 'Next Set →'}
                         </button>
                     )}
                     <button
                         onClick={onEndWorkout}
                         className={`
                             w-full py-3 rounded-xl font-bold text-sm tracking-wider uppercase transition-all cursor-pointer
-                            ${isLastSet
+                            ${isLastSet && !hasNextExercise
                                 ? 'bg-[#22c55e] text-black hover:bg-[#16a34a] shadow-[0_0_25px_rgba(34,197,94,0.25)]'
                                 : 'bg-white/5 text-white/40 border border-white/10 hover:bg-white/10 hover:text-white/60'
                             }
                         `}
                     >
-                        {isLastSet ? 'View Summary' : 'End Workout'}
+                        {isLastSet && !hasNextExercise ? 'View Summary' : 'End Workout'}
                     </button>
                 </div>
             </div>

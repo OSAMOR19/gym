@@ -95,7 +95,7 @@ export default function WorkoutSummaryDisplay({ summary, xpGained, newBadges, on
                 <div className="mb-6">
                     <h3 className="text-xs font-bold text-white/40 tracking-widest uppercase mb-3 flex items-center gap-2">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" /></svg>
-                        AI Coach Notes
+                        Coach Notes
                     </h3>
                     <div className="space-y-2">
                         {summary.coachNotes.map((note, i) => (
