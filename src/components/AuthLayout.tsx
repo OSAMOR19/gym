@@ -17,7 +17,7 @@ const SLIDES = [
     {
         image: '/images/gym1.png',
         title: 'Train Hard',
-        subtitle: 'Push your limits with AI-powered form tracking',
+        subtitle: 'Push your limits with real-time form tracking',
     },
     {
         image: '/images/gym2.png',
@@ -118,7 +118,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
                 {/* Logo in top-left */}
                 <div className="absolute top-6 left-6 z-10">
                     <Link href="/" className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#22c55e] to-[#38bdf8] flex items-center justify-center shadow-[0_0_15px_rgba(34,197,94,0.3)]">
+                        <div className="w-8 h-8 rounded-lg bg-[#22c55e] flex items-center justify-center shadow-[0_0_15px_rgba(34,197,94,0.3)]">
                             <svg className="w-5 h-5 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
                             </svg>
@@ -139,13 +139,13 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
 
                 {/* Mobile logo (hidden on desktop where carousel shows it) */}
                 <div className="lg:hidden flex items-center gap-3 mb-8">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#22c55e] to-[#38bdf8] flex items-center justify-center shadow-[0_0_20px_rgba(34,197,94,0.3)]">
+                    <div className="w-10 h-10 rounded-xl bg-[#22c55e] flex items-center justify-center shadow-[0_0_20px_rgba(34,197,94,0.3)]">
                         <svg className="w-6 h-6 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
                         </svg>
                     </div>
                     <span className="text-lg font-bold tracking-wider" style={{ fontFamily: 'Orbitron, sans-serif' }}>
-                        IRON<span className="text-[#22c55e]">TRACK</span> <span className="text-[#38bdf8]">AI</span>
+                        IRON<span className="text-[#22c55e]">TRACK</span>
                     </span>
                 </div>
 

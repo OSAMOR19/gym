@@ -49,7 +49,7 @@ export default function SignupPage() {
             setConfirmationSent(true);
             info('Check your email!', 'We sent a confirmation link to ' + email);
         } else {
-            success('Account created!', 'Welcome to IronTrack AI.');
+            success('Account created!', 'Welcome to IronTrack.');
             router.push('/dashboard');
         }
     };
@@ -91,7 +91,7 @@ export default function SignupPage() {
     return (
         <AuthLayout>
             <h2 className="text-2xl font-bold text-white mb-1">Create Account</h2>
-            <p className="text-white/30 text-sm mb-8">Start your fitness journey with IronTrack AI</p>
+            <p className="text-white/30 text-sm mb-8">Start your fitness journey with IronTrack</p>
 
             {/* Google OAuth */}
             <button

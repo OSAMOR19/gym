@@ -52,7 +52,7 @@ export default function ResetPasswordPage() {
         <AuthLayout>
             <h2 className="text-2xl font-bold text-white mb-1">Set New Password</h2>
             <p className="text-white/30 text-sm mb-8">
-                Choose a strong password for your IronTrack AI account.
+                Choose a strong password for your IronTrack account.
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-4">

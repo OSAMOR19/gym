@@ -60,7 +60,7 @@ export default function LoginPage() {
     return (
         <AuthLayout>
             <h2 className="text-2xl font-bold text-white mb-1">Welcome Back</h2>
-            <p className="text-white/30 text-sm mb-8">Sign in to continue to IronTrack AI</p>
+            <p className="text-white/30 text-sm mb-8">Sign in to continue to IronTrack</p>
 
             {/* Google OAuth */}
             <button
