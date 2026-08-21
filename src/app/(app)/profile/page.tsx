@@ -9,11 +9,16 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../../lib/auth';
 import { loadStats, UserStats, BADGES, getXPForCurrentLevel } from '../../../lib/gamification';
+import { getCoachPlan, CoachPlan } from '../../../lib/coachIntake';
+import { getProgramById } from '../../../lib/programs';
 import AchievementBadge from '../../../components/AchievementBadge';
+import CoachIntakeModal from '../../../components/CoachIntakeModal';
 
 export default function ProfilePage() {
     const { user, logout } = useAuth();
     const [stats, setStats] = useState<UserStats | null>(null);
+    const [coachOpen, setCoachOpen] = useState(false);
+    const [plan, setPlan] = useState<CoachPlan | null>(null);
 
     useEffect(() => {
         async function fetchStats() {
@@ -21,6 +26,12 @@ export default function ProfilePage() {
         }
         fetchStats();
     }, []);
+
+    useEffect(() => {
+        setPlan(getCoachPlan());
+    }, [coachOpen]);
+
+    const planProgram = plan ? getProgramById(plan.programId) : null;
 
     const xpInfo = stats ? getXPForCurrentLevel(stats.totalXP) : { current: 0, required: 500 };
     const xpPct = (xpInfo.current / xpInfo.required) * 100;
@@ -41,7 +52,7 @@ export default function ProfilePage() {
 
                 <div className="relative flex items-center gap-5">
                     {/* Avatar */}
-                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#22c55e] to-[#38bdf8] flex items-center justify-center shadow-[0_0_20px_rgba(34,197,94,0.15)] flex-shrink-0">
+                    <div className="w-14 h-14 rounded-xl bg-[#22c55e] flex items-center justify-center shadow-[0_0_20px_rgba(34,197,94,0.15)] flex-shrink-0">
                         <span className="text-black text-xl font-black" style={{ fontFamily: 'Orbitron, monospace' }}>
                             {user?.name?.charAt(0).toUpperCase()}
                         </span>
@@ -54,12 +65,23 @@ export default function ProfilePage() {
                             Member since {user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'today'}
                         </p>
                     </div>
+
+                    {/* Training plan */}
+                    <button
+                        onClick={() => setCoachOpen(true)}
+                        className="hidden sm:block text-right flex-shrink-0 rounded-lg border border-white/8 hover:border-[#22c55e]/40 px-3.5 py-2 transition-all cursor-pointer"
+                    >
+                        <p className="text-[9px] text-white/25 tracking-widest uppercase">Training plan</p>
+                        <p className="text-xs font-semibold text-[#22c55e]">
+                            {planProgram ? planProgram.name : 'Find my plan'}
+                        </p>
+                    </button>
                 </div>
 
                 {/* Level + XP bar */}
                 {stats && (
                     <div className="relative mt-6 flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#22c55e] to-[#38bdf8] flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-lg bg-[#22c55e] flex items-center justify-center">
                             <span className="text-black text-sm font-black" style={{ fontFamily: 'Orbitron, monospace' }}>
                                 {stats.level}
                             </span>
@@ -71,7 +93,7 @@ export default function ProfilePage() {
                             </div>
                             <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
                                 <div
-                                    className="h-full rounded-full bg-gradient-to-r from-[#22c55e] to-[#38bdf8] transition-all duration-700"
+                                    className="h-full rounded-full bg-[#22c55e] transition-all duration-700"
                                     style={{ width: `${xpPct}%`, boxShadow: '0 0 8px rgba(34,197,94,0.3)' }}
                                 />
                             </div>
@@ -139,6 +161,8 @@ export default function ProfilePage() {
                 </svg>
                 Sign Out
             </button>
+
+            <CoachIntakeModal open={coachOpen} onClose={() => setCoachOpen(false)} />
         </div>
     );
 }
