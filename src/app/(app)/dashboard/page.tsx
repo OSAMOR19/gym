@@ -57,7 +57,7 @@ export default function DashboardPage() {
                 </div>
                 {gameStats && (
                     <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#22c55e] to-[#38bdf8] flex items-center justify-center">
+                        <div className="w-8 h-8 rounded-lg bg-[#22c55e] flex items-center justify-center">
                             <span className="text-black text-xs font-black" style={{ fontFamily: 'Orbitron, monospace' }}>
                                 {gameStats.level}
                             </span>
@@ -66,7 +66,7 @@ export default function DashboardPage() {
                             <p className="text-[10px] text-white/25 tracking-wider uppercase">Level</p>
                             <div className="w-20 h-1.5 bg-white/5 rounded-full overflow-hidden">
                                 <div
-                                    className="h-full rounded-full bg-gradient-to-r from-[#22c55e] to-[#38bdf8]"
+                                    className="h-full rounded-full bg-[#22c55e]"
                                     style={{ width: `${xpPct}%` }}
                                 />
                             </div>

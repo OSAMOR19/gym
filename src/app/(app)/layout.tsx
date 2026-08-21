@@ -47,10 +47,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
     return (
         <div className="min-h-screen bg-[#0f0f0f] bg-grid">
-            {/* Subtle gradient overlays */}
+            {/* Single faint ambient glow — flat brand green only */}
             <div className="fixed inset-0 pointer-events-none z-0">
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-[#22c55e]/3 rounded-full blur-[120px]" />
-                <div className="absolute bottom-0 right-0 w-[600px] h-[300px] bg-[#38bdf8]/3 rounded-full blur-[120px]" />
             </div>
 
             <Sidebar />

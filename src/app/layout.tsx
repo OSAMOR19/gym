@@ -18,7 +18,7 @@ const orbitron = Orbitron({
 });
 
 export const metadata: Metadata = {
-  title: "IronTrack AI — AI-Powered Workout Tracker",
+  title: "IronTrack — AI-Powered Workout Tracker",
   description:
     "Real-time AI pose detection that counts your reps, tracks form quality, and monitors time under tension. Built with MediaPipe Pose.",
   icons: {

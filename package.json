@@ -3,11 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next build --webpack && next start",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "dev:hot": "WATCHPACK_POLLING=true CHOKIDAR_USEPOLLING=1 next dev --webpack"
+    "dev:usb": "USB_DEV=1 WATCHPACK_POLLING=true CHOKIDAR_USEPOLLING=1 next dev --webpack",
+    "dev:usb-prod": "USB_DEV=1 next build --webpack && USB_DEV=1 next start"
   },
   "dependencies": {
     "@mediapipe/camera_utils": "^0.3.1675466862",

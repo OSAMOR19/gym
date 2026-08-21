@@ -72,7 +72,7 @@ export default function Sidebar() {
                 <div className={`flex items-center border-b border-white/5 ${collapsed ? 'justify-center py-4' : 'justify-between px-4 py-4'}`}>
                     {!collapsed && (
                         <Link href="/dashboard" className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#22c55e] to-[#38bdf8] flex items-center justify-center shadow-[0_0_15px_rgba(34,197,94,0.25)]">
+                            <div className="w-8 h-8 rounded-lg bg-[#22c55e] flex items-center justify-center shadow-[0_0_15px_rgba(34,197,94,0.25)]">
                                 <svg className="w-4 h-4 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
                                 </svg>
