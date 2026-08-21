@@ -10,6 +10,7 @@
 
 import { PROGRAMS, Program } from './programs';
 import { EXERCISES, ExerciseId } from './exercises';
+import { exercisesContraindicatedFor } from './exerciseMeta';
 
 // ─── Answer types ────────────────────────────────────────────────────────────
 
@@ -120,11 +121,13 @@ const LEVEL_SCORE: Record<Experience, Record<Program['level'], number>> = {
     gentle:  { beginner: 1,  intermediate: -3, advanced: -5, senior: 4 },
 };
 
-/** Exercises to avoid per limitation (impact / overhead / hinge-loading). */
+/** Exercises to avoid per limitation (impact / overhead / hinge-loading) —
+ *  derived from exerciseMeta contraindications, the single source of truth.
+ *  The metadata was seeded from the lists that used to be hardcoded here. */
 const LIMITATION_EXERCISES: Record<Exclude<Limitation, 'none'>, ExerciseId[]> = {
-    knees: ['jump_squat', 'box_jumps', 'jumping_jacks', 'burpees', 'high_knees', 'mountain_climber', 'lunge', 'walking_lunges', 'jump_rope'],
-    shoulders: ['shoulder_press', 'overhead_press', 'lateral_raise', 'cable_lateral_raise', 'overhead_tricep_ext', 'pull_up', 'chin_up', 'battle_ropes', 'front_raise'],
-    back: ['deadlift', 'romanian_deadlift', 'dumbbell_deadlift', 'barbell_row', 'kettlebell_swing', 'situp', 'toe_touches'],
+    knees: exercisesContraindicatedFor('knees'),
+    shoulders: exercisesContraindicatedFor('shoulders'),
+    back: exercisesContraindicatedFor('back'),
 };
 
 const EQUIPMENT_LABEL: Record<string, Equipment> = {
