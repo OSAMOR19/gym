@@ -10,6 +10,34 @@
 import { createClient } from '../utils/supabase/client';
 import { getCompletedDays, markDayCompleted } from './workoutQueue';
 
+export interface ProgramPosition {
+    completedDays: number[];
+    currentDayIndex: number | null;
+    lastSessionAt: string | null;
+}
+
+/** Server-side position in a program; null when signed out, no row yet, or
+ *  the table is unavailable. */
+export async function getProgramPosition(programId: string): Promise<ProgramPosition | null> {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+
+    const { data, error } = await supabase
+        .from('program_progress')
+        .select('completed_days, current_day_index, last_session_at')
+        .eq('user_id', user.id)
+        .eq('program_id', programId)
+        .maybeSingle();
+
+    if (error || !data) return null;
+    return {
+        completedDays: data.completed_days ?? [],
+        currentDayIndex: data.current_day_index,
+        lastSessionAt: data.last_session_at,
+    };
+}
+
 /** Server copy of completed days; null when signed out or table unavailable. */
 async function getServerCompletedDays(programId: string): Promise<number[] | null> {
     const supabase = createClient();
