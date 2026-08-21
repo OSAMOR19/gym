@@ -79,11 +79,12 @@ export default function ProgramDetailPage({ params }: { params: Promise<{ id: st
 
     /** Hand the selected day's exercises to the workout page and go there.
      *  buildDayItems personalizes the template: substitutes exercises the
-     *  user can't/shouldn't do and applies readiness volume trims. */
-    const startDay = (dayIndex: number) => {
+     *  user can't/shouldn't do, applies progression from the last session,
+     *  and trims volume after a break. */
+    const startDay = async (dayIndex: number) => {
         const day = flatDays[dayIndex];
         if (!day || !program) return;
-        const built = buildDayItems(
+        const built = await buildDayItems(
             program.id,
             { name: day.dayName, exercises: day.exercises as ProgramExercise[] },
             readiness,
