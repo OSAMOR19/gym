@@ -233,15 +233,17 @@ function isToday(dateStr: string): boolean {
 // ─── Main update function ────────────────────────────────────────────────────
 
 /**
- * Record a completed workout and update all gamification stats.
- * Returns newly earned badges (if any).
+ * Apply a completed workout to a stats snapshot — pure, no I/O.
+ * The caller persists the returned stats (workoutSession.completeSession does
+ * this together with the workout data itself).
  */
-export async function recordWorkout(
+export function applyWorkout(
+    current: UserStats,
     reps: number,
     formQuality: number,
     perfectReps: number,
-): Promise<{ stats: UserStats; newBadges: Badge[]; xpGained: number; saved: boolean }> {
-    const stats = await loadStats();
+): { stats: UserStats; newBadges: Badge[]; xpGained: number } {
+    const stats: UserStats = { ...current, earnedBadges: [...current.earnedBadges] };
     const xpGained = calculateXPForWorkout(reps, formQuality);
 
     // Update stats
@@ -270,7 +272,5 @@ export async function recordWorkout(
         }
     }
 
-    const saved = await saveStats(stats);
-
-    return { stats, newBadges, xpGained, saved };
+    return { stats, newBadges, xpGained };
 }

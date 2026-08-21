@@ -11,8 +11,9 @@ import { usePoseDetection } from '../../../hooks/usePoseDetection';
 import { useSpeechCoach } from '../../../hooks/useSpeechCoach';
 import { EXERCISES } from '../../../lib/exercises';
 import { generateWorkoutSummary, resetCoach } from '../../../lib/aiCoach';
-import { recordWorkout } from '../../../lib/gamification';
-import { saveWorkout } from '../../../lib/progressStore';
+import { loadStats, applyWorkout } from '../../../lib/gamification';
+import { beginSession, isSessionActive, recordSet, abandonSession, completeSession } from '../../../lib/workoutSession';
+import { logEvent } from '../../../lib/events';
 import { getWorkoutQueue, clearWorkoutQueue, markDayCompleted, WorkoutQueue } from '../../../lib/workoutQueue';
 import { getCameraGuide } from '../../../lib/cameraGuide';
 import CameraFeed from '../../../components/CameraFeed';
@@ -29,6 +30,9 @@ import ExercisePickerModal from '../../../components/ExercisePickerModal';
 import { useToast } from '../../../components/Toast';
 import type { WorkoutSummary } from '../../../lib/aiCoach';
 import type { Badge } from '../../../lib/gamification';
+
+/** Reps at or above this form quality count as "good" in per-set records. */
+const GOOD_FORM_THRESHOLD = 70;
 
 export default function WorkoutPage() {
     const {
@@ -103,15 +107,118 @@ export default function WorkoutPage() {
     const prevRepCountRef = useRef(repCount);
     const setCompleteTriggeredRef = useRef(false);
 
+    // Per-set observation buffers for persistence (workout_sets). These only
+    // AGGREGATE what the CV pipeline already reports — detection is untouched.
+    const goodRepsRef = useRef(0);
+    const poorRepsRef = useRef(0);
+    const setIssuesRef = useRef<Set<string>>(new Set());
+    const setStartRef = useRef<number | null>(null);
+    const lastSetEndRef = useRef<number | null>(null);
+    const restBeforeSetRef = useRef<number | undefined>(undefined);
+
+    /** Called whenever detection (re)starts — marks set timing and, on the
+     *  first set, opens the persistent workout session. */
+    const markDetectionStart = useCallback(() => {
+        const now = Date.now();
+        restBeforeSetRef.current = lastSetEndRef.current
+            ? Math.round((now - lastSetEndRef.current) / 1000)
+            : undefined;
+        setStartRef.current = now;
+
+        // Fresh observation buffers — also covers the mid-set Reset button,
+        // which discards the aborted attempt's rep classifications
+        goodRepsRef.current = 0;
+        poorRepsRef.current = 0;
+        setIssuesRef.current = new Set();
+
+        if (!isSessionActive()) {
+            beginSession(
+                queue ? 'program' : 'free',
+                queue ? { programId: queue.programId, dayIndex: queue.dayIndex, dayName: queue.dayName } : undefined,
+            );
+            logEvent('WORKOUT_STARTED', {
+                exerciseId,
+                metadata: queue
+                    ? { source: 'program', program_id: queue.programId, day_name: queue.dayName }
+                    : { source: 'free' },
+            });
+            logEvent('EXERCISE_STARTED', { exerciseId });
+        }
+    }, [queue, exerciseId]);
+
+    /** Persist one finished (or manually cut short) set into the session
+     *  draft, and emit its events. */
+    const captureSet = useCallback((completedReps: number, holdSeconds?: number) => {
+        const now = Date.now();
+        const isHold = holdSeconds !== undefined;
+        const durationSeconds = setStartRef.current
+            ? Math.round((now - setStartRef.current) / 1000)
+            : undefined;
+        const issues = [...setIssuesRef.current];
+
+        recordSet({
+            exerciseId,
+            setNumber: currentSet,
+            targetReps: isHold ? 0 : targetReps,
+            completedReps,
+            formScore: formQuality,
+            goodReps: isHold ? undefined : goodRepsRef.current,
+            poorReps: isHold ? undefined : poorRepsRef.current,
+            holdSeconds,
+            durationSeconds,
+            restSeconds: restBeforeSetRef.current,
+        });
+        logEvent('SET_COMPLETED', {
+            exerciseId,
+            metadata: {
+                set_number: currentSet,
+                completed_reps: completedReps,
+                target_reps: isHold ? undefined : targetReps,
+                form_score: formQuality,
+                good_reps: isHold ? undefined : goodRepsRef.current,
+                poor_reps: isHold ? undefined : poorRepsRef.current,
+                hold_seconds: holdSeconds,
+            },
+        });
+        if (issues.length > 0 || poorRepsRef.current > 0) {
+            logEvent('FORM_ISSUE_DETECTED', {
+                exerciseId,
+                metadata: {
+                    set_number: currentSet,
+                    issues,
+                    good_reps: goodRepsRef.current,
+                    poor_reps: poorRepsRef.current,
+                    form_score: formQuality,
+                },
+            });
+        }
+
+        lastSetEndRef.current = now;
+        goodRepsRef.current = 0;
+        poorRepsRef.current = 0;
+        setIssuesRef.current = new Set();
+    }, [exerciseId, currentSet, targetReps, formQuality]);
+
+    // Remember which form corrections fired during the current set
+    useEffect(() => {
+        if (!isDetecting) return;
+        for (const fc of formCorrections) setIssuesRef.current.add(fc.ruleId);
+    }, [formCorrections, isDetecting]);
+
     // When reps reach target → stop detection and show modal
     useEffect(() => {
         if (repCount > prevRepCountRef.current) {
             speechCoach.onRepChange(repCount);
 
+            // Classify the rep for the set record using the live form score
+            if (formQuality >= GOOD_FORM_THRESHOLD) goodRepsRef.current += 1;
+            else poorRepsRef.current += 1;
+
             if (repCount >= targetReps && !setCompleteTriggeredRef.current) {
                 setCompleteTriggeredRef.current = true;
                 setSetFormQuality(formQuality);
                 setTotalRepsThisWorkout(prev => prev + repCount);
+                captureSet(repCount);
 
                 setTimeout(() => {
                     stopDetection();
@@ -121,7 +228,7 @@ export default function WorkoutPage() {
             }
         }
         prevRepCountRef.current = repCount;
-    }, [repCount, targetReps, formQuality, speechCoach, stopDetection]);
+    }, [repCount, targetReps, formQuality, speechCoach, stopDetection, captureSet]);
 
     // Hold exercises: complete the set when the hold target is reached.
     // Previously hold sets had no finish condition at all — the only way out
@@ -134,6 +241,7 @@ export default function WorkoutPage() {
             setSetFormQuality(formQuality);
             // Credit 1 rep-equivalent per 3s held so holds earn XP consistently
             setTotalRepsThisWorkout(prev => prev + Math.max(1, Math.round(holdTime / 3)));
+            captureSet(Math.max(1, Math.round(holdTime / 3)), holdTime);
 
             setTimeout(() => {
                 stopDetection();
@@ -141,7 +249,7 @@ export default function WorkoutPage() {
                 speechCoach.onSetComplete();
             }, 400);
         }
-    }, [isHoldExercise, isDetecting, holdTime, targetHoldSeconds, formQuality, speechCoach, stopDetection]);
+    }, [isHoldExercise, isDetecting, holdTime, targetHoldSeconds, formQuality, speechCoach, stopDetection, captureSet]);
 
     // Feed coach tips to speech coach
     useEffect(() => {
@@ -163,8 +271,9 @@ export default function WorkoutPage() {
     const handleCountdownComplete = useCallback(() => {
         setShowCountdown(false);
         speechCoach.announceExercise(currentExercise.name, getCameraGuide(exerciseId).speech);
+        markDetectionStart();
         startDetection();
-    }, [startDetection, speechCoach, currentExercise.name, exerciseId]);
+    }, [startDetection, speechCoach, currentExercise.name, exerciseId, markDetectionStart]);
 
     // Reset current set (stops detection, resets rep count)
     const handleReset = useCallback(() => {
@@ -187,6 +296,8 @@ export default function WorkoutPage() {
         if (currentSet >= targetSets && queue && nextQueueItem) {
             // Advance to the next exercise in the program day
             const next = nextQueueItem;
+            logEvent('EXERCISE_COMPLETED', { exerciseId, metadata: { sets: targetSets } });
+            logEvent('EXERCISE_STARTED', { exerciseId: next.exerciseId });
             setQueueIndex(prev => prev + 1);
             setExercise(next.exerciseId);
             setTargetSets(next.targetSets);
@@ -202,7 +313,7 @@ export default function WorkoutPage() {
         setTimeout(() => {
             setShowCountdown(true);
         }, 300);
-    }, [speechCoach, currentSet, targetSets, queue, nextQueueItem, setExercise]);
+    }, [speechCoach, currentSet, targetSets, queue, nextQueueItem, setExercise, exerciseId]);
 
     // Guard against double invocation (modal button + manual stop both route
     // here) — without it a workout could be recorded and XP granted twice.
@@ -230,6 +341,10 @@ export default function WorkoutPage() {
         const effectiveReps = finalTotal
             ?? (totalRepsThisWorkout > 0 ? totalRepsThisWorkout : currentContribution);
 
+        const dayCompleted = queue && !nextQueueItem && currentSet >= targetSets
+            ? { programId: queue.programId, dayIndex: queue.dayIndex }
+            : null;
+
         if (effectiveReps > 0) {
             const duration = workoutStartTime ? Math.round((Date.now() - workoutStartTime) / 1000) : 0;
             // Program days are recorded under the day's name; free workouts
@@ -239,31 +354,40 @@ export default function WorkoutPage() {
             setSummary(ws);
 
             const perfectReps = formQuality >= 90 ? Math.round(effectiveReps * 0.3) : 0;
-            const result = await recordWorkout(effectiveReps, formQuality, perfectReps);
-            setXpGained(result.xpGained);
-            setNewBadges(result.newBadges);
+            const current = await loadStats();
+            const { stats, xpGained: xp, newBadges: badges } = applyWorkout(current, effectiveReps, formQuality, perfectReps);
+            setXpGained(xp);
+            setNewBadges(badges);
 
-            const record = await saveWorkout({
+            // One atomic save: session + per-set CV results + workout record
+            // + events + program progress (falls back pre-migration)
+            const result = await completeSession({
                 exerciseId,
-                exerciseName: recordName,
-                reps: effectiveReps,
-                formQuality,
+                recordName,
+                totalReps: effectiveReps,
+                avgFormScore: formQuality,
                 timeUnderTension: isHold ? holdTime : timeUnderTension,
-                duration,
-                xpGained: result.xpGained,
+                durationSeconds: duration,
+                xpGained: xp,
+                stats,
+                programDayCompleted: dayCompleted,
             });
 
-            if (!result.saved || !record) {
+            if (!result.saved || !result.statsSaved) {
                 toast.error('Workout not saved', 'Could not reach the server — your progress may be missing.');
             }
 
             setShowSummary(true);
             speechCoach.speakSummary(ws.coachNotes);
+        } else {
+            abandonSession();
         }
 
-        // Program day finished (last exercise, all sets) → mark it on the pathway
-        if (queue && !nextQueueItem && currentSet >= targetSets) {
-            markDayCompleted(queue.programId, queue.dayIndex);
+        // Program day finished (last exercise, all sets) → mark it on the
+        // pathway. localStorage is the device cache; the server copy was
+        // written by completeSession above.
+        if (dayCompleted) {
+            markDayCompleted(dayCompleted.programId, dayCompleted.dayIndex);
         }
         clearWorkoutQueue();
         setQueue(null);
@@ -284,9 +408,13 @@ export default function WorkoutPage() {
         const total = totalRepsThisWorkout + currentContribution;
         if (currentContribution > 0) {
             setTotalRepsThisWorkout(total);
+            // Preserve the cut-short set's data too
+            if (!setCompleteTriggeredRef.current) {
+                captureSet(currentContribution, isHold ? holdTime : undefined);
+            }
         }
         handleEndWorkout(total > 0 ? total : undefined);
-    }, [repCount, holdTime, currentExercise, totalRepsThisWorkout, handleEndWorkout]);
+    }, [repCount, holdTime, currentExercise, totalRepsThisWorkout, handleEndWorkout, captureSet]);
 
     return (
         <div className="h-screen flex flex-col overflow-hidden">
@@ -418,6 +546,16 @@ export default function WorkoutPage() {
                     setTotalRepsThisWorkout(0);
                     setCompleteTriggeredRef.current = false;
                     // Picking an exercise manually abandons the program day
+                    if (queue) {
+                        logEvent('WORKOUT_MODIFIED', {
+                            exerciseId: id,
+                            metadata: {
+                                reason: 'manual_exercise_change',
+                                abandoned_program_id: queue.programId,
+                                abandoned_day_name: queue.dayName,
+                            },
+                        });
+                    }
                     clearWorkoutQueue();
                     setQueue(null);
                     setQueueIndex(0);
@@ -502,6 +640,7 @@ export default function WorkoutPage() {
                         showModal={showVideoModal && !isDetecting && !showCountdown}
                         onModalDismiss={() => {
                             setShowVideoModal(false);
+                            markDetectionStart();
                             startDetection();
                         }}
                     />
