@@ -8,10 +8,12 @@
 
 import { use, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getProgramById } from '../../../../lib/programs';
-import { EXERCISES, ExerciseId } from '../../../../lib/exercises';
+import { getProgramById, ProgramExercise } from '../../../../lib/programs';
+import { EXERCISES } from '../../../../lib/exercises';
 import { setWorkoutQueue, getCompletedDays } from '../../../../lib/workoutQueue';
 import { syncProgramProgress } from '../../../../lib/programProgress';
+import { buildDayItems } from '../../../../lib/workoutBuilder';
+import { getUserState, assessReadiness, Readiness } from '../../../../lib/userState';
 import { EXERCISE_VIDEOS } from '../../../../components/ExerciseGuide';
 
 interface FlatDay {
@@ -28,6 +30,7 @@ export default function ProgramDetailPage({ params }: { params: Promise<{ id: st
     const [selectedDay, setSelectedDay] = useState<number | null>(null);
     const [hoveredDay, setHoveredDay] = useState<number | null>(null);
     const [completedDays, setCompletedDays] = useState<number[]>([]);
+    const [readiness, setReadiness] = useState<Readiness | null>(null);
 
     // Local cache renders instantly; server progress (the source of truth)
     // reconciles in the background and picks up other devices' sessions
@@ -35,6 +38,12 @@ export default function ProgramDetailPage({ params }: { params: Promise<{ id: st
         setCompletedDays(getCompletedDays(id));
         syncProgramProgress(id).then(setCompletedDays);
     }, [id]);
+
+    // Resume intelligence: after a break, the banner explains and startDay
+    // trims volume instead of blindly continuing
+    useEffect(() => {
+        getUserState().then((s) => setReadiness(assessReadiness(s))).catch(() => {});
+    }, []);
 
     if (!program) {
         return (
@@ -68,21 +77,23 @@ export default function ProgramDetailPage({ params }: { params: Promise<{ id: st
         return 'available';
     };
 
-    /** Hand the selected day's exercises to the workout page and go there. */
+    /** Hand the selected day's exercises to the workout page and go there.
+     *  buildDayItems personalizes the template: substitutes exercises the
+     *  user can't/shouldn't do and applies readiness volume trims. */
     const startDay = (dayIndex: number) => {
         const day = flatDays[dayIndex];
         if (!day || !program) return;
+        const built = buildDayItems(
+            program.id,
+            { name: day.dayName, exercises: day.exercises as ProgramExercise[] },
+            readiness,
+        );
         setWorkoutQueue({
             programId: program.id,
             programName: program.name,
             dayIndex,
             dayName: day.dayName,
-            items: day.exercises.map((ex) => ({
-                exerciseId: ex.exerciseId as ExerciseId,
-                targetSets: ex.targetSets,
-                targetReps: ex.targetReps,
-                targetHoldSeconds: ex.targetHoldSeconds,
-            })),
+            items: built.items,
         });
         router.push('/workout');
     };
@@ -155,6 +166,19 @@ export default function ProgramDetailPage({ params }: { params: Promise<{ id: st
                     </div>
                 </div>
             </div>
+
+            {/* ─── Readiness banner — shown after a training break ──────────── */}
+            {readiness && readiness.level !== 'ready' && readiness.message && (
+                <div className="flex items-start gap-3 border border-amber-500/20 bg-amber-500/5 rounded-xl px-4 py-3 mb-6">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="1.5" strokeLinecap="round" className="flex-shrink-0 mt-0.5">
+                        <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                    <div>
+                        <p className="text-xs font-bold text-amber-400 tracking-wider uppercase mb-0.5">Easing back in</p>
+                        <p className="text-xs text-white/40 leading-relaxed">{readiness.message}</p>
+                    </div>
+                </div>
+            )}
 
             {/* ─── Pathway section label ────────────────────────────────────── */}
             <div className="flex items-center gap-3 mb-6">

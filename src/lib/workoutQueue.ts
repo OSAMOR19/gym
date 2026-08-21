@@ -17,6 +17,8 @@ export interface QueueItem {
     targetSets: number;
     targetReps: number;         // 0 for hold exercises
     targetHoldSeconds?: number;
+    /** Set when the builder swapped the template's exercise for this one. */
+    substitutedFrom?: ExerciseId;
 }
 
 export interface WorkoutQueue {
