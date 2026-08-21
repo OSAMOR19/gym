@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation';
 import { getProgramById } from '../../../../lib/programs';
 import { EXERCISES, ExerciseId } from '../../../../lib/exercises';
 import { setWorkoutQueue, getCompletedDays } from '../../../../lib/workoutQueue';
+import { syncProgramProgress } from '../../../../lib/programProgress';
 import { EXERCISE_VIDEOS } from '../../../../components/ExerciseGuide';
 
 interface FlatDay {
@@ -28,9 +29,11 @@ export default function ProgramDetailPage({ params }: { params: Promise<{ id: st
     const [hoveredDay, setHoveredDay] = useState<number | null>(null);
     const [completedDays, setCompletedDays] = useState<number[]>([]);
 
-    // localStorage is client-only — read after mount
+    // Local cache renders instantly; server progress (the source of truth)
+    // reconciles in the background and picks up other devices' sessions
     useEffect(() => {
         setCompletedDays(getCompletedDays(id));
+        syncProgramProgress(id).then(setCompletedDays);
     }, [id]);
 
     if (!program) {
