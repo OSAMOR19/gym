@@ -1,9 +1,12 @@
 /**
  * SetCompleteModal — Full-screen modal shown when a set is complete.
  * Shows set results, feedback, and option to continue to next set or end workout.
+ * Optionally captures RPE (1–10) — a single tap, always skippable.
  */
 
 'use client';
+
+import { useState } from 'react';
 
 interface SetCompleteModalProps {
     currentSet: number;
@@ -15,6 +18,8 @@ interface SetCompleteModalProps {
     mode?: 'reps' | 'hold';
     /** When set, the last set advances to this exercise instead of ending (program days) */
     nextExerciseName?: string;
+    /** When set, shows the optional "how hard was that?" 1–10 row */
+    onRpe?: (rpe: number) => void;
     onNextSet: () => void;
     onEndWorkout: () => void;
 }
@@ -27,9 +32,12 @@ export default function SetCompleteModal({
     formQuality,
     mode = 'reps',
     nextExerciseName,
+    onRpe,
     onNextSet,
     onEndWorkout,
 }: SetCompleteModalProps) {
+    // Local only — the modal unmounts between sets, so this resets itself
+    const [rpe, setRpe] = useState<number | null>(null);
     const isLastSet = currentSet >= totalSets;
     const hasNextExercise = isLastSet && !!nextExerciseName;
     const formLabel = formQuality >= 80 ? 'Excellent' : formQuality >= 60 ? 'Good' : 'Needs Work';
@@ -78,6 +86,36 @@ export default function SetCompleteModal({
                         </p>
                     </div>
                 </div>
+
+                {/* Optional RPE — one tap, never required */}
+                {onRpe && (
+                    <div className="mb-6">
+                        <p className="text-[9px] text-white/25 tracking-widest uppercase mb-2">
+                            How hard was that set?
+                        </p>
+                        <div className="flex justify-center gap-1">
+                            {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+                                <button
+                                    key={n}
+                                    onClick={() => { setRpe(n); onRpe(n); }}
+                                    className={`
+                                        w-7 h-8 rounded-md text-[11px] font-bold transition-all cursor-pointer
+                                        ${rpe === n
+                                            ? 'bg-[#22c55e] text-black'
+                                            : 'bg-white/5 text-white/30 border border-white/5 hover:bg-white/10 hover:text-white/60'}
+                                    `}
+                                    style={{ fontFamily: 'Orbitron, monospace' }}
+                                >
+                                    {n}
+                                </button>
+                            ))}
+                        </div>
+                        <div className="flex justify-between px-1 mt-1">
+                            <span className="text-[8px] text-white/15 tracking-wider uppercase">Easy</span>
+                            <span className="text-[8px] text-white/15 tracking-wider uppercase">Max effort</span>
+                        </div>
+                    </div>
+                )}
 
                 {/* Action buttons */}
                 <div className="flex flex-col gap-2.5">

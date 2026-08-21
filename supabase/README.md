@@ -16,6 +16,7 @@ this repo, so apply migrations through the dashboard:
 | Migration | Adds |
 |---|---|
 | `20260821120000_phase1_foundation.sql` | `user_profiles`, `program_progress`, `workout_sessions`, `workout_sets`, `events`, and the `save_workout_v1` RPC (atomic workout save) |
+| `20260821130000_phase4_rpe.sql` | Replaces `save_workout_v1` so set inserts carry `rpe` and `weight_kg` (columns existed since Phase 1) |
 
 The two pre-existing tables (`user_stats`, `workout_records`) were created
 before this migration system existed and are not modified by it.

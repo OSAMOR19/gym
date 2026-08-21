@@ -33,6 +33,7 @@ export interface SetRecord {
     holdSeconds?: number;
     durationSeconds?: number;
     restSeconds?: number;          // rest taken before this set
+    rpe?: number;                  // user-reported 1–10, from the set modal
     completedAt: string;
 }
 
@@ -95,6 +96,13 @@ export function recordSet(set: Omit<SetRecord, 'completedAt'>): void {
     draft.sets.push({ ...set, completedAt: new Date().toISOString() });
 }
 
+/** Attach a user-reported RPE (1–10) to the most recently recorded set —
+ *  the set modal appears after recordSet has run, so it amends the draft. */
+export function setLastSetRpe(rpe: number): void {
+    const last = draft?.sets[draft.sets.length - 1];
+    if (last) last.rpe = Math.min(10, Math.max(1, Math.round(rpe)));
+}
+
 /** Drop the draft without saving (workout ended with nothing to record). */
 export function abandonSession(): void {
     draft = null;
@@ -135,6 +143,7 @@ export async function completeSession(args: CompleteSessionArgs): Promise<Comple
                 hold_seconds: s.holdSeconds != null ? Math.round(s.holdSeconds) : null,
                 duration_seconds: s.durationSeconds != null ? Math.round(s.durationSeconds) : null,
                 rest_seconds: s.restSeconds != null ? Math.round(s.restSeconds) : null,
+                rpe: s.rpe ?? null,
                 completed_at: s.completedAt,
             })),
             program_day_completed: args.programDayCompleted

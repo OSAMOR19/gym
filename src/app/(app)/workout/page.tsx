@@ -12,7 +12,7 @@ import { useSpeechCoach } from '../../../hooks/useSpeechCoach';
 import { EXERCISES } from '../../../lib/exercises';
 import { generateWorkoutSummary, resetCoach } from '../../../lib/aiCoach';
 import { loadStats, applyWorkout } from '../../../lib/gamification';
-import { beginSession, isSessionActive, recordSet, abandonSession, completeSession } from '../../../lib/workoutSession';
+import { beginSession, isSessionActive, recordSet, abandonSession, completeSession, setLastSetRpe } from '../../../lib/workoutSession';
 import { logEvent } from '../../../lib/events';
 import { getWorkoutQueue, clearWorkoutQueue, markDayCompleted, WorkoutQueue } from '../../../lib/workoutQueue';
 import { getCameraGuide } from '../../../lib/cameraGuide';
@@ -745,6 +745,10 @@ export default function WorkoutPage() {
                     formQuality={setFormQuality}
                     mode={isHoldExercise ? 'hold' : 'reps'}
                     nextExerciseName={nextQueueItem ? EXERCISES[nextQueueItem.exerciseId].name : undefined}
+                    onRpe={(rpe) => {
+                        setLastSetRpe(rpe);
+                        logEvent('RPE_RECORDED', { exerciseId, metadata: { set_number: currentSet, rpe } });
+                    }}
                     onNextSet={handleNextSet}
                     onEndWorkout={() => handleEndWorkout()}
                 />
