@@ -7,6 +7,7 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { usePoseDetection } from '../../../hooks/usePoseDetection';
 import { useSpeechCoach } from '../../../hooks/useSpeechCoach';
 import { EXERCISES } from '../../../lib/exercises';
@@ -43,6 +44,7 @@ export default function WorkoutPage() {
     } = usePoseDetection();
 
     const toast = useToast();
+    const router = useRouter();
 
     const [showSummary, setShowSummary] = useState(false);
     const [summary, setSummary] = useState<WorkoutSummary | null>(null);
@@ -416,126 +418,152 @@ export default function WorkoutPage() {
         handleEndWorkout(total > 0 ? total : undefined);
     }, [repCount, holdTime, currentExercise, totalRepsThisWorkout, handleEndWorkout, captureSet]);
 
+    // ─── Top-bar controls — extracted so mobile and desktop can arrange
+    //     them differently without duplicating markup ─────────────────────────
+    const voiceButton = (
+        <button
+            onClick={() => setVoiceEnabled(!voiceEnabled)}
+            className={`
+                p-2 rounded-lg transition-all cursor-pointer flex-shrink-0
+                ${voiceEnabled
+                    ? 'bg-[#38bdf8]/10 text-[#38bdf8] border border-[#38bdf8]/20'
+                    : 'bg-white/5 text-white/20 border border-white/5'}
+            `}
+            title={voiceEnabled ? 'Voice coaching ON' : 'Voice coaching OFF'}
+        >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                {voiceEnabled ? (
+                    <>
+                        <polygon points="11,5 6,9 2,9 2,15 6,15 11,19" />
+                        <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+                    </>
+                ) : (
+                    <>
+                        <polygon points="11,5 6,9 2,9 2,15 6,15 11,19" />
+                        <line x1="23" y1="9" x2="17" y2="15" />
+                        <line x1="17" y1="9" x2="23" y2="15" />
+                    </>
+                )}
+            </svg>
+        </button>
+    );
+
+    const resetButton = isDetecting ? (
+        <button
+            onClick={handleReset}
+            className="p-2 rounded-lg transition-all cursor-pointer flex-shrink-0 bg-white/5 text-white/30 border border-white/5 hover:bg-amber-500/10 hover:text-amber-400 hover:border-amber-500/20"
+            title="Reset current set"
+        >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <polyline points="1,4 1,10 7,10" />
+                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+            </svg>
+        </button>
+    ) : null;
+
+    const targetConfig = !isDetecting ? (
+        <div className="flex items-center gap-1 bg-white/5 rounded-lg border border-white/5 px-2 py-1">
+            <span className="text-[8px] text-white/25 tracking-wider uppercase mr-1">Target</span>
+            <button onClick={() => setTargetReps(Math.max(1, targetReps - 1))}
+                className="text-white/30 hover:text-white/60 w-6 h-6 sm:w-5 sm:h-5 flex items-center justify-center cursor-pointer">-</button>
+            <span className="text-[11px] font-bold text-[#22c55e] w-6 text-center" style={{ fontFamily: 'Orbitron, monospace' }}>{targetReps}</span>
+            <button onClick={() => setTargetReps(targetReps + 1)}
+                className="text-white/30 hover:text-white/60 w-6 h-6 sm:w-5 sm:h-5 flex items-center justify-center cursor-pointer">+</button>
+            <span className="text-[8px] text-white/15 mx-1">×</span>
+            <button onClick={() => setTargetSets(Math.max(1, targetSets - 1))}
+                className="text-white/30 hover:text-white/60 w-6 h-6 sm:w-5 sm:h-5 flex items-center justify-center cursor-pointer">-</button>
+            <span className="text-[11px] font-bold text-[#38bdf8] w-4 text-center" style={{ fontFamily: 'Orbitron, monospace' }}>{targetSets}</span>
+            <button onClick={() => setTargetSets(targetSets + 1)}
+                className="text-white/30 hover:text-white/60 w-6 h-6 sm:w-5 sm:h-5 flex items-center justify-center cursor-pointer">+</button>
+            <span className="text-[8px] text-white/25 tracking-wider uppercase ml-1">sets</span>
+        </div>
+    ) : null;
+
+    const startButton = (
+        <button
+            onClick={isDetecting ? handleManualStop : handleStart}
+            className={`
+                px-5 py-2 rounded-lg font-bold text-xs tracking-wider uppercase transition-all cursor-pointer flex-shrink-0
+                ${isDetecting
+                    ? 'bg-red-500/15 text-red-400 border border-red-500/25 hover:bg-red-500/25'
+                    : 'bg-[#22c55e] text-black hover:bg-[#16a34a] shadow-[0_0_25px_rgba(34,197,94,0.3)]'}
+            `}
+        >
+            {isDetecting ? (
+                <span className="flex items-center gap-2">
+                    <span className="w-2 h-2 bg-red-400 rounded-full animate-pulse" />Stop
+                </span>
+            ) : (
+                <span className="flex items-center gap-2">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21" /></svg>
+                    Start
+                </span>
+            )}
+        </button>
+    );
+
     return (
         // 100dvh (not vh): on mobile browsers 100vh includes the collapsed
         // address bar, pushing the bottom controls off-screen
         <div className="h-[100dvh] flex flex-col overflow-hidden">
-            {/* ─── Top bar ────────────────────────────────────────────── */}
+            {/* ─── Top bar — two rows on phones so Start is never pushed
+                 off-screen: row 1 = back / exercise / actions, row 2 = the
+                 target stepper (inline again from sm up) ─────────────────── */}
             <div className="flex-none bg-[#0a0a0a] border-b border-white/5 z-20 relative">
-                {/* flex-wrap: on narrow phones the controls drop to a second
-                    row instead of overflowing off-screen */}
-                <div className="flex flex-wrap items-center justify-between gap-y-2 px-4 py-2.5">
-                    {/* Current exercise (clickable to toggle selector) */}
-                    <button
-                        onClick={() => !isDetecting && setSelectorOpen(!selectorOpen)}
-                        disabled={isDetecting}
-                        className={`
-                            flex items-center gap-3 cursor-pointer transition-all
-                            ${isDetecting ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-80'}
-                        `}
-                    >
-                        <span
-                            className="text-[10px] font-black tracking-wider bg-[#22c55e]/10 text-[#22c55e] border border-[#22c55e]/20 rounded-md px-2 py-1"
-                            style={{ fontFamily: 'Orbitron, monospace' }}
-                        >
-                            {currentExercise.icon}
-                        </span>
-                        <span className="text-sm font-semibold text-white truncate max-w-[9.5rem] sm:max-w-none">{currentExercise.name}</span>
-                        {!isDetecting && (
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
-                                className={`text-white/20 transition-transform ${selectorOpen ? 'rotate-180' : ''}`}>
-                                <polyline points="6,9 12,15 18,9" />
-                            </svg>
-                        )}
-                    </button>
-
-                    {/* Controls */}
+                <div className="px-3 sm:px-4 py-2.5 space-y-2">
                     <div className="flex items-center gap-2">
-                        {/* Voice toggle */}
-                        <button
-                            onClick={() => setVoiceEnabled(!voiceEnabled)}
-                            className={`
-                                p-2 rounded-lg transition-all cursor-pointer
-                                ${voiceEnabled
-                                    ? 'bg-[#38bdf8]/10 text-[#38bdf8] border border-[#38bdf8]/20'
-                                    : 'bg-white/5 text-white/20 border border-white/5'}
-                            `}
-                            title={voiceEnabled ? 'Voice coaching ON' : 'Voice coaching OFF'}
-                        >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                                {voiceEnabled ? (
-                                    <>
-                                        <polygon points="11,5 6,9 2,9 2,15 6,15 11,19" />
-                                        <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
-                                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
-                                    </>
-                                ) : (
-                                    <>
-                                        <polygon points="11,5 6,9 2,9 2,15 6,15 11,19" />
-                                        <line x1="23" y1="9" x2="17" y2="15" />
-                                        <line x1="17" y1="9" x2="23" y2="15" />
-                                    </>
-                                )}
-                            </svg>
-                        </button>
-
-                        {/* Reset button — only during detection */}
-                        {isDetecting && (
+                        {/* Back — the bottom nav is hidden on this immersive screen */}
+                        {!isDetecting && (
                             <button
-                                onClick={handleReset}
-                                className="p-2 rounded-lg transition-all cursor-pointer bg-white/5 text-white/30 border border-white/5 hover:bg-amber-500/10 hover:text-amber-400 hover:border-amber-500/20"
-                                title="Reset current set"
+                                onClick={() => router.back()}
+                                aria-label="Go back"
+                                className="md:hidden -ml-1 w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-lg text-white/40 hover:text-white/70 hover:bg-white/5 transition-all cursor-pointer"
                             >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                                    <polyline points="1,4 1,10 7,10" />
-                                    <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <polyline points="15,18 9,12 15,6" />
                                 </svg>
                             </button>
                         )}
 
-                        {/* Target reps config (only when not detecting) */}
-                        {!isDetecting && (
-                            <div className="flex items-center gap-1 bg-white/5 rounded-lg border border-white/5 px-2 py-1">
-                                <span className="text-[8px] text-white/25 tracking-wider uppercase mr-1">Target</span>
-                                <button onClick={() => setTargetReps(Math.max(1, targetReps - 1))}
-                                    className="text-white/30 hover:text-white/60 w-5 h-5 flex items-center justify-center cursor-pointer">-</button>
-                                <span className="text-[11px] font-bold text-[#22c55e] w-6 text-center" style={{ fontFamily: 'Orbitron, monospace' }}>{targetReps}</span>
-                                <button onClick={() => setTargetReps(targetReps + 1)}
-                                    className="text-white/30 hover:text-white/60 w-5 h-5 flex items-center justify-center cursor-pointer">+</button>
-                                <span className="text-[8px] text-white/15 mx-1">×</span>
-                                <button onClick={() => setTargetSets(Math.max(1, targetSets - 1))}
-                                    className="text-white/30 hover:text-white/60 w-5 h-5 flex items-center justify-center cursor-pointer">-</button>
-                                <span className="text-[11px] font-bold text-[#38bdf8] w-4 text-center" style={{ fontFamily: 'Orbitron, monospace' }}>{targetSets}</span>
-                                <button onClick={() => setTargetSets(targetSets + 1)}
-                                    className="text-white/30 hover:text-white/60 w-5 h-5 flex items-center justify-center cursor-pointer">+</button>
-                                <span className="text-[8px] text-white/25 tracking-wider uppercase ml-1">sets</span>
-                            </div>
-                        )}
-
-                        {/* Start/Stop */}
+                        {/* Current exercise (clickable to toggle selector) */}
                         <button
-                            onClick={isDetecting ? handleManualStop : handleStart}
+                            onClick={() => !isDetecting && setSelectorOpen(!selectorOpen)}
+                            disabled={isDetecting}
                             className={`
-                                px-5 py-2 rounded-lg font-bold text-xs tracking-wider uppercase transition-all cursor-pointer
-                                ${isDetecting
-                                    ? 'bg-red-500/15 text-red-400 border border-red-500/25 hover:bg-red-500/25'
-                                    : 'bg-[#22c55e] text-black hover:bg-[#16a34a] shadow-[0_0_25px_rgba(34,197,94,0.3)]'}
+                                flex items-center gap-2 sm:gap-3 min-w-0 cursor-pointer transition-all
+                                ${isDetecting ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-80'}
                             `}
                         >
-                            {isDetecting ? (
-                                <span className="flex items-center gap-2">
-                                    <span className="w-2 h-2 bg-red-400 rounded-full animate-pulse" />Stop
-                                </span>
-                            ) : (
-                                <span className="flex items-center gap-2">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21" /></svg>
-                                    Start
-                                </span>
+                            <span
+                                className="text-[10px] font-black tracking-wider bg-[#22c55e]/10 text-[#22c55e] border border-[#22c55e]/20 rounded-md px-2 py-1 flex-shrink-0"
+                                style={{ fontFamily: 'Orbitron, monospace' }}
+                            >
+                                {currentExercise.icon}
+                            </span>
+                            <span className="text-sm font-semibold text-white truncate min-w-0">{currentExercise.name}</span>
+                            {!isDetecting && (
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+                                    className={`flex-shrink-0 text-white/20 transition-transform ${selectorOpen ? 'rotate-180' : ''}`}>
+                                    <polyline points="6,9 12,15 18,9" />
+                                </svg>
                             )}
                         </button>
-                    </div>
-                </div>
 
+                        {/* Actions — always on this row, so Start stays visible */}
+                        <div className="ml-auto flex items-center gap-2 flex-shrink-0">
+                            {voiceButton}
+                            {resetButton}
+                            {targetConfig && <div className="hidden sm:block">{targetConfig}</div>}
+                            {startButton}
+                        </div>
+                    </div>
+
+                    {/* Target stepper gets its own row on phones */}
+                    {targetConfig && (
+                        <div className="sm:hidden flex justify-center">{targetConfig}</div>
+                    )}
+                </div>
             </div>
 
             {/* Exercise picker — swipeable card modal */}

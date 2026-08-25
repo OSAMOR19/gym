@@ -62,7 +62,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
             {/* Main content area — offset dynamically by sidebar width */}
             <main
-                className={`relative z-10 min-h-screen transition-all duration-300 ${isWorkout ? '' : 'pb-24 md:pb-0'} ${sidebarCollapsed ? 'md:ml-[60px]' : 'md:ml-56'
+                className={`relative z-10 min-h-screen transition-all duration-300 ${isWorkout ? '' : 'pb-28 md:pb-0'} ${sidebarCollapsed ? 'md:ml-[60px]' : 'md:ml-56'
                     }`}
             >
                 {children}

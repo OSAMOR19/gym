@@ -151,13 +151,13 @@ export default function Sidebar() {
                 </div>
             </aside>
 
-            {/* ─── Mobile Bottom Nav — hidden on the immersive workout screen;
-                 safe-area padding keeps it above the iOS home indicator ────── */}
+            {/* ─── Mobile Bottom Nav — floating liquid-glass pill, hidden on
+                 the immersive workout screen; sits above the home indicator ── */}
             <nav
-                className={`md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0a0a0a]/95 backdrop-blur-lg border-t border-white/5 ${pathname.startsWith('/workout') ? 'hidden' : ''}`}
-                style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+                className={`md:hidden fixed left-3 right-3 z-40 rounded-[1.75rem] liquid-glass ${pathname.startsWith('/workout') ? 'hidden' : ''}`}
+                style={{ bottom: 'calc(0.75rem + env(safe-area-inset-bottom))' }}
             >
-                <div className="flex items-center justify-around py-2 px-2">
+                <div className="flex items-center justify-around px-2 py-1.5">
                     {NAV_ITEMS.map((item) => {
                         const isActive = pathname.startsWith(item.href);
                         return (
@@ -165,9 +165,11 @@ export default function Sidebar() {
                                 key={item.href}
                                 href={item.href}
                                 className={`
-                                    flex flex-col items-center gap-1 py-1 px-3 rounded-xl
+                                    flex flex-col items-center gap-0.5 py-1.5 px-3.5 rounded-2xl
                                     transition-all duration-200 text-center min-w-0
-                                    ${isActive ? 'text-[#22c55e]' : 'text-white/30 hover:text-white/60'}
+                                    ${isActive
+                                        ? 'text-[#22c55e] bg-white/[0.08] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]'
+                                        : 'text-white/35 hover:text-white/60'}
                                 `}
                             >
                                 <NavIcon name={item.iconKey} active={isActive} />

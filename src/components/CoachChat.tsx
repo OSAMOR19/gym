@@ -214,7 +214,7 @@ export default function CoachChat() {
                 <button
                     onClick={() => openPanel('chat')}
                     aria-label={nudges.length > 0 ? `Open coach chat — ${nudges.length} suggestion${nudges.length > 1 ? 's' : ''}` : 'Open coach chat'}
-                    className={`fixed z-40 right-4 bottom-[4.75rem] md:right-6 md:bottom-6 w-14 h-14 rounded-full bg-[#22c55e] text-black flex items-center justify-center shadow-[0_4px_25px_rgba(34,197,94,0.4)] hover:bg-[#16a34a] active:scale-95 transition-all cursor-pointer ${attention ? 'animate-fab-breathe' : ''}`}
+                    className={`fixed z-40 right-4 bottom-[5.75rem] md:right-6 md:bottom-6 w-14 h-14 rounded-full bg-[#22c55e] text-black flex items-center justify-center shadow-[0_4px_25px_rgba(34,197,94,0.4)] hover:bg-[#16a34a] active:scale-95 transition-all cursor-pointer ${attention ? 'animate-fab-breathe' : ''}`}
                     style={{ marginBottom: 'env(safe-area-inset-bottom)' }}
                 >
                     {/* Soft ping ring until the user meets the coach */}
