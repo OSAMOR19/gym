@@ -1,29 +1,87 @@
 /**
- * Programs Page — Horizontal scroll carousel with full-viewport cards.
- * Filter tabs at top.
+ * Programs Page — Spotify-style browsing: horizontal shelves of compact
+ * program tiles ("Picked for you" ranked by the user's own intake answers,
+ * then "More to explore"), each row swipeable, several tiles in view at once.
+ * The first shelf drifts forward on its own; any touch pauses it.
  */
 
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
-import { PROGRAMS, getProgramById } from '../../../lib/programs';
-import { getCoachPlan, CoachPlan } from '../../../lib/coachIntake';
+import { PROGRAMS, getProgramById, Program, LEVEL_LABELS } from '../../../lib/programs';
+import { getCoachPlan, CoachPlan, scorePrograms } from '../../../lib/coachIntake';
 import { syncCoachPlan } from '../../../lib/userProfile';
-import ProgramCard from '../../../components/ProgramCard';
 import { openCoachChat } from '../../../components/CoachChat';
 
 type Filter = 'all' | 'beginner' | 'intermediate' | 'senior';
 
+// ─── Compact tile — small enough that a row shows 2–3 at once ────────────────
+
+function ProgramTile({ program }: { program: Program }) {
+    const daysPerWeek = program.weeks[0]?.days.length ?? 3;
+    return (
+        <Link href={`/programs/${program.id}`} className="flex-shrink-0 snap-start w-[44vw] sm:w-52 group">
+            <div className="relative h-28 sm:h-32 rounded-xl overflow-hidden border border-white/5 group-hover:border-white/15 transition-all">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={program.image} alt="" className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                <span
+                    className="absolute top-2 right-2 text-[8px] font-bold tracking-widest uppercase px-2 py-0.5 rounded-full border backdrop-blur-sm"
+                    style={{ borderColor: `${program.color}50`, color: program.color, backgroundColor: 'rgba(0,0,0,0.5)' }}
+                >
+                    {LEVEL_LABELS[program.level]}
+                </span>
+            </div>
+            <p className="text-[13px] font-semibold text-white/85 mt-2 truncate">{program.name}</p>
+            <p className="text-[10px] text-white/25 mt-0.5">
+                {program.weeks.length} wk · {daysPerWeek} days/week
+            </p>
+        </Link>
+    );
+}
+
+// ─── Shelf — a titled, swipeable row ─────────────────────────────────────────
+
+function ProgramShelf({
+    title,
+    programs,
+    rowRef,
+    onInteract,
+}: {
+    title: string;
+    programs: Program[];
+    rowRef?: React.RefObject<HTMLDivElement | null>;
+    onInteract?: () => void;
+}) {
+    if (programs.length === 0) return null;
+    return (
+        <div className="mb-7">
+            <div className="flex items-baseline justify-between mb-3">
+                <h2 className="text-sm font-bold text-white/80">{title}</h2>
+                <span className="text-[10px] text-white/20">{programs.length}</span>
+            </div>
+            <div
+                ref={rowRef}
+                onTouchStart={onInteract}
+                onPointerDown={onInteract}
+                onWheel={onInteract}
+                className="flex gap-3 overflow-x-auto snap-x scrollbar-hide -mx-4 px-4"
+            >
+                {programs.map((p) => <ProgramTile key={p.id} program={p} />)}
+            </div>
+        </div>
+    );
+}
+
 export default function ProgramsPage() {
     const [filter, setFilter] = useState<Filter>('all');
     const [plan, setPlan] = useState<CoachPlan | null>(null);
-    const [slide, setSlide] = useState(0);
-    const carouselRef = useRef<HTMLDivElement>(null);
+    const pickedRowRef = useRef<HTMLDivElement>(null);
 
     // Local cache renders instantly; the server copy (which follows the user
-    // across devices) reconciles in the background. The intake now runs in
-    // the coach chat — it announces 'irontrack-plan-saved' when done.
+    // across devices) reconciles in the background. The intake runs in the
+    // coach chat and announces 'irontrack-plan-saved' when done.
     useEffect(() => {
         setPlan(getCoachPlan());
         syncCoachPlan().then(setPlan);
@@ -34,39 +92,43 @@ export default function ProgramsPage() {
 
     const planProgram = plan ? getProgramById(plan.programId) : null;
 
-    const filtered = filter === 'all'
-        ? PROGRAMS
-        : PROGRAMS.filter(p => p.level === filter);
+    // "Picked for you": the user's own intake answers rank the catalog (their
+    // chosen plan always leads). Without an intake yet, lead with the
+    // easiest ways in. Everything else lands in the explore shelf.
+    let picked: Program[];
+    if (plan) {
+        const ranked = scorePrograms(plan.answers).map((s) => s.program);
+        picked = [
+            ...(planProgram ? [planProgram] : []),
+            ...ranked.filter((p) => p.id !== plan.programId),
+        ].slice(0, 7);
+    } else {
+        picked = PROGRAMS.filter((p) => p.level === 'beginner' || p.level === 'senior').slice(0, 7);
+    }
+    const pickedIds = new Set(picked.map((p) => p.id));
+    const explore = PROGRAMS.filter((p) => !pickedIds.has(p.id));
 
-    // Track which card is in view for the slideshow dots
-    const onCarouselScroll = useCallback(() => {
-        const el = carouselRef.current;
-        if (!el || filtered.length === 0) return;
-        const cardSpan = el.scrollWidth / filtered.length;
-        setSlide(Math.min(filtered.length - 1, Math.round(el.scrollLeft / cardSpan)));
-    }, [filtered.length]);
+    const filteredOnly = PROGRAMS.filter((p) => p.level === filter);
 
-    // Auto-advance the slideshow so browsing takes zero effort. The user's
-    // touch always wins: any interaction pauses it for a while, a hidden tab
-    // pauses it entirely, and reduced-motion settings disable it.
+    // The picked shelf drifts one tile forward every few seconds; user input
+    // pauses it, hidden tabs stop it, reduced-motion disables it.
     const pauseUntilRef = useRef(0);
     const pauseAutoPlay = useCallback(() => {
         pauseUntilRef.current = Date.now() + 8000;
     }, []);
 
     useEffect(() => {
+        if (filter !== 'all') return;
         if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-        if (filtered.length < 2) return;
         const id = setInterval(() => {
-            const el = carouselRef.current;
+            const el = pickedRowRef.current;
             if (!el || document.hidden || Date.now() < pauseUntilRef.current) return;
-            const cardSpan = el.scrollWidth / filtered.length;
-            const current = Math.round(el.scrollLeft / cardSpan);
-            const next = (current + 1) % filtered.length;
-            el.scrollTo({ left: next * cardSpan, behavior: 'smooth' });
+            const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 8;
+            if (atEnd) el.scrollTo({ left: 0, behavior: 'smooth' });
+            else el.scrollBy({ left: el.clientWidth * 0.5, behavior: 'smooth' });
         }, 4500);
         return () => clearInterval(id);
-    }, [filtered.length]);
+    }, [filter]);
 
     const filters: { key: Filter; label: string }[] = [
         { key: 'all', label: 'All Programs' },
@@ -77,13 +139,12 @@ export default function ProgramsPage() {
 
     return (
         <div className="max-w-6xl mx-auto p-4 md:p-6">
-            {/* Header — title and filters stack on mobile (side by side they
-                clipped the tabs and squeezed the title); the filters become a
-                swipeable chip row, and stay a segmented control on desktop */}
+            {/* Header — title and filters stack on mobile; the filters are a
+                swipeable chip row, and a segmented control on desktop */}
             <div className="mb-6">
                 <div className="md:flex md:items-end md:justify-between">
                     <div className="mb-4 md:mb-0">
-                        <p className="text-[10px] text-white/15 tracking-widest uppercase mb-1">{filtered.length} available</p>
+                        <p className="text-[10px] text-white/15 tracking-widest uppercase mb-1">{PROGRAMS.length} available</p>
                         <h1 className="text-2xl font-bold text-white">Programs</h1>
                     </div>
 
@@ -170,36 +231,23 @@ export default function ProgramsPage() {
                 </button>
             )}
 
-            {/* Slideshow carousel — one card at a time, the next one peeking in
-                from the right so new users know there's more to swipe */}
-            <div
-                ref={carouselRef}
-                onScroll={onCarouselScroll}
-                onTouchStart={pauseAutoPlay}
-                onPointerDown={pauseAutoPlay}
-                onWheel={pauseAutoPlay}
-                className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 scrollbar-hide -mx-4 px-4"
-            >
-                {filtered.map((program) => (
-                    <ProgramCard key={program.id} program={program} />
-                ))}
-            </div>
-
-            {/* Slide dots */}
-            <div className="flex items-center justify-center gap-1.5 mt-1">
-                {filtered.map((program, i) => (
-                    <span
-                        key={program.id}
-                        aria-hidden="true"
-                        className="rounded-full transition-all duration-300"
-                        style={{
-                            width: i === slide ? 18 : 6,
-                            height: 6,
-                            backgroundColor: i === slide ? program.color : 'rgba(255,255,255,0.12)',
-                        }}
+            {/* Shelves */}
+            {filter === 'all' ? (
+                <>
+                    <ProgramShelf
+                        title="Picked for you"
+                        programs={picked}
+                        rowRef={pickedRowRef}
+                        onInteract={pauseAutoPlay}
                     />
-                ))}
-            </div>
+                    <ProgramShelf title="More to explore" programs={explore} />
+                </>
+            ) : (
+                <ProgramShelf
+                    title={filters.find((f) => f.key === filter)?.label ?? ''}
+                    programs={filteredOnly}
+                />
+            )}
         </div>
     );
 }

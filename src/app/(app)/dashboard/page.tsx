@@ -77,12 +77,13 @@ export default function DashboardPage() {
 
             {/* ─── Main cockpit: 60/40 split ────────────────────────────────── */}
             <div className="grid grid-cols-1 md:grid-cols-[1fr_320px] gap-6 mb-6">
-                {/* Left: dominant weekly ring */}
-                <div className="relative border border-white/5 rounded-xl p-8 flex flex-col items-center justify-center min-h-[320px]">
+                {/* Left: dominant weekly ring — compact on phones, where the
+                    old fixed height left a screen-filling void */}
+                <div className="relative border border-white/5 rounded-xl p-5 md:p-8 flex flex-col items-center justify-center md:min-h-[320px]">
                     {/* Background ghost number */}
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden">
                         <span
-                            className="text-[200px] font-black text-white/[0.015] leading-none"
+                            className="text-[110px] md:text-[200px] font-black text-white/[0.015] leading-none"
                             style={{ fontFamily: 'Orbitron, monospace' }}
                         >
                             {weeklyDone}
@@ -91,7 +92,7 @@ export default function DashboardPage() {
 
                     {/* Ring */}
                     <div className="relative">
-                        <svg width={200} height={200} className="transform -rotate-90">
+                        <svg width={200} height={200} viewBox="0 0 200 200" className="w-[148px] h-[148px] md:w-[200px] md:h-[200px] transform -rotate-90">
                             <circle cx={100} cy={100} r={ringRadius} fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth={6} />
                             <circle
                                 cx={100} cy={100} r={ringRadius} fill="none" stroke="#22c55e" strokeWidth={6}
@@ -100,17 +101,17 @@ export default function DashboardPage() {
                             />
                         </svg>
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
-                            <span className="text-4xl font-black text-white" style={{ fontFamily: 'Orbitron, monospace' }}>
+                            <span className="text-2xl md:text-4xl font-black text-white" style={{ fontFamily: 'Orbitron, monospace' }}>
                                 {weeklyDone}/{weeklyTarget}
                             </span>
-                            <span className="text-[10px] text-white/25 tracking-widest uppercase mt-1">
+                            <span className="text-[9px] md:text-[10px] text-white/25 tracking-widest uppercase mt-1">
                                 Workouts this week
                             </span>
                         </div>
                     </div>
 
                     {/* Weekly activity dots */}
-                    <div className="flex items-center gap-3 mt-6">
+                    <div className="flex items-center gap-3 mt-4 md:mt-6">
                         {(progressStats?.weeklyActivity || []).map((d, i) => (
                             <div key={i} className="flex flex-col items-center gap-1.5">
                                 <div
@@ -125,34 +126,40 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
-                {/* Right: stacked data panels */}
+                {/* Right: data panels — a compact 3-up row on phones (three
+                    stacked full-width cards wasted a screen of scroll),
+                    stacked again in the narrow desktop side column */}
                 <div className="flex flex-col gap-3">
-                    {/* Streak */}
-                    <div className="border border-white/5 rounded-xl p-4">
-                        <div className="flex items-center justify-between">
-                            <span className="text-[10px] text-white/20 tracking-widest uppercase">Streak</span>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="1.5"><path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z" /></svg>
+                    <div className="grid grid-cols-3 gap-2 md:flex md:flex-col md:gap-3">
+                        {/* Streak */}
+                        <div className="border border-white/5 rounded-xl p-3 md:p-4">
+                            <div className="flex items-center justify-between">
+                                <span className="text-[9px] md:text-[10px] text-white/20 tracking-widest uppercase">Streak</span>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="1.5" className="hidden md:block"><path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z" /></svg>
+                            </div>
+                            <p className="text-xl md:text-3xl font-black text-[#f59e0b] mt-1" style={{ fontFamily: 'Orbitron, monospace' }}>
+                                {gameStats?.currentStreak || 0}
+                            </p>
+                            <p className="text-[9px] md:text-[10px] text-white/15 mt-0.5">days in a row</p>
                         </div>
-                        <p className="text-3xl font-black text-[#f59e0b] mt-1" style={{ fontFamily: 'Orbitron, monospace' }}>
-                            {gameStats?.currentStreak || 0}
-                        </p>
-                        <p className="text-[10px] text-white/15 mt-0.5">consecutive days</p>
-                    </div>
 
-                    {/* Total Reps */}
-                    <div className="border border-white/5 rounded-xl p-4">
-                        <span className="text-[10px] text-white/20 tracking-widest uppercase">Total Reps</span>
-                        <p className="text-3xl font-black text-[#22c55e] mt-1" style={{ fontFamily: 'Orbitron, monospace' }}>
-                            {progressStats?.totalReps || 0}
-                        </p>
-                    </div>
+                        {/* Total Reps */}
+                        <div className="border border-white/5 rounded-xl p-3 md:p-4">
+                            <span className="text-[9px] md:text-[10px] text-white/20 tracking-widest uppercase">Reps</span>
+                            <p className="text-xl md:text-3xl font-black text-[#22c55e] mt-1" style={{ fontFamily: 'Orbitron, monospace' }}>
+                                {progressStats?.totalReps || 0}
+                            </p>
+                            <p className="text-[9px] md:text-[10px] text-white/15 mt-0.5">lifetime</p>
+                        </div>
 
-                    {/* Avg Form */}
-                    <div className="border border-white/5 rounded-xl p-4">
-                        <span className="text-[10px] text-white/20 tracking-widest uppercase">Avg Form Score</span>
-                        <p className="text-3xl font-black text-[#a855f7] mt-1" style={{ fontFamily: 'Orbitron, monospace' }}>
-                            {progressStats?.averageFormQuality || 0}%
-                        </p>
+                        {/* Avg Form */}
+                        <div className="border border-white/5 rounded-xl p-3 md:p-4">
+                            <span className="text-[9px] md:text-[10px] text-white/20 tracking-widest uppercase">Form</span>
+                            <p className="text-xl md:text-3xl font-black text-[#a855f7] mt-1" style={{ fontFamily: 'Orbitron, monospace' }}>
+                                {progressStats?.averageFormQuality || 0}%
+                            </p>
+                            <p className="text-[9px] md:text-[10px] text-white/15 mt-0.5">average</p>
+                        </div>
                     </div>
 
                     {/* Quick actions — side by side on phones, stacked in the
