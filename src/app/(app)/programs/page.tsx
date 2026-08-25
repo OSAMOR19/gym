@@ -46,6 +46,28 @@ export default function ProgramsPage() {
         setSlide(Math.min(filtered.length - 1, Math.round(el.scrollLeft / cardSpan)));
     }, [filtered.length]);
 
+    // Auto-advance the slideshow so browsing takes zero effort. The user's
+    // touch always wins: any interaction pauses it for a while, a hidden tab
+    // pauses it entirely, and reduced-motion settings disable it.
+    const pauseUntilRef = useRef(0);
+    const pauseAutoPlay = useCallback(() => {
+        pauseUntilRef.current = Date.now() + 8000;
+    }, []);
+
+    useEffect(() => {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        if (filtered.length < 2) return;
+        const id = setInterval(() => {
+            const el = carouselRef.current;
+            if (!el || document.hidden || Date.now() < pauseUntilRef.current) return;
+            const cardSpan = el.scrollWidth / filtered.length;
+            const current = Math.round(el.scrollLeft / cardSpan);
+            const next = (current + 1) % filtered.length;
+            el.scrollTo({ left: next * cardSpan, behavior: 'smooth' });
+        }, 4500);
+        return () => clearInterval(id);
+    }, [filtered.length]);
+
     const filters: { key: Filter; label: string }[] = [
         { key: 'all', label: 'All Programs' },
         { key: 'beginner', label: 'Beginner' },
@@ -153,6 +175,9 @@ export default function ProgramsPage() {
             <div
                 ref={carouselRef}
                 onScroll={onCarouselScroll}
+                onTouchStart={pauseAutoPlay}
+                onPointerDown={pauseAutoPlay}
+                onWheel={pauseAutoPlay}
                 className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 scrollbar-hide -mx-4 px-4"
             >
                 {filtered.map((program) => (

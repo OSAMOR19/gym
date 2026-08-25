@@ -157,23 +157,26 @@ export default function Sidebar() {
                 className={`md:hidden fixed left-3 right-3 z-40 rounded-[1.75rem] liquid-glass ${pathname.startsWith('/workout') ? 'hidden' : ''}`}
                 style={{ bottom: 'calc(0.75rem + env(safe-area-inset-bottom))' }}
             >
-                <div className="flex items-center justify-around px-2 py-1.5">
+                {/* Icons only — the glyphs are self-explanatory and labels
+                    made the pill feel crowded; names stay as aria-labels */}
+                <div className="flex items-center justify-around px-2 py-2">
                     {NAV_ITEMS.map((item) => {
                         const isActive = pathname.startsWith(item.href);
                         return (
                             <Link
                                 key={item.href}
                                 href={item.href}
+                                aria-label={item.label}
+                                title={item.label}
                                 className={`
-                                    flex flex-col items-center gap-0.5 py-1.5 px-3.5 rounded-2xl
-                                    transition-all duration-200 text-center min-w-0
+                                    flex items-center justify-center w-12 h-11 rounded-2xl
+                                    transition-all duration-200
                                     ${isActive
                                         ? 'text-[#22c55e] bg-white/[0.08] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]'
                                         : 'text-white/35 hover:text-white/60'}
                                 `}
                             >
                                 <NavIcon name={item.iconKey} active={isActive} />
-                                <span className="text-[10px] font-medium tracking-wide">{item.label}</span>
                             </Link>
                         );
                     })}

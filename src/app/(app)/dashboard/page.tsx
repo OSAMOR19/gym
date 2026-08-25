@@ -155,21 +155,24 @@ export default function DashboardPage() {
                         </p>
                     </div>
 
-                    {/* Quick actions */}
-                    <Link
-                        href="/workout"
-                        className="flex items-center justify-center gap-2 py-3 rounded-xl bg-[#22c55e]/10 border border-[#22c55e]/25 text-[#22c55e] font-bold text-sm hover:bg-[#22c55e]/20 transition-all"
-                    >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="5,3 19,12 5,21" /></svg>
-                        Start Workout
-                    </Link>
-                    <Link
-                        href="/programs"
-                        className="flex items-center justify-center gap-2 py-3 rounded-xl border border-white/5 text-white/40 font-medium text-sm hover:bg-white/[0.02] hover:text-white/60 transition-all"
-                    >
-                        Browse Programs
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polyline points="9,18 15,12 9,6" /></svg>
-                    </Link>
+                    {/* Quick actions — side by side on phones, stacked in the
+                        narrow desktop column */}
+                    <div className="grid grid-cols-2 gap-3 md:grid-cols-1">
+                        <Link
+                            href="/workout"
+                            className="flex items-center justify-center gap-2 py-3 px-2 rounded-xl bg-[#22c55e]/10 border border-[#22c55e]/25 text-[#22c55e] font-bold text-[13px] md:text-sm hover:bg-[#22c55e]/20 transition-all whitespace-nowrap"
+                        >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="flex-shrink-0"><polygon points="5,3 19,12 5,21" /></svg>
+                            Start Workout
+                        </Link>
+                        <Link
+                            href="/programs"
+                            className="flex items-center justify-center gap-2 py-3 px-2 rounded-xl border border-white/5 text-white/40 font-medium text-[13px] md:text-sm hover:bg-white/[0.02] hover:text-white/60 transition-all whitespace-nowrap"
+                        >
+                            Browse Programs
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="flex-shrink-0"><polyline points="9,18 15,12 9,6" /></svg>
+                        </Link>
+                    </div>
                 </div>
             </div>
 
