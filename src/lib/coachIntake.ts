@@ -167,9 +167,11 @@ export interface Recommendation {
     alternativeReason: string;
 }
 
-/** Exported for testability — the ranked scores behind recommendProgram. */
+/** Exported for testability — the ranked scores behind recommendProgram.
+ *  Programs flagged excludeFromIntake (e.g. prenatal) are never scored:
+ *  they require explicit self-selection, not algorithmic assignment. */
 export function scorePrograms(answers: IntakeAnswers) {
-    return PROGRAMS.map((program) => {
+    return PROGRAMS.filter((p) => !p.excludeFromIntake).map((program) => {
         let score = 0;
         const reasons: string[] = [];
 

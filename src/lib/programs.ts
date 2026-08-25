@@ -37,8 +37,24 @@ export interface Program {
     icon: string;
     image: string;              // Path to program cover image
     color: string;              // Accent color for the card
+    /** Never surfaced by the coach intake — for programs that need an explicit
+     *  self-selection (e.g. prenatal), not an algorithmic recommendation. */
+    excludeFromIntake?: boolean;
     weeks: ProgramWeek[];
 }
+
+/**
+ * What each level is CALLED in the UI. 'senior' stays as the internal value
+ * (it's stored in program data and intake scoring), but on screen it reads
+ * as "Gentle" — "Senior" made these programs sound like advanced training
+ * rather than an easy, welcoming pace for older adults.
+ */
+export const LEVEL_LABELS: Record<Program['level'], string> = {
+    beginner: 'Beginner',
+    intermediate: 'Intermediate',
+    advanced: 'Advanced',
+    senior: 'Gentle',
+};
 
 // ─── Program Definitions ─────────────────────────────────────────────────────
 
@@ -777,6 +793,146 @@ export const PROGRAMS: Program[] = [
                             { exerciseId: 'jumping_jacks', targetSets: 2, targetReps: 10 },
                             { exerciseId: 'calf_raise', targetSets: 3, targetReps: 12 },
                             { exerciseId: 'plank', targetSets: 2, targetReps: 0, targetHoldSeconds: 15 },
+                        ],
+                    },
+                ],
+            },
+        ],
+    },
+
+    // ─── Prenatal Gentle ─────────────────────────────────────────────────────
+    // Conservative by design: upright or side-lying only — nothing flat on the
+    // back, nothing face-down, no impact, no loaded hinging, no crunch-style
+    // core work. Deliberately excluded from intake recommendations: pregnancy
+    // is self-selected with professional clearance, never algorithmically
+    // assigned (see the safety architecture notes in the product spec).
+    {
+        id: 'prenatal-gentle',
+        name: 'Prenatal Gentle',
+        description: 'Low-impact strength and mobility for pregnancy — upright, steady movements only. Get your doctor or midwife\'s okay first, and stop anything that doesn\'t feel right.',
+        level: 'senior',
+        excludeFromIntake: true,
+        durationWeeks: 4,
+        icon: 'PN',
+        image: '/programs/gentle-mobility.png',
+        color: '#ec4899',
+        weeks: [
+            {
+                weekNumber: 1,
+                days: [
+                    {
+                        name: 'Day 1: Standing Strength',
+                        exercises: [
+                            { exerciseId: 'squat', targetSets: 2, targetReps: 8 },
+                            { exerciseId: 'calf_raise', targetSets: 2, targetReps: 10 },
+                            { exerciseId: 'bicep_curl', targetSets: 2, targetReps: 10 },
+                        ],
+                    },
+                    {
+                        name: 'Day 2: Posture & Carry',
+                        exercises: [
+                            { exerciseId: 'lateral_raise', targetSets: 2, targetReps: 8 },
+                            { exerciseId: 'tricep_extension', targetSets: 2, targetReps: 8 },
+                            { exerciseId: 'farmers_walk', targetSets: 2, targetReps: 0, targetHoldSeconds: 20 },
+                        ],
+                    },
+                    {
+                        name: 'Day 3: Mobility & Balance',
+                        exercises: [
+                            { exerciseId: 'hamstring_stretch', targetSets: 1, targetReps: 0, targetHoldSeconds: 30 },
+                            { exerciseId: 'hip_flexor_stretch', targetSets: 1, targetReps: 0, targetHoldSeconds: 30 },
+                            { exerciseId: 'quad_stretch', targetSets: 1, targetReps: 0, targetHoldSeconds: 30 },
+                            { exerciseId: 'shoulder_stretch', targetSets: 1, targetReps: 0, targetHoldSeconds: 30 },
+                        ],
+                    },
+                ],
+            },
+            {
+                weekNumber: 2,
+                days: [
+                    {
+                        name: 'Day 1: Standing Strength',
+                        exercises: [
+                            { exerciseId: 'squat', targetSets: 2, targetReps: 10 },
+                            { exerciseId: 'calf_raise', targetSets: 2, targetReps: 12 },
+                            { exerciseId: 'bicep_curl', targetSets: 2, targetReps: 10 },
+                        ],
+                    },
+                    {
+                        name: 'Day 2: Arms & Carry',
+                        exercises: [
+                            { exerciseId: 'shoulder_press', targetSets: 2, targetReps: 6 },
+                            { exerciseId: 'lateral_raise', targetSets: 2, targetReps: 8 },
+                            { exerciseId: 'farmers_walk', targetSets: 2, targetReps: 0, targetHoldSeconds: 25 },
+                        ],
+                    },
+                    {
+                        name: 'Day 3: Core & Mobility',
+                        exercises: [
+                            { exerciseId: 'side_plank', targetSets: 2, targetReps: 0, targetHoldSeconds: 10 },
+                            { exerciseId: 'hamstring_stretch', targetSets: 1, targetReps: 0, targetHoldSeconds: 30 },
+                            { exerciseId: 'hip_flexor_stretch', targetSets: 1, targetReps: 0, targetHoldSeconds: 30 },
+                            { exerciseId: 'shoulder_stretch', targetSets: 1, targetReps: 0, targetHoldSeconds: 30 },
+                        ],
+                    },
+                ],
+            },
+            {
+                weekNumber: 3,
+                days: [
+                    {
+                        name: 'Day 1: Standing Strength',
+                        exercises: [
+                            { exerciseId: 'squat', targetSets: 3, targetReps: 8 },
+                            { exerciseId: 'calf_raise', targetSets: 2, targetReps: 12 },
+                            { exerciseId: 'bicep_curl', targetSets: 2, targetReps: 12 },
+                        ],
+                    },
+                    {
+                        name: 'Day 2: Arms & Carry',
+                        exercises: [
+                            { exerciseId: 'shoulder_press', targetSets: 2, targetReps: 8 },
+                            { exerciseId: 'tricep_extension', targetSets: 2, targetReps: 10 },
+                            { exerciseId: 'farmers_walk', targetSets: 2, targetReps: 0, targetHoldSeconds: 30 },
+                        ],
+                    },
+                    {
+                        name: 'Day 3: Core & Mobility',
+                        exercises: [
+                            { exerciseId: 'side_plank', targetSets: 2, targetReps: 0, targetHoldSeconds: 12 },
+                            { exerciseId: 'hamstring_stretch', targetSets: 1, targetReps: 0, targetHoldSeconds: 40 },
+                            { exerciseId: 'hip_flexor_stretch', targetSets: 1, targetReps: 0, targetHoldSeconds: 40 },
+                            { exerciseId: 'quad_stretch', targetSets: 1, targetReps: 0, targetHoldSeconds: 30 },
+                        ],
+                    },
+                ],
+            },
+            {
+                weekNumber: 4,
+                days: [
+                    {
+                        name: 'Day 1: Steady Strength',
+                        exercises: [
+                            { exerciseId: 'squat', targetSets: 3, targetReps: 8 },
+                            { exerciseId: 'calf_raise', targetSets: 3, targetReps: 10 },
+                            { exerciseId: 'bicep_curl', targetSets: 2, targetReps: 12 },
+                        ],
+                    },
+                    {
+                        name: 'Day 2: Arms & Carry',
+                        exercises: [
+                            { exerciseId: 'shoulder_press', targetSets: 2, targetReps: 8 },
+                            { exerciseId: 'lateral_raise', targetSets: 2, targetReps: 10 },
+                            { exerciseId: 'farmers_walk', targetSets: 3, targetReps: 0, targetHoldSeconds: 25 },
+                        ],
+                    },
+                    {
+                        name: 'Day 3: Core & Mobility',
+                        exercises: [
+                            { exerciseId: 'side_plank', targetSets: 2, targetReps: 0, targetHoldSeconds: 15 },
+                            { exerciseId: 'hamstring_stretch', targetSets: 1, targetReps: 0, targetHoldSeconds: 40 },
+                            { exerciseId: 'hip_flexor_stretch', targetSets: 1, targetReps: 0, targetHoldSeconds: 40 },
+                            { exerciseId: 'shoulder_stretch', targetSets: 1, targetReps: 0, targetHoldSeconds: 40 },
                         ],
                     },
                 ],

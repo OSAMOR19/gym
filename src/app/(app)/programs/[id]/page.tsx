@@ -8,7 +8,7 @@
 
 import { use, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getProgramById, ProgramExercise } from '../../../../lib/programs';
+import { getProgramById, ProgramExercise, LEVEL_LABELS } from '../../../../lib/programs';
 import { EXERCISES } from '../../../../lib/exercises';
 import { setWorkoutQueue, getCompletedDays } from '../../../../lib/workoutQueue';
 import { syncProgramProgress } from '../../../../lib/programProgress';
@@ -155,7 +155,7 @@ export default function ProgramDetailPage({ params }: { params: Promise<{ id: st
                                 className="px-2 py-0.5 rounded border font-bold uppercase tracking-widest text-[9px]"
                                 style={{ borderColor: `${program.color}25`, color: program.color }}
                             >
-                                {program.level}
+                                {LEVEL_LABELS[program.level]}
                             </span>
                             {/* Derived from actual data — durationWeeks was often wrong */}
                             <span>{program.weeks.length} week{program.weeks.length > 1 ? 's' : ''}</span>
