@@ -2,9 +2,14 @@
  * CoachChat — the AI coach, one tap away on every screen.
  *
  * A floating button (bottom-right, above the mobile nav) opens the coach:
- * full-screen sheet on mobile, compact panel on desktop. Holds a running
- * conversation, keeps history (open, continue, delete), and talks to
- * /api/chat, which grounds every reply in the user's real training data.
+ * full-screen sheet on mobile, compact panel on desktop, sliding in from the
+ * button's corner. The button breathes and carries a counter only when the
+ * coach genuinely has something for the user (coachNudges — derived from
+ * their real journey state), so the animation stays meaningful.
+ *
+ * Views: chat (grounded in the user's data via /api/chat), history (open,
+ * continue, delete past conversations), and intake — the deterministic
+ * "Find my plan" flow now lives HERE; pages open it with openCoachChat().
  *
  * Hidden on /workout — that screen is camera-dominant and has the voice
  * coach; overlaying a chat button on the workout controls would fight it.
@@ -13,8 +18,10 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { createClient } from '../utils/supabase/client';
+import { getCoachNudges, CoachNudge } from '../lib/coachNudges';
+import CoachIntakeFlow from './CoachIntakeFlow';
 
 interface ChatMessage {
     role: 'user' | 'assistant';
@@ -28,12 +35,19 @@ interface ConversationRow {
     updated_at: string;
 }
 
-const SUGGESTIONS = [
+const DEFAULT_SUGGESTIONS = [
     'What should I do today?',
     'I only have 20 minutes',
     "I'm sore from last time",
     'How am I progressing?',
 ];
+
+const SEEN_KEY = 'irontrack_coach_seen';
+
+/** Open the coach from anywhere in the app (e.g. the Find-my-plan buttons). */
+export function openCoachChat(mode: 'chat' | 'intake' = 'chat'): void {
+    window.dispatchEvent(new CustomEvent('irontrack-open-coach', { detail: { mode } }));
+}
 
 function relativeDate(iso: string): string {
     const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
@@ -45,15 +59,50 @@ function relativeDate(iso: string): string {
 
 export default function CoachChat() {
     const pathname = usePathname();
+    const router = useRouter();
     const [open, setOpen] = useState(false);
-    const [view, setView] = useState<'chat' | 'history'>('chat');
+    const [view, setView] = useState<'chat' | 'history' | 'intake'>('chat');
     const [conversationId, setConversationId] = useState<string | null>(null);
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [conversations, setConversations] = useState<ConversationRow[]>([]);
     const [input, setInput] = useState('');
     const [sending, setSending] = useState(false);
+    const [nudges, setNudges] = useState<CoachNudge[]>([]);
+    const [seen, setSeen] = useState(true); // assume seen until localStorage says otherwise
     const scrollRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
+
+    // Journey-aware nudges drive the button's counter and the suggestion chips
+    const refreshNudges = useCallback(() => {
+        getCoachNudges().then(setNudges).catch(() => {});
+    }, []);
+
+    useEffect(() => {
+        setSeen(localStorage.getItem(SEEN_KEY) === '1');
+        refreshNudges();
+    }, [refreshNudges]);
+
+    const openPanel = useCallback((mode: 'chat' | 'intake' = 'chat') => {
+        setOpen(true);
+        setView(mode);
+        setSeen(true);
+        localStorage.setItem(SEEN_KEY, '1');
+    }, []);
+
+    // Anywhere in the app can open the coach (Find-my-plan buttons do)
+    useEffect(() => {
+        const handler = (e: Event) => {
+            const mode = (e as CustomEvent).detail?.mode === 'intake' ? 'intake' : 'chat';
+            openPanel(mode);
+        };
+        window.addEventListener('irontrack-open-coach', handler);
+        return () => window.removeEventListener('irontrack-open-coach', handler);
+    }, [openPanel]);
+
+    const closePanel = useCallback(() => {
+        setOpen(false);
+        refreshNudges(); // state may have changed (e.g. plan chosen)
+    }, [refreshNudges]);
 
     // Keep the newest message in view
     useEffect(() => {
@@ -135,28 +184,58 @@ export default function CoachChat() {
         }
     }, [input, sending, conversationId]);
 
+    const handleNudge = useCallback((nudge: CoachNudge) => {
+        if (nudge.action === 'intake') setView('intake');
+        else send(nudge.prompt);
+    }, [send]);
+
+    const handlePlanChosen = useCallback((programId: string) => {
+        setOpen(false);
+        setView('chat');
+        refreshNudges();
+        router.push(`/programs/${programId}`);
+    }, [router, refreshNudges]);
+
     // The workout screen is camera-dominant — no chat button there
     if (pathname.startsWith('/workout')) return null;
+
+    // Suggestion chips: real nudges first, defaults fill the rest
+    const chips: Array<{ key: string; label: string; onTap: () => void }> = [
+        ...nudges.map((n) => ({ key: n.id, label: n.label, onTap: () => handleNudge(n) })),
+        ...DEFAULT_SUGGESTIONS.map((s) => ({ key: s, label: s, onTap: () => send(s) })),
+    ].slice(0, 4);
+
+    const attention = nudges.length > 0 || !seen;
 
     return (
         <>
             {/* ─── Floating button ─────────────────────────────────────────── */}
             {!open && (
                 <button
-                    onClick={() => setOpen(true)}
-                    aria-label="Open coach chat"
-                    className="fixed z-40 right-4 bottom-[4.75rem] md:right-6 md:bottom-6 w-14 h-14 rounded-full bg-[#22c55e] text-black flex items-center justify-center shadow-[0_4px_25px_rgba(34,197,94,0.4)] hover:bg-[#16a34a] active:scale-95 transition-all cursor-pointer"
+                    onClick={() => openPanel('chat')}
+                    aria-label={nudges.length > 0 ? `Open coach chat — ${nudges.length} suggestion${nudges.length > 1 ? 's' : ''}` : 'Open coach chat'}
+                    className={`fixed z-40 right-4 bottom-[4.75rem] md:right-6 md:bottom-6 w-14 h-14 rounded-full bg-[#22c55e] text-black flex items-center justify-center shadow-[0_4px_25px_rgba(34,197,94,0.4)] hover:bg-[#16a34a] active:scale-95 transition-all cursor-pointer ${attention ? 'animate-fab-breathe' : ''}`}
                     style={{ marginBottom: 'env(safe-area-inset-bottom)' }}
                 >
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    {/* Soft ping ring until the user meets the coach */}
+                    {!seen && (
+                        <span className="absolute inset-0 rounded-full bg-[#22c55e]/40 animate-ping" aria-hidden="true" />
+                    )}
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="relative">
                         <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" />
                     </svg>
+                    {/* Journey-nudge counter */}
+                    {nudges.length > 0 && (
+                        <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 rounded-full bg-red-500 border-2 border-[#0f0f0f] text-white text-[10px] font-bold flex items-center justify-center">
+                            {nudges.length}
+                        </span>
+                    )}
                 </button>
             )}
 
             {/* ─── Panel ───────────────────────────────────────────────────── */}
             {open && (
-                <div className="fixed z-50 inset-0 md:inset-auto md:right-6 md:bottom-6 md:w-[400px] md:h-[640px] md:max-h-[calc(100dvh-3rem)] bg-[#0d0d0d] md:border md:border-white/10 md:rounded-2xl md:shadow-2xl flex flex-col h-[100dvh] md:h-[640px]">
+                <div className="fixed z-50 inset-0 md:inset-auto md:right-6 md:bottom-6 md:w-[400px] md:h-[640px] md:max-h-[calc(100dvh-3rem)] bg-[#0d0d0d] md:border md:border-white/10 md:rounded-2xl md:shadow-2xl flex flex-col h-[100dvh] md:h-[640px] animate-chat-in">
                     {/* Header */}
                     <div className="flex-none flex items-center justify-between px-4 py-3 border-b border-white/5" style={{ paddingTop: 'max(0.75rem, env(safe-area-inset-top))' }}>
                         <div className="flex items-center gap-2.5 min-w-0">
@@ -168,7 +247,7 @@ export default function CoachChat() {
                             <div className="min-w-0">
                                 <h2 className="text-sm font-bold text-white leading-none">Coach</h2>
                                 <p className="text-[9px] text-white/25 mt-1 tracking-wider uppercase truncate">
-                                    {view === 'history' ? 'Conversations' : 'Knows your training'}
+                                    {view === 'history' ? 'Conversations' : view === 'intake' ? 'Find your plan' : 'Knows your training'}
                                 </p>
                             </div>
                         </div>
@@ -208,7 +287,7 @@ export default function CoachChat() {
                                 </button>
                             )}
                             <button
-                                onClick={() => setOpen(false)}
+                                onClick={closePanel}
                                 aria-label="Close chat"
                                 className="w-9 h-9 flex items-center justify-center rounded-lg text-white/30 hover:text-white/60 hover:bg-white/5 transition-all cursor-pointer"
                             >
@@ -218,6 +297,11 @@ export default function CoachChat() {
                             </button>
                         </div>
                     </div>
+
+                    {/* ─── Intake view — the scripted Find-my-plan flow ─────── */}
+                    {view === 'intake' && (
+                        <CoachIntakeFlow onPlanChosen={handlePlanChosen} />
+                    )}
 
                     {/* ─── History view ─────────────────────────────────────── */}
                     {view === 'history' && (
@@ -232,7 +316,24 @@ export default function CoachChat() {
                                 New conversation
                             </button>
                             {conversations.length === 0 && (
-                                <p className="text-xs text-white/20 text-center pt-8">No conversations yet.</p>
+                                <div className="flex flex-col items-center text-center pt-12 pb-8 px-6">
+                                    {/* Empty chat bubble with a resting dash — nothing said yet */}
+                                    <div className="relative w-16 h-16 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center mb-4">
+                                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" />
+                                            <line x1="9" y1="11.5" x2="15" y2="11.5" stroke="rgba(34,197,94,0.5)" />
+                                        </svg>
+                                        <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-[#22c55e]/15 border border-[#22c55e]/30 flex items-center justify-center">
+                                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round">
+                                                <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+                                            </svg>
+                                        </span>
+                                    </div>
+                                    <p className="text-sm font-semibold text-white/60 mb-1">Nothing here yet</p>
+                                    <p className="text-xs text-white/25 leading-relaxed">
+                                        Every conversation you have with your coach is saved here, so you can pick any of them back up whenever you want.
+                                    </p>
+                                </div>
                             )}
                             {conversations.map((c) => (
                                 <div
@@ -269,13 +370,13 @@ export default function CoachChat() {
                                         <p className="text-sm text-white/50 mb-1">Hey — I&apos;m your coach.</p>
                                         <p className="text-xs text-white/25 mb-5">I can see your training history, plan, and recent sessions. Ask me anything.</p>
                                         <div className="flex flex-wrap gap-2">
-                                            {SUGGESTIONS.map((s) => (
+                                            {chips.map((chip) => (
                                                 <button
-                                                    key={s}
-                                                    onClick={() => send(s)}
+                                                    key={chip.key}
+                                                    onClick={chip.onTap}
                                                     className="px-3 py-2 rounded-full border border-white/10 text-xs text-white/50 hover:border-[#22c55e]/40 hover:text-[#22c55e] transition-all cursor-pointer"
                                                 >
-                                                    {s}
+                                                    {chip.label}
                                                 </button>
                                             ))}
                                         </div>

@@ -5,7 +5,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Program } from '../lib/programs';
+import { Program, LEVEL_LABELS } from '../lib/programs';
 
 interface ProgramCardProps {
     program: Program;
@@ -20,7 +20,9 @@ export default function ProgramCard({ program }: ProgramCardProps) {
 
     return (
         <Link href={`/programs/${program.id}`} className="flex-shrink-0 snap-center">
-            <div className="group relative w-[92vw] md:w-[460px] rounded-xl overflow-hidden border border-white/5 hover:border-white/15 transition-all duration-500 cursor-pointer">
+            {/* 85vw (not full width): the next card peeks in from the edge so
+                new users can tell the row is a swipeable slideshow */}
+            <div className="group relative w-[85vw] sm:w-[70vw] md:w-[460px] rounded-xl overflow-hidden border border-white/5 hover:border-white/15 transition-all duration-500 cursor-pointer">
                 {/* Image */}
                 <div className="relative aspect-[3/4] overflow-hidden">
                     <img
@@ -40,7 +42,7 @@ export default function ProgramCard({ program }: ProgramCardProps) {
                         className="absolute top-3 right-3 text-[9px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-full border backdrop-blur-sm"
                         style={{ borderColor: `${program.color}50`, color: program.color, backgroundColor: 'rgba(0,0,0,0.5)' }}
                     >
-                        {program.level}
+                        {LEVEL_LABELS[program.level]}
                     </span>
                 </div>
 

@@ -5,27 +5,32 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { PROGRAMS, getProgramById } from '../../../lib/programs';
 import { getCoachPlan, CoachPlan } from '../../../lib/coachIntake';
 import { syncCoachPlan } from '../../../lib/userProfile';
 import ProgramCard from '../../../components/ProgramCard';
-import CoachIntakeModal from '../../../components/CoachIntakeModal';
+import { openCoachChat } from '../../../components/CoachChat';
 
 type Filter = 'all' | 'beginner' | 'intermediate' | 'senior';
 
 export default function ProgramsPage() {
     const [filter, setFilter] = useState<Filter>('all');
-    const [coachOpen, setCoachOpen] = useState(false);
     const [plan, setPlan] = useState<CoachPlan | null>(null);
+    const [slide, setSlide] = useState(0);
+    const carouselRef = useRef<HTMLDivElement>(null);
 
     // Local cache renders instantly; the server copy (which follows the user
-    // across devices) reconciles in the background
+    // across devices) reconciles in the background. The intake now runs in
+    // the coach chat — it announces 'irontrack-plan-saved' when done.
     useEffect(() => {
         setPlan(getCoachPlan());
         syncCoachPlan().then(setPlan);
-    }, [coachOpen]);
+        const onPlanSaved = () => setPlan(getCoachPlan());
+        window.addEventListener('irontrack-plan-saved', onPlanSaved);
+        return () => window.removeEventListener('irontrack-plan-saved', onPlanSaved);
+    }, []);
 
     const planProgram = plan ? getProgramById(plan.programId) : null;
 
@@ -33,11 +38,19 @@ export default function ProgramsPage() {
         ? PROGRAMS
         : PROGRAMS.filter(p => p.level === filter);
 
+    // Track which card is in view for the slideshow dots
+    const onCarouselScroll = useCallback(() => {
+        const el = carouselRef.current;
+        if (!el || filtered.length === 0) return;
+        const cardSpan = el.scrollWidth / filtered.length;
+        setSlide(Math.min(filtered.length - 1, Math.round(el.scrollLeft / cardSpan)));
+    }, [filtered.length]);
+
     const filters: { key: Filter; label: string }[] = [
         { key: 'all', label: 'All Programs' },
         { key: 'beginner', label: 'Beginner' },
         { key: 'intermediate', label: 'Intermediate' },
-        { key: 'senior', label: 'Senior' },
+        { key: 'senior', label: 'Gentle' },
     ];
 
     return (
@@ -83,7 +96,7 @@ export default function ProgramsPage() {
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                         <button
-                            onClick={() => setCoachOpen(true)}
+                            onClick={() => openCoachChat('intake')}
                             className="text-[11px] text-white/30 hover:text-white/60 transition-colors cursor-pointer px-2 py-2"
                         >
                             Retake
@@ -99,7 +112,7 @@ export default function ProgramsPage() {
                 </div>
             ) : (
                 <button
-                    onClick={() => setCoachOpen(true)}
+                    onClick={() => openCoachChat('intake')}
                     className="w-full flex items-center justify-between gap-3 rounded-xl border border-[#22c55e]/25 bg-[#22c55e]/[0.06] hover:bg-[#22c55e]/10 px-4 py-4 mb-6 transition-all cursor-pointer text-left"
                 >
                     <div>
@@ -112,14 +125,33 @@ export default function ProgramsPage() {
                 </button>
             )}
 
-            {/* Horizontal scroll carousel — full viewport cards */}
-            <div className="flex gap-5 overflow-x-auto snap-x snap-mandatory pb-4 scrollbar-hide -mx-4 px-4">
+            {/* Slideshow carousel — one card at a time, the next one peeking in
+                from the right so new users know there's more to swipe */}
+            <div
+                ref={carouselRef}
+                onScroll={onCarouselScroll}
+                className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 scrollbar-hide -mx-4 px-4"
+            >
                 {filtered.map((program) => (
                     <ProgramCard key={program.id} program={program} />
                 ))}
             </div>
 
-            <CoachIntakeModal open={coachOpen} onClose={() => setCoachOpen(false)} />
+            {/* Slide dots */}
+            <div className="flex items-center justify-center gap-1.5 mt-1">
+                {filtered.map((program, i) => (
+                    <span
+                        key={program.id}
+                        aria-hidden="true"
+                        className="rounded-full transition-all duration-300"
+                        style={{
+                            width: i === slide ? 18 : 6,
+                            height: 6,
+                            backgroundColor: i === slide ? program.color : 'rgba(255,255,255,0.12)',
+                        }}
+                    />
+                ))}
+            </div>
         </div>
     );
 }

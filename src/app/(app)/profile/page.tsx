@@ -13,12 +13,11 @@ import { getCoachPlan, CoachPlan } from '../../../lib/coachIntake';
 import { syncCoachPlan } from '../../../lib/userProfile';
 import { getProgramById } from '../../../lib/programs';
 import AchievementBadge from '../../../components/AchievementBadge';
-import CoachIntakeModal from '../../../components/CoachIntakeModal';
+import { openCoachChat } from '../../../components/CoachChat';
 
 export default function ProfilePage() {
     const { user, logout } = useAuth();
     const [stats, setStats] = useState<UserStats | null>(null);
-    const [coachOpen, setCoachOpen] = useState(false);
     const [plan, setPlan] = useState<CoachPlan | null>(null);
 
     useEffect(() => {
@@ -28,10 +27,14 @@ export default function ProfilePage() {
         fetchStats();
     }, []);
 
+    // The intake runs in the coach chat now; it announces when a plan is saved
     useEffect(() => {
         setPlan(getCoachPlan());
         syncCoachPlan().then(setPlan);
-    }, [coachOpen]);
+        const onPlanSaved = () => setPlan(getCoachPlan());
+        window.addEventListener('irontrack-plan-saved', onPlanSaved);
+        return () => window.removeEventListener('irontrack-plan-saved', onPlanSaved);
+    }, []);
 
     const planProgram = plan ? getProgramById(plan.programId) : null;
 
@@ -70,7 +73,7 @@ export default function ProfilePage() {
 
                     {/* Training plan */}
                     <button
-                        onClick={() => setCoachOpen(true)}
+                        onClick={() => openCoachChat('intake')}
                         className="hidden sm:block text-right flex-shrink-0 rounded-lg border border-white/8 hover:border-[#22c55e]/40 px-3.5 py-2 transition-all cursor-pointer"
                     >
                         <p className="text-[9px] text-white/25 tracking-widest uppercase">Training plan</p>
@@ -163,8 +166,6 @@ export default function ProfilePage() {
                 </svg>
                 Sign Out
             </button>
-
-            <CoachIntakeModal open={coachOpen} onClose={() => setCoachOpen(false)} />
         </div>
     );
 }

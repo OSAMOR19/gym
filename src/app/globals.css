@@ -110,6 +110,54 @@ body {
   animation: spin-slow 8s linear infinite;
 }
 
+/* ─── Coach chat ─────────────────────────────────────────────────────────── */
+
+/* Panel entrance: slides up from the button's corner with a soft spring */
+@keyframes chat-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-chat-in {
+  animation: chat-pop-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: bottom right;
+}
+
+/* Floating button "breathe" — a slow, gentle attention pulse (used only when
+   the coach actually has something for the user, so it stays meaningful) */
+@keyframes fab-breathe {
+
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 4px 25px rgba(34, 197, 94, 0.4);
+  }
+
+  50% {
+    transform: scale(1.06);
+    box-shadow: 0 4px 38px rgba(34, 197, 94, 0.65);
+  }
+}
+
+.animate-fab-breathe {
+  animation: fab-breathe 2.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .animate-chat-in,
+  .animate-fab-breathe {
+    animation: none;
+  }
+}
+
 /* ─── Background grid effect ─────────────────────────────────────────────── */
 
 .bg-grid {
