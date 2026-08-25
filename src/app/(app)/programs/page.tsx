@@ -55,30 +55,53 @@ export default function ProgramsPage() {
 
     return (
         <div className="max-w-6xl mx-auto p-4 md:p-6">
-            {/* Header */}
-            <div className="flex items-end justify-between mb-6">
-                <div>
-                    <p className="text-[10px] text-white/15 tracking-widest uppercase mb-1">{filtered.length} available</p>
-                    <h1 className="text-2xl font-bold text-white">Programs</h1>
-                </div>
+            {/* Header — title and filters stack on mobile (side by side they
+                clipped the tabs and squeezed the title); the filters become a
+                swipeable chip row, and stay a segmented control on desktop */}
+            <div className="mb-6">
+                <div className="md:flex md:items-end md:justify-between">
+                    <div className="mb-4 md:mb-0">
+                        <p className="text-[10px] text-white/15 tracking-widest uppercase mb-1">{filtered.length} available</p>
+                        <h1 className="text-2xl font-bold text-white">Programs</h1>
+                    </div>
 
-                {/* Filter tabs */}
-                <div className="flex items-center border border-white/5 rounded-lg overflow-hidden">
-                    {filters.map((f) => (
-                        <button
-                            key={f.key}
-                            onClick={() => setFilter(f.key)}
-                            className={`
-                                px-4 py-2 text-[11px] font-bold tracking-wider uppercase transition-all cursor-pointer
-                                ${filter === f.key
-                                    ? 'bg-[#22c55e]/10 text-[#22c55e]'
-                                    : 'text-white/20 hover:text-white/40 hover:bg-white/[0.02]'
-                                }
-                            `}
-                        >
-                            {f.label}
-                        </button>
-                    ))}
+                    {/* Mobile: scrollable filter chips */}
+                    <div className="flex md:hidden items-center gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4">
+                        {filters.map((f) => (
+                            <button
+                                key={f.key}
+                                onClick={() => setFilter(f.key)}
+                                className={`
+                                    flex-shrink-0 px-3.5 py-2 rounded-full text-[11px] font-bold tracking-wider uppercase border transition-all cursor-pointer
+                                    ${filter === f.key
+                                        ? 'bg-[#22c55e]/10 text-[#22c55e] border-[#22c55e]/30'
+                                        : 'text-white/25 border-white/8 hover:text-white/40'
+                                    }
+                                `}
+                            >
+                                {f.label}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Desktop: segmented control */}
+                    <div className="hidden md:flex items-center border border-white/5 rounded-lg overflow-hidden">
+                        {filters.map((f) => (
+                            <button
+                                key={f.key}
+                                onClick={() => setFilter(f.key)}
+                                className={`
+                                    px-4 py-2 text-[11px] font-bold tracking-wider uppercase transition-all cursor-pointer
+                                    ${filter === f.key
+                                        ? 'bg-[#22c55e]/10 text-[#22c55e]'
+                                        : 'text-white/20 hover:text-white/40 hover:bg-white/[0.02]'
+                                    }
+                                `}
+                            >
+                                {f.label}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </div>
 
