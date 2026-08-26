@@ -8,12 +8,12 @@
  *
  * The deterministic engines (intake scoring, readiness, progression) remain
  * the authority on decisions; this context lets the LLM explain and coach
- * around them with real data. Server-only: called from /api/chat.
+ * around them with real data. Server-only: called from /api/ai/chat.
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { PROGRAMS } from './programs';
-import { EXERCISES } from './exercises';
+import { PROGRAMS } from '../programs';
+import { EXERCISES } from '../exercises';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
