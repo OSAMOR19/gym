@@ -40,7 +40,8 @@ function rateLimited(userId: string): boolean {
 }
 
 interface ChatBody {
-    conversationId?: string;
+    /** Absent OR null both mean "start a new conversation". */
+    conversationId?: string | null;
     message?: string;
 }
 
@@ -66,7 +67,8 @@ export async function POST(request: Request) {
     if (message.length > MAX_MESSAGE_CHARS) {
         return NextResponse.json({ error: `Message too long (max ${MAX_MESSAGE_CHARS} characters)` }, { status: 400 });
     }
-    if (body.conversationId !== undefined && typeof body.conversationId !== 'string') {
+    // The client sends null (not just omission) for a new conversation
+    if (body.conversationId != null && typeof body.conversationId !== 'string') {
         return NextResponse.json({ error: 'Invalid conversationId' }, { status: 400 });
     }
 
