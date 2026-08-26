@@ -7,6 +7,8 @@ export interface User {
     id: string;
     email: string;
     name: string;
+    /** Profile photo URL — set by Google sign-in or a manual upload. */
+    avatarUrl: string | null;
     createdAt: string;
 }
 
@@ -19,6 +21,8 @@ interface AuthContextType {
     loginWithGoogle: () => Promise<{ error?: string }>;
     logout: () => void;
     resetPassword: (email: string) => Promise<{ error?: string; message?: string }>;
+    /** Update name and/or avatar URL in auth metadata (null avatarUrl removes the photo). */
+    updateProfile: (updates: { name?: string; avatarUrl?: string | null }) => Promise<{ error?: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -29,6 +33,7 @@ function mapSupabaseUser(user: any): User | null {
         id: user.id,
         email: user.email || '',
         name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+        avatarUrl: user.user_metadata?.avatar_url || null,
         createdAt: user.created_at,
     };
 }
@@ -96,6 +101,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await supabase.auth.signOut();
     }, []);
 
+    const updateProfile = useCallback(async (updates: { name?: string; avatarUrl?: string | null }) => {
+        const data: Record<string, string | null> = {};
+        if (updates.name !== undefined) data.full_name = updates.name;
+        if (updates.avatarUrl !== undefined) data.avatar_url = updates.avatarUrl;
+        const { data: result, error } = await supabase.auth.updateUser({ data });
+        if (error) return { error: error.message };
+        setUser(mapSupabaseUser(result.user));
+        return {};
+    }, []);
+
     const resetPassword = useCallback(async (email: string) => {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
             redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
@@ -105,7 +120,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     return (
-        <AuthContext.Provider value={{ user, isLoading, login, signup, loginWithGoogle, logout, resetPassword }}>
+        <AuthContext.Provider value={{ user, isLoading, login, signup, loginWithGoogle, logout, resetPassword, updateProfile }}>
             {children}
         </AuthContext.Provider>
     );

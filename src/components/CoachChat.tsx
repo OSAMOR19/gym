@@ -21,7 +21,10 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { createClient } from '../utils/supabase/client';
 import { getCoachNudges, CoachNudge } from '../lib/coachNudges';
+import { EXERCISES, ExerciseId } from '../lib/exercises';
+import { setWorkoutQueue } from '../lib/workoutQueue';
 import CoachIntakeFlow from './CoachIntakeFlow';
+import CoachRichMessage from './CoachRichMessage';
 
 interface ChatMessage {
     role: 'user' | 'assistant';
@@ -67,6 +70,8 @@ export default function CoachChat() {
     const [conversations, setConversations] = useState<ConversationRow[]>([]);
     const [input, setInput] = useState('');
     const [sending, setSending] = useState(false);
+    const [pendingDelete, setPendingDelete] = useState<ConversationRow | null>(null);
+    const [deleting, setDeleting] = useState(false);
     const [nudges, setNudges] = useState<CoachNudge[]>([]);
     const [seen, setSeen] = useState(true); // assume seen until localStorage says otherwise
     const scrollRef = useRef<HTMLDivElement>(null);
@@ -101,8 +106,19 @@ export default function CoachChat() {
 
     const closePanel = useCallback(() => {
         setOpen(false);
+        setPendingDelete(null);
         refreshNudges(); // state may have changed (e.g. plan chosen)
     }, [refreshNudges]);
+
+    // Escape dismisses the delete confirmation
+    useEffect(() => {
+        if (!pendingDelete) return;
+        const handler = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') setPendingDelete(null);
+        };
+        window.addEventListener('keydown', handler);
+        return () => window.removeEventListener('keydown', handler);
+    }, [pendingDelete]);
 
     // Keep the newest message in view
     useEffect(() => {
@@ -132,7 +148,9 @@ export default function CoachChat() {
         setView('chat');
     }, []);
 
+    // Runs only after the user confirms in the modal (messages cascade in the DB)
     const deleteConversation = useCallback(async (id: string) => {
+        setDeleting(true);
         const supabase = createClient();
         await supabase.from('conversations').delete().eq('id', id);
         setConversations((prev) => prev.filter((c) => c.id !== id));
@@ -140,6 +158,8 @@ export default function CoachChat() {
             setConversationId(null);
             setMessages([]);
         }
+        setDeleting(false);
+        setPendingDelete(null);
     }, [conversationId]);
 
     const newConversation = useCallback(() => {
@@ -183,6 +203,32 @@ export default function CoachChat() {
             setSending(false);
         }
     }, [input, sending, conversationId]);
+
+    // Tapping an exercise card (or "start all") stages a real workout queue
+    // and jumps to the camera screen — the chat's recommendations are startable
+    const startExercises = useCallback((ids: ExerciseId[]) => {
+        if (ids.length === 0) return;
+        const items = ids.map((id) => {
+            const cfg = EXERCISES[id];
+            return cfg.repMode === 'hold'
+                ? { exerciseId: id, targetSets: 3, targetReps: 0, targetHoldSeconds: 30 }
+                : { exerciseId: id, targetSets: 3, targetReps: 10 };
+        });
+        setWorkoutQueue({
+            programId: 'coach-picks',
+            programName: 'Coach picks',
+            dayIndex: 0,
+            dayName: ids.length > 1 ? `${ids.length} exercises from your coach` : EXERCISES[ids[0]].name,
+            items,
+        });
+        setOpen(false);
+        router.push('/workout');
+    }, [router]);
+
+    const navigateTo = useCallback((path: string) => {
+        setOpen(false);
+        router.push(path);
+    }, [router]);
 
     const handleNudge = useCallback((nudge: CoachNudge) => {
         if (nudge.action === 'intake') setView('intake');
@@ -348,7 +394,7 @@ export default function CoachChat() {
                                         <p className="text-[10px] text-white/20 mt-0.5">{relativeDate(c.updated_at)}</p>
                                     </button>
                                     <button
-                                        onClick={() => deleteConversation(c.id)}
+                                        onClick={() => setPendingDelete(c)}
                                         aria-label={`Delete conversation: ${c.title}`}
                                         className="w-9 h-9 mr-1 flex items-center justify-center rounded-lg text-white/15 hover:text-red-400 hover:bg-red-500/10 transition-all cursor-pointer flex-shrink-0"
                                     >
@@ -391,7 +437,15 @@ export default function CoachChat() {
                                                     ? 'bg-red-500/10 border border-red-500/20 text-red-300 rounded-bl-md'
                                                     : 'bg-white/5 text-white/80 rounded-bl-md'}`}
                                         >
-                                            {m.content}
+                                            {m.role === 'assistant' && !m.error ? (
+                                                <CoachRichMessage
+                                                    content={m.content}
+                                                    onStartExercises={startExercises}
+                                                    onNavigate={navigateTo}
+                                                />
+                                            ) : (
+                                                m.content
+                                            )}
                                         </div>
                                     </div>
                                 ))}
@@ -444,6 +498,52 @@ export default function CoachChat() {
                                 </div>
                             </div>
                         </>
+                    )}
+
+                    {/* ─── Delete confirmation ──────────────────────────────── */}
+                    {pendingDelete && (
+                        <div
+                            className="absolute inset-0 z-10 md:rounded-2xl bg-black/70 backdrop-blur-sm flex items-center justify-center p-6"
+                            onClick={() => !deleting && setPendingDelete(null)}
+                        >
+                            <div
+                                role="alertdialog"
+                                aria-modal="true"
+                                aria-labelledby="delete-conv-title"
+                                aria-describedby="delete-conv-body"
+                                className="w-full max-w-[320px] bg-[#161616] border border-white/10 rounded-2xl p-5 shadow-2xl animate-chat-in"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <div className="w-11 h-11 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-4">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f87171" strokeWidth="1.5" strokeLinecap="round">
+                                        <polyline points="3,6 5,6 21,6" /><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+                                    </svg>
+                                </div>
+                                <h3 id="delete-conv-title" className="text-sm font-bold text-white mb-1.5">
+                                    Delete this conversation?
+                                </h3>
+                                <p id="delete-conv-body" className="text-xs text-white/40 leading-relaxed mb-5">
+                                    <span className="text-white/60">&ldquo;{pendingDelete.title}&rdquo;</span> and every message
+                                    in it will be permanently deleted. This can&apos;t be undone.
+                                </p>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => setPendingDelete(null)}
+                                        disabled={deleting}
+                                        className="flex-1 py-2.5 rounded-xl border border-white/10 text-sm font-semibold text-white/60 hover:bg-white/5 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={() => deleteConversation(pendingDelete.id)}
+                                        disabled={deleting}
+                                        className="flex-1 py-2.5 rounded-xl bg-red-500 text-sm font-bold text-white hover:bg-red-600 transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                                    >
+                                        {deleting ? 'Deleting…' : 'Delete'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     )}
                 </div>
             )}

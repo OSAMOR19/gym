@@ -126,9 +126,14 @@ export default function Sidebar() {
                 <div className={`border-t border-white/5 py-3 ${collapsed ? 'px-2' : 'px-3'}`}>
                     {!collapsed && (
                         <div className="flex items-center gap-2.5 mb-2 px-1">
-                            <div className="w-7 h-7 rounded-full bg-[#22c55e]/20 flex items-center justify-center text-[#22c55e] text-xs font-bold flex-shrink-0">
-                                {user?.name?.charAt(0).toUpperCase() || '?'}
-                            </div>
+                            {user?.avatarUrl ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={user.avatarUrl} alt="" className="w-7 h-7 rounded-full object-cover flex-shrink-0" />
+                            ) : (
+                                <div className="w-7 h-7 rounded-full bg-[#22c55e]/20 flex items-center justify-center text-[#22c55e] text-xs font-bold flex-shrink-0">
+                                    {user?.name?.charAt(0).toUpperCase() || '?'}
+                                </div>
+                            )}
                             <div className="min-w-0">
                                 <p className="text-xs font-medium text-white/60 truncate">{user?.name}</p>
                                 <p className="text-[10px] text-white/20 truncate">{user?.email}</p>

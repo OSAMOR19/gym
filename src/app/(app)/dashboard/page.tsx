@@ -6,14 +6,14 @@
 
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../lib/auth';
 import { loadStats, UserStats } from '../../../lib/gamification';
 import { getProgressStats, ProgressStats } from '../../../lib/progressStore';
 import { getCoachPlan, CoachPlan } from '../../../lib/coachIntake';
-import { getProgramById, Program, LEVEL_LABELS } from '../../../lib/programs';
+import { getProgramById, Program, PROGRAMS, LEVEL_LABELS } from '../../../lib/programs';
 import { listStartedPrograms, StartedProgram } from '../../../lib/programProgress';
 import { launchProgramDay } from '../../../lib/workoutBuilder';
 import { getUserState, assessReadiness, Readiness } from '../../../lib/userState';
@@ -53,6 +53,11 @@ export default function DashboardPage() {
     const [readiness, setReadiness] = useState<Readiness | null>(null);
     const [launching, setLaunching] = useState(false);
 
+    // Hero carousel: auto-drifts until the user interacts; the next card
+    // peeks in from the right so swipeability is self-evident
+    const trackRef = useRef<HTMLDivElement>(null);
+    const pausedRef = useRef(false);
+
     useEffect(() => {
         async function fetchDashboardData() {
             setGameStats(await loadStats());
@@ -79,6 +84,32 @@ export default function DashboardPage() {
             totalDays: planProgram.weeks.reduce((n, w) => n + w.days.length, 0),
         } : null);
     const jumpBack = active.filter((a) => a.program.id !== hero?.program.id);
+
+    // Other kinds of training for the carousel — each card keeps its own
+    // program's accent color. Started programs already have their own shelf.
+    const startedIds = new Set(started.map((s) => s.programId));
+    const explore = PROGRAMS
+        .filter((p) => !p.excludeFromIntake && p.id !== hero?.program.id && !startedIds.has(p.id))
+        .slice(0, 4);
+    const slideCount = 1 + explore.length;
+
+    useEffect(() => {
+        if (slideCount < 2) return;
+        const timer = setInterval(() => {
+            const el = trackRef.current;
+            if (!el || pausedRef.current) return;
+            // Positions from actual card offsets — slide width is fractional
+            // (peek layout), so no fixed-step math
+            const cards = Array.from(el.children) as HTMLElement[];
+            const lefts = cards.map((c) => c.offsetLeft - cards[0].offsetLeft);
+            const current = lefts.reduce(
+                (best, left, i) => (Math.abs(left - el.scrollLeft) < Math.abs(lefts[best] - el.scrollLeft) ? i : best),
+                0,
+            );
+            el.scrollTo({ left: lefts[(current + 1) % cards.length], behavior: 'smooth' });
+        }, 6000);
+        return () => clearInterval(timer);
+    }, [slideCount]);
 
     const startDay = useCallback(async (item: ActiveProgram) => {
         if (launching) return;
@@ -149,70 +180,132 @@ export default function DashboardPage() {
                 )}
             </div>
 
-            {/* ─── Hero: continue the journey (or start it) ─────────────────── */}
-            {hero ? (
-                <div className="relative rounded-2xl overflow-hidden border border-white/10 mb-6">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={hero.program.image} alt="" className="absolute inset-0 w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-black/25" />
-                    <div className="relative p-5 md:p-7">
-                        <p className="text-[9px] font-bold tracking-[0.25em] uppercase" style={{ color: hero.program.color }}>
-                            {hero.completedDays.length > 0 ? 'Jump back in' : 'Picked for you'}
-                        </p>
-                        <h2 className="text-xl md:text-2xl font-bold text-white mt-1">{hero.program.name}</h2>
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-[11px] text-white/50">
-                            <span>{LEVEL_LABELS[hero.program.level]}</span>
-                            <span className="w-0.5 h-0.5 bg-white/20 rounded-full" />
-                            <span>{hero.program.weeks[0]?.days.length ?? 3} days/week</span>
-                            <span className="w-0.5 h-0.5 bg-white/20 rounded-full" />
-                            <span>Next up: {dayTitle(hero.program, hero.nextDayIndex)}</span>
-                        </div>
-                        {hero.completedDays.length > 0 && (
-                            <div className="mt-3 max-w-xs">
-                                <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
-                                    <div
-                                        className="h-full rounded-full transition-all duration-700"
-                                        style={{
-                                            width: `${(hero.completedDays.length / hero.totalDays) * 100}%`,
-                                            backgroundColor: hero.program.color,
-                                        }}
-                                    />
-                                </div>
-                                <p className="text-[10px] text-white/35 mt-1">
-                                    {hero.completedDays.length} of {hero.totalDays} days done
-                                </p>
-                            </div>
-                        )}
-                        <button
-                            onClick={() => startDay(hero)}
-                            disabled={launching}
-                            className="mt-4 w-full sm:w-auto px-6 py-3 rounded-xl font-bold text-sm tracking-wide transition-all cursor-pointer disabled:opacity-60"
-                            style={{ backgroundColor: hero.program.color, color: '#000' }}
-                        >
-                            {launching ? 'Preparing…' : `Start Day ${hero.nextDayIndex + 1} →`}
-                        </button>
-                    </div>
-                </div>
-            ) : (
-                <button
-                    onClick={() => openCoachChat('intake')}
-                    className="relative w-full rounded-2xl overflow-hidden border border-white/10 mb-6 text-left cursor-pointer group"
+            {/* ─── Hero carousel: your plan first, then other ways to train.
+                 Swipes natively (scroll-snap) and drifts on its own until the
+                 user takes over. ──────────────────────────────────────────── */}
+            <div className="mb-6">
+                <div
+                    ref={trackRef}
+                    onPointerDown={() => { pausedRef.current = true; }}
+                    onMouseEnter={() => { pausedRef.current = true; }}
+                    onMouseLeave={() => { pausedRef.current = false; }}
+                    className="flex gap-3 overflow-x-auto snap-x snap-mandatory scrollbar-hide"
                 >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src="/programs/full-body.png" alt="" className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-700" />
-                    <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-black/25" />
-                    <div className="relative p-5 md:p-7">
-                        <p className="text-[9px] font-bold tracking-[0.25em] uppercase text-[#22c55e]">Let&apos;s get you started</p>
-                        <h2 className="text-xl md:text-2xl font-bold text-white mt-1">Find the plan that fits you</h2>
-                        <p className="text-xs text-white/45 mt-1.5 max-w-sm leading-relaxed">
-                            Five quick questions — your goal, your gear, your schedule — and your coach picks the right program.
-                        </p>
-                        <span className="inline-block mt-4 px-6 py-3 rounded-xl bg-[#22c55e] text-black font-bold text-sm">
-                            Find my plan →
-                        </span>
+                    {/* Lead slide: active/picked program, or the find-my-plan invitation.
+                        ~86% wide so the next card peeks in — the "you can swipe" cue */}
+                    <div className={`flex-shrink-0 snap-start ${slideCount > 1 ? 'w-[86%] sm:w-[88%]' : 'w-full'}`}>
+                        {hero ? (
+                            <div className="relative h-full rounded-2xl overflow-hidden border border-white/10">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={hero.program.image} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                                <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-black/25" />
+                                <div className="relative p-5 md:p-7 h-full flex flex-col">
+                                    <p className="text-[9px] font-bold tracking-[0.25em] uppercase" style={{ color: hero.program.color }}>
+                                        {hero.completedDays.length > 0 ? 'Jump back in' : 'Picked for you'}
+                                    </p>
+                                    <h2 className="text-xl md:text-2xl font-bold text-white mt-1">{hero.program.name}</h2>
+                                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-[11px] text-white/50">
+                                        <span>{LEVEL_LABELS[hero.program.level]}</span>
+                                        <span className="w-0.5 h-0.5 bg-white/20 rounded-full" />
+                                        <span>{hero.program.weeks[0]?.days.length ?? 3} days/week</span>
+                                        <span className="w-0.5 h-0.5 bg-white/20 rounded-full" />
+                                        <span>Next up: {dayTitle(hero.program, hero.nextDayIndex)}</span>
+                                    </div>
+                                    {hero.completedDays.length > 0 && (
+                                        <div className="mt-3 max-w-xs">
+                                            <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                                                <div
+                                                    className="h-full rounded-full transition-all duration-700"
+                                                    style={{
+                                                        width: `${(hero.completedDays.length / hero.totalDays) * 100}%`,
+                                                        backgroundColor: hero.program.color,
+                                                    }}
+                                                />
+                                            </div>
+                                            <p className="text-[10px] text-white/35 mt-1">
+                                                {hero.completedDays.length} of {hero.totalDays} days done
+                                            </p>
+                                        </div>
+                                    )}
+                                    <div className="mt-auto pt-4">
+                                        <button
+                                            onClick={() => startDay(hero)}
+                                            disabled={launching}
+                                            className="w-full sm:w-auto px-6 py-3 rounded-xl font-bold text-sm tracking-wide transition-all cursor-pointer disabled:opacity-60"
+                                            style={{ backgroundColor: hero.program.color, color: '#000' }}
+                                        >
+                                            {launching ? 'Preparing…' : `Start Day ${hero.nextDayIndex + 1} →`}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <button
+                                onClick={() => openCoachChat('intake')}
+                                className="relative w-full h-full rounded-2xl overflow-hidden border border-white/10 text-left cursor-pointer group"
+                            >
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src="/programs/full-body.png" alt="" className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-700" />
+                                <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-black/25" />
+                                <div className="relative p-5 md:p-7">
+                                    <p className="text-[9px] font-bold tracking-[0.25em] uppercase text-[#22c55e]">Let&apos;s get you started</p>
+                                    <h2 className="text-xl md:text-2xl font-bold text-white mt-1">Find the plan that fits you</h2>
+                                    <p className="text-xs text-white/45 mt-1.5 max-w-sm leading-relaxed">
+                                        Five quick questions — your goal, your gear, your schedule — and your coach picks the right program.
+                                    </p>
+                                    <span className="inline-block mt-4 px-6 py-3 rounded-xl bg-[#22c55e] text-black font-bold text-sm">
+                                        Find my plan →
+                                    </span>
+                                </div>
+                            </button>
+                        )}
                     </div>
-                </button>
-            )}
+
+                    {/* Other kinds of training — each in its program's own color */}
+                    {explore.map((p) => {
+                        const totalDays = p.weeks.reduce((n, w) => n + w.days.length, 0);
+                        return (
+                            <div key={p.id} className="w-[86%] sm:w-[88%] flex-shrink-0 snap-start">
+                                <div className="relative h-full rounded-2xl overflow-hidden border border-white/10">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src={p.image} alt="" className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+                                    <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-black/25" />
+                                    <div className="relative p-5 md:p-7 h-full flex flex-col">
+                                        <p className="text-[9px] font-bold tracking-[0.25em] uppercase" style={{ color: p.color }}>
+                                            Switch it up
+                                        </p>
+                                        <h2 className="text-xl md:text-2xl font-bold text-white mt-1">{p.name}</h2>
+                                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-[11px] text-white/50">
+                                            <span>{LEVEL_LABELS[p.level]}</span>
+                                            <span className="w-0.5 h-0.5 bg-white/20 rounded-full" />
+                                            <span>{p.weeks[0]?.days.length ?? 3} days/week</span>
+                                            <span className="w-0.5 h-0.5 bg-white/20 rounded-full" />
+                                            <span>{p.durationWeeks} weeks</span>
+                                        </div>
+                                        <p className="text-xs text-white/45 mt-1.5 max-w-sm leading-relaxed">{p.description}</p>
+                                        <div className="mt-auto pt-4 flex items-center gap-4">
+                                            <button
+                                                onClick={() => startDay({ program: p, completedDays: [], nextDayIndex: 0, totalDays })}
+                                                disabled={launching}
+                                                className="px-6 py-3 rounded-xl font-bold text-sm tracking-wide transition-all cursor-pointer disabled:opacity-60"
+                                                style={{ backgroundColor: p.color, color: '#000' }}
+                                            >
+                                                {launching ? 'Preparing…' : 'Start Day 1 →'}
+                                            </button>
+                                            <Link
+                                                href={`/programs/${p.id}`}
+                                                className="text-xs font-semibold text-white/40 hover:text-white/80 transition-colors"
+                                            >
+                                                See program
+                                            </Link>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
 
             {/* ─── Jump back in: every other unfinished program ─────────────── */}
             {jumpBack.length > 0 && (

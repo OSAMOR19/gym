@@ -13,12 +13,14 @@ import { getCoachPlan, CoachPlan } from '../../../lib/coachIntake';
 import { syncCoachPlan } from '../../../lib/userProfile';
 import { getProgramById } from '../../../lib/programs';
 import AchievementBadge from '../../../components/AchievementBadge';
+import EditProfileModal from '../../../components/EditProfileModal';
 import { openCoachChat } from '../../../components/CoachChat';
 
 export default function ProfilePage() {
     const { user, logout } = useAuth();
     const [stats, setStats] = useState<UserStats | null>(null);
     const [plan, setPlan] = useState<CoachPlan | null>(null);
+    const [editing, setEditing] = useState(false);
 
     useEffect(() => {
         async function fetchStats() {
@@ -56,12 +58,35 @@ export default function ProfilePage() {
                 </div>
 
                 <div className="relative flex items-center gap-5">
-                    {/* Avatar */}
-                    <div className="w-14 h-14 rounded-xl bg-[#22c55e] flex items-center justify-center shadow-[0_0_20px_rgba(34,197,94,0.15)] flex-shrink-0">
-                        <span className="text-black text-xl font-black" style={{ fontFamily: 'Orbitron, monospace' }}>
-                            {user?.name?.charAt(0).toUpperCase()}
+                    {/* Avatar — circular, tap to edit profile (photo, name, stats) */}
+                    <button
+                        onClick={() => setEditing(true)}
+                        aria-label="Edit profile"
+                        title="Edit profile"
+                        className="relative w-16 h-16 flex-shrink-0 rounded-full group cursor-pointer"
+                    >
+                        {user?.avatarUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                                src={user.avatarUrl}
+                                alt=""
+                                className="w-16 h-16 rounded-full object-cover border border-white/10 group-hover:border-[#22c55e]/40 transition-colors"
+                            />
+                        ) : (
+                            <span className="w-16 h-16 rounded-full bg-[#22c55e] flex items-center justify-center shadow-[0_0_20px_rgba(34,197,94,0.15)]">
+                                <span className="text-black text-xl font-black" style={{ fontFamily: 'Orbitron, monospace' }}>
+                                    {user?.name?.charAt(0).toUpperCase()}
+                                </span>
+                            </span>
+                        )}
+                        {/* Camera chip — the edit affordance */}
+                        <span className="absolute -bottom-0.5 -right-0.5 w-6 h-6 rounded-full bg-[#0f0f0f] border border-white/15 flex items-center justify-center text-white/40 group-hover:text-[#22c55e] group-hover:border-[#22c55e]/40 transition-colors">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
+                                <circle cx="12" cy="13" r="4" />
+                            </svg>
                         </span>
-                    </div>
+                    </button>
 
                     <div className="flex-1">
                         <h1 className="text-xl font-bold text-white">{user?.name}</h1>
@@ -83,25 +108,37 @@ export default function ProfilePage() {
                     </button>
                 </div>
 
-                {/* Level + XP bar */}
+                {/* Level as a progress ring — same language as the home page,
+                    the XP toward the next level is the arc around the number */}
                 {stats && (
                     <div className="relative mt-6 flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-lg bg-[#22c55e] flex items-center justify-center">
-                            <span className="text-black text-sm font-black" style={{ fontFamily: 'Orbitron, monospace' }}>
-                                {stats.level}
-                            </span>
-                        </div>
-                        <div className="flex-1">
-                            <div className="flex items-center justify-between mb-1">
-                                <span className="text-xs font-medium text-white/40">Level {stats.level}</span>
-                                <span className="text-[10px] text-white/15">{xpInfo.current} / {xpInfo.required} XP</span>
-                            </div>
-                            <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-                                <div
-                                    className="h-full rounded-full bg-[#22c55e] transition-all duration-700"
-                                    style={{ width: `${xpPct}%`, boxShadow: '0 0 8px rgba(34,197,94,0.3)' }}
+                        <div
+                            className="relative w-16 h-16 flex-shrink-0"
+                            aria-label={`Level ${stats.level}, ${xpInfo.current} of ${xpInfo.required} XP`}
+                        >
+                            <svg viewBox="0 0 64 64" className="w-16 h-16 -rotate-90">
+                                <circle cx={32} cy={32} r={28} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={4.5} />
+                                <circle
+                                    cx={32} cy={32} r={28} fill="none" stroke="#22c55e" strokeWidth={4.5}
+                                    strokeLinecap="round"
+                                    strokeDasharray={2 * Math.PI * 28}
+                                    strokeDashoffset={(2 * Math.PI * 28) * (1 - xpPct / 100)}
+                                    style={{ transition: 'stroke-dashoffset 0.8s ease', filter: 'drop-shadow(0 0 5px rgba(34,197,94,0.35))' }}
                                 />
+                            </svg>
+                            <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                <span className="text-lg font-black text-white leading-none" style={{ fontFamily: 'Orbitron, monospace' }}>
+                                    {stats.level}
+                                </span>
+                                <span className="text-[7px] text-white/30 tracking-widest uppercase mt-0.5">Lvl</span>
                             </div>
+                        </div>
+                        <div>
+                            <p className="text-sm font-bold text-white">Level {stats.level}</p>
+                            <p className="text-[11px] text-white/30 mt-0.5">{xpInfo.current} / {xpInfo.required} XP</p>
+                            <p className="text-[10px] text-white/15 mt-0.5">
+                                {xpInfo.required - xpInfo.current} XP to Level {stats.level + 1}
+                            </p>
                         </div>
                     </div>
                 )}
@@ -166,6 +203,8 @@ export default function ProfilePage() {
                 </svg>
                 Sign Out
             </button>
+
+            {editing && <EditProfileModal onClose={() => setEditing(false)} />}
         </div>
     );
 }

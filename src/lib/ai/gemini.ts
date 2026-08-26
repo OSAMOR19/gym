@@ -13,7 +13,7 @@ import { GoogleGenAI, ApiError, type Content, type Part, type FunctionDeclaratio
 // for new API users — the API 404s with exactly this guidance)
 const MODEL = process.env.GEMINI_MODEL ?? 'gemini-3.6-flash';
 const MAX_TOOL_ROUNDS = 4;
-const MAX_OUTPUT_TOKENS = 1024; // coach replies are deliberately short
+const MAX_OUTPUT_TOKENS = 2048; // short replies, but card tags add lines — don't truncate mid-tag
 
 export type GeminiFailure = 'rate_limit' | 'auth' | 'unavailable';
 

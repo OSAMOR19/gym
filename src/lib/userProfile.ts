@@ -71,6 +71,83 @@ export async function getUserProfile(): Promise<UserProfile | null> {
     };
 }
 
+/** Save the user-editable basics from the profile editor. */
+export async function saveBodyProfile(updates: {
+    age?: number | null;
+    sex?: string | null;
+    heightCm?: number | null;
+    weightKg?: number | null;
+}): Promise<boolean> {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return false;
+
+    const { error } = await supabase
+        .from('user_profiles')
+        .upsert({
+            user_id: user.id,
+            ...(updates.age !== undefined && { age: updates.age }),
+            ...(updates.sex !== undefined && { sex: updates.sex }),
+            ...(updates.heightCm !== undefined && { height_cm: updates.heightCm }),
+            ...(updates.weightKg !== undefined && { weight_kg: updates.weightKg }),
+        }, { onConflict: 'user_id' });
+
+    if (error) {
+        console.warn('[userProfile] Could not save profile:', error.message);
+        return false;
+    }
+    return true;
+}
+
+/** Downscale an image file to a square JPEG (center-cropped) for the avatar. */
+async function resizeToSquareJpeg(file: File, size: number): Promise<Blob> {
+    const bitmap = await createImageBitmap(file);
+    const side = Math.min(bitmap.width, bitmap.height);
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d')!;
+    ctx.drawImage(
+        bitmap,
+        (bitmap.width - side) / 2, (bitmap.height - side) / 2, side, side,
+        0, 0, size, size,
+    );
+    bitmap.close();
+    return new Promise((resolve, reject) => {
+        canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('Could not process the image'))), 'image/jpeg', 0.85);
+    });
+}
+
+/**
+ * Upload a profile photo to the `avatars` storage bucket (own-folder path,
+ * resized client-side) and return its public URL. The `?v=` cache-buster makes
+ * the new photo show immediately even though the storage path is stable.
+ */
+export async function uploadAvatar(file: File): Promise<{ url?: string; error?: string }> {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { error: 'Not signed in' };
+
+    let blob: Blob;
+    try {
+        blob = await resizeToSquareJpeg(file, 512);
+    } catch {
+        return { error: 'That file could not be read as an image.' };
+    }
+
+    const path = `${user.id}/avatar.jpg`;
+    const { error } = await supabase.storage
+        .from('avatars')
+        .upload(path, blob, { contentType: 'image/jpeg', upsert: true });
+    if (error) {
+        console.warn('[userProfile] Avatar upload failed:', error.message);
+        return { error: 'Could not upload the photo — is the avatars storage migration applied?' };
+    }
+
+    const { data } = supabase.storage.from('avatars').getPublicUrl(path);
+    return { url: `${data.publicUrl}?v=${Date.now()}` };
+}
+
 /**
  * Persist a completed coach intake into the profile.
  * `savedAt` keeps localStorage and server timestamps identical so
