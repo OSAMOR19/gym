@@ -8,11 +8,11 @@
 
 import { use, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getProgramById, ProgramExercise, LEVEL_LABELS } from '../../../../lib/programs';
+import { getProgramById, LEVEL_LABELS } from '../../../../lib/programs';
 import { EXERCISES } from '../../../../lib/exercises';
-import { setWorkoutQueue, getCompletedDays } from '../../../../lib/workoutQueue';
+import { getCompletedDays } from '../../../../lib/workoutQueue';
 import { syncProgramProgress } from '../../../../lib/programProgress';
-import { buildDayItems } from '../../../../lib/workoutBuilder';
+import { launchProgramDay } from '../../../../lib/workoutBuilder';
 import { getUserState, assessReadiness, Readiness } from '../../../../lib/userState';
 import { EXERCISE_VIDEOS } from '../../../../components/ExerciseGuide';
 
@@ -77,26 +77,13 @@ export default function ProgramDetailPage({ params }: { params: Promise<{ id: st
         return 'available';
     };
 
-    /** Hand the selected day's exercises to the workout page and go there.
-     *  buildDayItems personalizes the template: substitutes exercises the
-     *  user can't/shouldn't do, applies progression from the last session,
-     *  and trims volume after a break. */
+    /** Stage the selected day as the pending workout and go there.
+     *  launchProgramDay personalizes the template on the way: substitutions,
+     *  progression from the last session, and readiness volume trims. */
     const startDay = async (dayIndex: number) => {
-        const day = flatDays[dayIndex];
-        if (!day || !program) return;
-        const built = await buildDayItems(
-            program.id,
-            { name: day.dayName, exercises: day.exercises as ProgramExercise[] },
-            readiness,
-        );
-        setWorkoutQueue({
-            programId: program.id,
-            programName: program.name,
-            dayIndex,
-            dayName: day.dayName,
-            items: built.items,
-        });
-        router.push('/workout');
+        if (!program) return;
+        const ok = await launchProgramDay(program, dayIndex, readiness);
+        if (ok) router.push('/workout');
     };
 
     /** "Day 3: Upper Body" → "Upper Body" (the cell already shows the number) */

@@ -6,16 +6,52 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../lib/auth';
 import { loadStats, UserStats } from '../../../lib/gamification';
 import { getProgressStats, ProgressStats } from '../../../lib/progressStore';
+import { getCoachPlan, CoachPlan } from '../../../lib/coachIntake';
+import { getProgramById, Program, LEVEL_LABELS } from '../../../lib/programs';
+import { listStartedPrograms, StartedProgram } from '../../../lib/programProgress';
+import { launchProgramDay } from '../../../lib/workoutBuilder';
+import { getUserState, assessReadiness, Readiness } from '../../../lib/userState';
+import { openCoachChat } from '../../../components/CoachChat';
+
+/** A started-but-unfinished program, resolved against the catalog. */
+interface ActiveProgram {
+    program: Program;
+    completedDays: number[];
+    nextDayIndex: number;
+    totalDays: number;
+}
+
+function toActive(s: StartedProgram): ActiveProgram | null {
+    const program = getProgramById(s.programId);
+    if (!program) return null;
+    const totalDays = program.weeks.reduce((n, w) => n + w.days.length, 0);
+    let nextDayIndex = -1;
+    for (let i = 0; i < totalDays; i++) {
+        if (!s.completedDays.includes(i)) { nextDayIndex = i; break; }
+    }
+    if (nextDayIndex < 0) return null; // program finished
+    return { program, completedDays: s.completedDays, nextDayIndex, totalDays };
+}
+
+/** "Day 3: Upper Body" → "Upper Body" */
+const dayTitle = (p: Program, idx: number) =>
+    p.weeks.flatMap((w) => w.days)[idx]?.name.replace(/^Day \d+:\s*/i, '') ?? '';
 
 export default function DashboardPage() {
     const { user } = useAuth();
+    const router = useRouter();
     const [gameStats, setGameStats] = useState<UserStats | null>(null);
     const [progressStats, setProgressStats] = useState<ProgressStats | null>(null);
+    const [started, setStarted] = useState<StartedProgram[]>([]);
+    const [plan, setPlan] = useState<CoachPlan | null>(null);
+    const [readiness, setReadiness] = useState<Readiness | null>(null);
+    const [launching, setLaunching] = useState(false);
 
     useEffect(() => {
         async function fetchDashboardData() {
@@ -23,7 +59,37 @@ export default function DashboardPage() {
             setProgressStats(await getProgressStats());
         }
         fetchDashboardData();
+        setPlan(getCoachPlan());
+        listStartedPrograms().then(setStarted).catch(() => {});
+        getUserState().then((s) => setReadiness(assessReadiness(s))).catch(() => {});
+        const onPlanSaved = () => setPlan(getCoachPlan());
+        window.addEventListener('irontrack-plan-saved', onPlanSaved);
+        return () => window.removeEventListener('irontrack-plan-saved', onPlanSaved);
     }, []);
+
+    // Hero: the most recently active unfinished program; else the chosen plan
+    // from day one; else the find-my-plan invitation.
+    const active = started.map(toActive).filter((a): a is ActiveProgram => a !== null);
+    const planProgram = plan ? getProgramById(plan.programId) : null;
+    const hero: ActiveProgram | null = active[0]
+        ?? (planProgram ? {
+            program: planProgram,
+            completedDays: [],
+            nextDayIndex: 0,
+            totalDays: planProgram.weeks.reduce((n, w) => n + w.days.length, 0),
+        } : null);
+    const jumpBack = active.filter((a) => a.program.id !== hero?.program.id);
+
+    const startDay = useCallback(async (item: ActiveProgram) => {
+        if (launching) return;
+        setLaunching(true);
+        try {
+            const ok = await launchProgramDay(item.program, item.nextDayIndex, readiness);
+            if (ok) router.push('/workout');
+        } finally {
+            setLaunching(false);
+        }
+    }, [launching, readiness, router]);
 
     const greeting = () => {
         const hour = new Date().getHours();
@@ -74,6 +140,108 @@ export default function DashboardPage() {
                     </div>
                 )}
             </div>
+
+            {/* ─── Hero: continue the journey (or start it) ─────────────────── */}
+            {hero ? (
+                <div className="relative rounded-2xl overflow-hidden border border-white/10 mb-6">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={hero.program.image} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-black/25" />
+                    <div className="relative p-5 md:p-7">
+                        <p className="text-[9px] font-bold tracking-[0.25em] uppercase" style={{ color: hero.program.color }}>
+                            {hero.completedDays.length > 0 ? 'Jump back in' : 'Picked for you'}
+                        </p>
+                        <h2 className="text-xl md:text-2xl font-bold text-white mt-1">{hero.program.name}</h2>
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-[11px] text-white/50">
+                            <span>{LEVEL_LABELS[hero.program.level]}</span>
+                            <span className="w-0.5 h-0.5 bg-white/20 rounded-full" />
+                            <span>{hero.program.weeks[0]?.days.length ?? 3} days/week</span>
+                            <span className="w-0.5 h-0.5 bg-white/20 rounded-full" />
+                            <span>Next up: {dayTitle(hero.program, hero.nextDayIndex)}</span>
+                        </div>
+                        {hero.completedDays.length > 0 && (
+                            <div className="mt-3 max-w-xs">
+                                <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full rounded-full transition-all duration-700"
+                                        style={{
+                                            width: `${(hero.completedDays.length / hero.totalDays) * 100}%`,
+                                            backgroundColor: hero.program.color,
+                                        }}
+                                    />
+                                </div>
+                                <p className="text-[10px] text-white/35 mt-1">
+                                    {hero.completedDays.length} of {hero.totalDays} days done
+                                </p>
+                            </div>
+                        )}
+                        <button
+                            onClick={() => startDay(hero)}
+                            disabled={launching}
+                            className="mt-4 w-full sm:w-auto px-6 py-3 rounded-xl font-bold text-sm tracking-wide transition-all cursor-pointer disabled:opacity-60"
+                            style={{ backgroundColor: hero.program.color, color: '#000' }}
+                        >
+                            {launching ? 'Preparing…' : `Start Day ${hero.nextDayIndex + 1} →`}
+                        </button>
+                    </div>
+                </div>
+            ) : (
+                <button
+                    onClick={() => openCoachChat('intake')}
+                    className="relative w-full rounded-2xl overflow-hidden border border-white/10 mb-6 text-left cursor-pointer group"
+                >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/programs/full-body.png" alt="" className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-700" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-black/25" />
+                    <div className="relative p-5 md:p-7">
+                        <p className="text-[9px] font-bold tracking-[0.25em] uppercase text-[#22c55e]">Let&apos;s get you started</p>
+                        <h2 className="text-xl md:text-2xl font-bold text-white mt-1">Find the plan that fits you</h2>
+                        <p className="text-xs text-white/45 mt-1.5 max-w-sm leading-relaxed">
+                            Five quick questions — your goal, your gear, your schedule — and your coach picks the right program.
+                        </p>
+                        <span className="inline-block mt-4 px-6 py-3 rounded-xl bg-[#22c55e] text-black font-bold text-sm">
+                            Find my plan →
+                        </span>
+                    </div>
+                </button>
+            )}
+
+            {/* ─── Jump back in: every other unfinished program ─────────────── */}
+            {jumpBack.length > 0 && (
+                <div className="mb-6">
+                    <h3 className="text-[10px] text-white/20 tracking-widest uppercase mb-3">Jump back in</h3>
+                    <div className="flex gap-3 overflow-x-auto scrollbar-hide snap-x -mx-4 px-4">
+                        {jumpBack.map((item) => (
+                            <Link
+                                key={item.program.id}
+                                href={`/programs/${item.program.id}`}
+                                className="flex-shrink-0 snap-start w-[58vw] sm:w-64 group"
+                            >
+                                <div className="relative h-24 rounded-xl overflow-hidden border border-white/5 group-hover:border-white/15 transition-all">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src={item.program.image} alt="" className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
+                                    <div className="absolute bottom-2 left-3 right-3">
+                                        <p className="text-[13px] font-semibold text-white truncate">{item.program.name}</p>
+                                        <div className="h-1 bg-white/15 rounded-full overflow-hidden mt-1.5">
+                                            <div
+                                                className="h-full rounded-full"
+                                                style={{
+                                                    width: `${(item.completedDays.length / item.totalDays) * 100}%`,
+                                                    backgroundColor: item.program.color,
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                                <p className="text-[10px] text-white/25 mt-1.5">
+                                    {item.completedDays.length}/{item.totalDays} days · next: Day {item.nextDayIndex + 1}
+                                </p>
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {/* ─── Main cockpit: 60/40 split ────────────────────────────────── */}
             <div className="grid grid-cols-1 md:grid-cols-[1fr_320px] gap-6 mb-6">

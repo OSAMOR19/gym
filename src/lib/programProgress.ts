@@ -8,7 +8,59 @@
  */
 
 import { createClient } from '../utils/supabase/client';
-import { getCompletedDays, markDayCompleted } from './workoutQueue';
+import { getCompletedDays, markDayCompleted, getAllCompletedDaysLocal } from './workoutQueue';
+
+export interface StartedProgram {
+    programId: string;
+    completedDays: number[];
+    lastSessionAt: string | null;
+}
+
+/**
+ * Every program the user has made progress in, most recently active first —
+ * the "jump back in" data. Server rows and the local cache are merged
+ * (union), and it degrades to local-only when signed out or offline.
+ */
+export async function listStartedPrograms(): Promise<StartedProgram[]> {
+    const merged = new Map<string, StartedProgram>();
+    for (const [programId, days] of Object.entries(getAllCompletedDaysLocal())) {
+        if (days.length > 0) {
+            merged.set(programId, {
+                programId,
+                completedDays: [...days].sort((a, b) => a - b),
+                lastSessionAt: null,
+            });
+        }
+    }
+    try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+            const { data } = await supabase
+                .from('program_progress')
+                .select('program_id, completed_days, last_session_at')
+                .eq('user_id', user.id);
+            for (const row of data ?? []) {
+                const existing = merged.get(row.program_id);
+                const union = [...new Set([
+                    ...(existing?.completedDays ?? []),
+                    ...((row.completed_days as number[] | null) ?? []),
+                ])].sort((a, b) => a - b);
+                if (union.length > 0) {
+                    merged.set(row.program_id, {
+                        programId: row.program_id,
+                        completedDays: union,
+                        lastSessionAt: row.last_session_at ?? existing?.lastSessionAt ?? null,
+                    });
+                }
+            }
+        }
+    } catch {
+        // local-only view
+    }
+    return [...merged.values()].sort((a, b) =>
+        (b.lastSessionAt ?? '').localeCompare(a.lastSessionAt ?? ''));
+}
 
 export interface ProgramPosition {
     completedDays: number[];

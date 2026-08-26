@@ -73,6 +73,11 @@ export function getCompletedDays(programId: string): number[] {
     return readProgress()[programId] ?? [];
 }
 
+/** Every program with locally tracked completions (device cache). */
+export function getAllCompletedDaysLocal(): Record<string, number[]> {
+    return readProgress();
+}
+
 export function markDayCompleted(programId: string, dayIndex: number): void {
     if (typeof window === 'undefined') return;
     const progress = readProgress();

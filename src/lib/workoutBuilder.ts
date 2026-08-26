@@ -18,8 +18,8 @@
 
 import { createClient } from '../utils/supabase/client';
 import { ExerciseId } from './exercises';
-import { WorkoutDay } from './programs';
-import { QueueItem } from './workoutQueue';
+import { Program, WorkoutDay } from './programs';
+import { QueueItem, setWorkoutQueue } from './workoutQueue';
 import { getCoachPlan } from './coachIntake';
 import {
     expandEquipment, canPerform, isContraindicated, findSubstitute, IntakeEquipment,
@@ -210,4 +210,30 @@ export async function buildDayItems(
     }
 
     return { items, substitutions, adjustments, setAdjustment };
+}
+
+/**
+ * Build a program day (personalized) and stage it as the pending workout —
+ * the shared "Start Day N" action used by the program calendar and the
+ * dashboard's jump-back-in hero. Caller navigates to /workout afterwards.
+ * Returns false when the day index doesn't exist.
+ */
+export async function launchProgramDay(
+    program: Program,
+    dayIndex: number,
+    readiness: Readiness | null,
+): Promise<boolean> {
+    const flatDays = program.weeks.flatMap((w) => w.days);
+    const day = flatDays[dayIndex];
+    if (!day) return false;
+
+    const built = await buildDayItems(program.id, day, readiness);
+    setWorkoutQueue({
+        programId: program.id,
+        programName: program.name,
+        dayIndex,
+        dayName: day.name,
+        items: built.items,
+    });
+    return true;
 }
