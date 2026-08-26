@@ -18,6 +18,7 @@ import { listStartedPrograms, StartedProgram } from '../../../lib/programProgres
 import { launchProgramDay } from '../../../lib/workoutBuilder';
 import { getUserState, assessReadiness, Readiness } from '../../../lib/userState';
 import { openCoachChat } from '../../../components/CoachChat';
+import Skeleton from '../../../components/Skeleton';
 
 /** A started-but-unfinished program, resolved against the catalog. */
 interface ActiveProgram {
@@ -52,6 +53,7 @@ export default function DashboardPage() {
     const [plan, setPlan] = useState<CoachPlan | null>(null);
     const [readiness, setReadiness] = useState<Readiness | null>(null);
     const [launching, setLaunching] = useState(false);
+    const [booting, setBooting] = useState(true);
 
     // Hero carousel: auto-drifts until the user interacts; the next card
     // peeks in from the right so swipeability is self-evident
@@ -63,10 +65,14 @@ export default function DashboardPage() {
             setGameStats(await loadStats());
             setProgressStats(await getProgressStats());
         }
-        fetchDashboardData();
         setPlan(getCoachPlan());
-        listStartedPrograms().then(setStarted).catch(() => {});
         getUserState().then((s) => setReadiness(assessReadiness(s))).catch(() => {});
+        // Hero data gates the skeleton — don't flash "find my plan" at a user
+        // who has an active program that just hasn't loaded yet
+        Promise.allSettled([
+            fetchDashboardData(),
+            listStartedPrograms().then(setStarted),
+        ]).then(() => setBooting(false));
         const onPlanSaved = () => setPlan(getCoachPlan());
         window.addEventListener('irontrack-plan-saved', onPlanSaved);
         return () => window.removeEventListener('irontrack-plan-saved', onPlanSaved);
@@ -180,9 +186,17 @@ export default function DashboardPage() {
                 )}
             </div>
 
+            {/* Skeleton while hero data loads — no find-my-plan flash */}
+            {booting && (
+                <div className="mb-6 space-y-3">
+                    <Skeleton className="h-56 rounded-2xl" />
+                </div>
+            )}
+
             {/* ─── Hero carousel: your plan first, then other ways to train.
                  Swipes natively (scroll-snap) and drifts on its own until the
                  user takes over. ──────────────────────────────────────────── */}
+            {!booting && (
             <div className="mb-6">
                 <div
                     ref={trackRef}
@@ -306,6 +320,7 @@ export default function DashboardPage() {
                     })}
                 </div>
             </div>
+            )}
 
             {/* ─── Jump back in: every other unfinished program ─────────────── */}
             {jumpBack.length > 0 && (
@@ -447,6 +462,20 @@ export default function DashboardPage() {
                         >
                             Browse Programs
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="flex-shrink-0"><polyline points="9,18 15,12 9,6" /></svg>
+                        </Link>
+                        <Link
+                            href="/cardio"
+                            className="flex items-center justify-center gap-2 py-3 px-2 rounded-xl border border-white/5 text-white/40 font-medium text-[13px] md:text-sm hover:bg-white/[0.02] hover:text-white/60 transition-all whitespace-nowrap"
+                        >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0"><polyline points="2,12 7,12 10,5 14,19 17,12 22,12" /></svg>
+                            Cardio
+                        </Link>
+                        <Link
+                            href="/replays"
+                            className="flex items-center justify-center gap-2 py-3 px-2 rounded-xl border border-white/5 text-white/40 font-medium text-[13px] md:text-sm hover:bg-white/[0.02] hover:text-white/60 transition-all whitespace-nowrap"
+                        >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0"><polygon points="23,7 16,12 23,17" /><rect x="1" y="5" width="15" height="14" rx="2" /></svg>
+                            My Replays
                         </Link>
                     </div>
                 </div>

@@ -14,6 +14,7 @@ import { syncCoachPlan } from '../../../lib/userProfile';
 import { getProgramById } from '../../../lib/programs';
 import AchievementBadge from '../../../components/AchievementBadge';
 import EditProfileModal from '../../../components/EditProfileModal';
+import Skeleton from '../../../components/Skeleton';
 import { openCoachChat } from '../../../components/CoachChat';
 
 export default function ProfilePage() {
@@ -142,7 +143,23 @@ export default function ProfilePage() {
                         </div>
                     </div>
                 )}
+                {!stats && (
+                    <div className="relative mt-6 flex items-center gap-4">
+                        <Skeleton className="w-16 h-16 rounded-full" />
+                        <div className="space-y-2">
+                            <Skeleton className="h-3.5 w-24 rounded" />
+                            <Skeleton className="h-3 w-32 rounded" />
+                        </div>
+                    </div>
+                )}
             </div>
+
+            {/* Stats skeleton while gamification data loads */}
+            {!stats && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+                    {[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-[88px] rounded-xl" />)}
+                </div>
+            )}
 
             {/* ─── Stats: asymmetric columns ────────────────────────────────── */}
             {stats && (

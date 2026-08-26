@@ -16,6 +16,14 @@ import { getCameraGuide } from './cameraGuide';
 /** Minimum MediaPipe visibility for a landmark to be trusted. */
 const MIN_VISIBILITY = 0.6;
 
+/**
+ * Feedback when no tracked joints are visible — the user isn't in frame yet.
+ * Exported so the workout screen can promote this one message to a large
+ * centered overlay (the user is standing away from the phone and can't read
+ * the small form pill).
+ */
+export const NOT_IN_FRAME_FEEDBACK = 'Step back so your full body is visible';
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export type RepState = 'IDLE' | 'DOWN' | 'UP';
@@ -99,7 +107,7 @@ export class RepEngine {
         // hallucinated coordinates (phantom reps).
         if (angles.length === 0) {
             const result = this.getResult(false);
-            result.feedback = 'Step back so your full body is visible';
+            result.feedback = NOT_IN_FRAME_FEEDBACK;
             return result;
         }
 
@@ -325,8 +333,6 @@ export class RepEngine {
         this.isHolding = false;
         this.idleLocalMin = 180;
         this.nearMissAt = 0;
-        this.mismatchSince = null;
-        this.positionHint = null;
     }
 
     setExercise(exerciseId: ExerciseId): void {

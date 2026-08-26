@@ -34,8 +34,9 @@ export const metadata: Metadata = {
     icon: [
       { url: "/icon.png", type: "image/png", sizes: "512x512" },
     ],
+    // Full-square art — iOS masks its own rounded corners over it
     apple: [
-      { url: "/icon.png", sizes: "512x512" },
+      { url: "/apple-icon.png", sizes: "512x512" },
     ],
     shortcut: "/icon.png",
   },

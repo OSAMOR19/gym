@@ -23,7 +23,8 @@ interface CameraFeedProps {
     landmarksRef: React.RefObject<NormalizedLandmarkList | null>;
     angleRef: React.RefObject<number>;
     hasBody: boolean;
-    exercise: ExerciseId;
+    /** Places the joint-angle label. Omit for flows with no tracked angle (cardio). */
+    exercise?: ExerciseId;
     isDetecting: boolean;
     isLoading?: boolean;
     error?: string | null;
@@ -47,7 +48,7 @@ export default function CameraFeed({
      * Uses the exercise config's vertex joint (index [1] of landmarkIndices).
      */
     const getAngleLandmarkIndex = useCallback((): number => {
-        const config = EXERCISES[exercise];
+        const config = exercise ? EXERCISES[exercise] : null;
         return config ? config.landmarkIndices[1] : 13; // vertex joint
     }, [exercise]);
 

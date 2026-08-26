@@ -68,6 +68,7 @@ export default function CoachChat() {
     const [conversationId, setConversationId] = useState<string | null>(null);
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [conversations, setConversations] = useState<ConversationRow[]>([]);
+    const [historyLoading, setHistoryLoading] = useState(false);
     const [input, setInput] = useState('');
     const [sending, setSending] = useState(false);
     const [pendingDelete, setPendingDelete] = useState<ConversationRow | null>(null);
@@ -126,6 +127,7 @@ export default function CoachChat() {
     }, [messages, sending, open, view]);
 
     const loadConversations = useCallback(async () => {
+        setHistoryLoading(true);
         const supabase = createClient();
         const { data } = await supabase
             .from('conversations')
@@ -133,6 +135,7 @@ export default function CoachChat() {
             .order('updated_at', { ascending: false })
             .limit(50);
         setConversations(data ?? []);
+        setHistoryLoading(false);
     }, []);
 
     const openConversation = useCallback(async (id: string) => {
@@ -242,8 +245,8 @@ export default function CoachChat() {
         router.push(`/programs/${programId}`);
     }, [router, refreshNudges]);
 
-    // The workout screen is camera-dominant — no chat button there
-    if (pathname.startsWith('/workout')) return null;
+    // Camera-dominant screens (workout, cardio) get no chat button
+    if (pathname.startsWith('/workout') || pathname.startsWith('/cardio')) return null;
 
     // Suggestion chips: real nudges first, defaults fill the rest
     const chips: Array<{ key: string; label: string; onTap: () => void }> = [
@@ -361,7 +364,17 @@ export default function CoachChat() {
                                 </svg>
                                 New conversation
                             </button>
-                            {conversations.length === 0 && (
+                            {historyLoading && conversations.length === 0 && (
+                                <div className="space-y-1.5">
+                                    {[0, 1, 2].map((i) => (
+                                        <div key={i} className="animate-pulse rounded-xl border border-white/5 px-3 py-3">
+                                            <div className="h-3 w-2/3 bg-white/[0.05] rounded" />
+                                            <div className="h-2 w-16 bg-white/[0.04] rounded mt-2" />
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                            {!historyLoading && conversations.length === 0 && (
                                 <div className="flex flex-col items-center text-center pt-12 pb-8 px-6">
                                     {/* Empty chat bubble with a resting dash — nothing said yet */}
                                     <div className="relative w-16 h-16 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center mb-4">

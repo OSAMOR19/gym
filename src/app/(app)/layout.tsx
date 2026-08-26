@@ -17,6 +17,8 @@ const SECTION_TITLES: Array<[prefix: string, title: string]> = [
     ['/dashboard', 'Dashboard'],
     ['/programs', 'Programs'],
     ['/workout', 'Workout'],
+    ['/cardio', 'Cardio'],
+    ['/replays', 'My Replays'],
     ['/progress', 'Progress'],
     ['/profile', 'Profile'],
 ];

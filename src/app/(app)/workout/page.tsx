@@ -17,6 +17,10 @@ import { beginSession, isSessionActive, recordSet, abandonSession, completeSessi
 import { logEvent } from '../../../lib/events';
 import { getWorkoutQueue, clearWorkoutQueue, markDayCompleted, WorkoutQueue } from '../../../lib/workoutQueue';
 import { getCameraGuide } from '../../../lib/cameraGuide';
+import { NOT_IN_FRAME_FEEDBACK } from '../../../lib/repEngine';
+import { HighlightRecorder, HighlightClip } from '../../../lib/replay/highlightRecorder';
+import { ReplayStats } from '../../../lib/replay/replayComposer';
+import ReplayPanel from '../../../components/ReplayPanel';
 import CameraFeed from '../../../components/CameraFeed';
 import RepCounterDisplay from '../../../components/RepCounter';
 import SetTracker from '../../../components/SetTracker';
@@ -51,6 +55,26 @@ export default function WorkoutPage() {
     const [xpGained, setXpGained] = useState(0);
     const [newBadges, setNewBadges] = useState<Badge[]>([]);
     const [selectorOpen, setSelectorOpen] = useState(false);
+
+    // Workout Replay: highlight clips recorded locally (only pinned moments
+    // survive; raw footage never persists — see lib/replay/highlightRecorder)
+    const recorderRef = useRef<HighlightRecorder | null>(null);
+    const bestFormRef = useRef(0);
+    const setsDoneRef = useRef(0);
+    const [replayEnabled, setReplayEnabled] = useState(true);
+    const [replayData, setReplayData] = useState<{
+        clips: HighlightClip[]; stats: ReplayStats; workoutId: string | null;
+    } | null>(null);
+
+    useEffect(() => {
+        setReplayEnabled(localStorage.getItem('irontrack_replay_off') !== '1' && HighlightRecorder.supported());
+    }, []);
+    const toggleReplay = useCallback(() => {
+        setReplayEnabled((prev) => {
+            localStorage.setItem('irontrack_replay_off', prev ? '1' : '0');
+            return !prev;
+        });
+    }, []);
 
     // Set/rep tracking
     const [targetReps, setTargetReps] = useState(10);
@@ -222,6 +246,16 @@ export default function WorkoutPage() {
                 setTotalRepsThisWorkout(prev => prev + repCount);
                 captureSet(repCount);
 
+                // Pin this moment for the replay (marks land in the segment
+                // being recorded right now, before the camera stops)
+                setsDoneRef.current += 1;
+                const isBest = formQuality > bestFormRef.current && formQuality >= 80;
+                if (isBest) bestFormRef.current = formQuality;
+                recorderRef.current?.mark(
+                    isBest ? 'best_form' : 'set_complete',
+                    `${currentExercise.name} · Form ${formQuality}%`,
+                );
+
                 setTimeout(() => {
                     stopDetection();
                     setShowSetComplete(true);
@@ -230,7 +264,7 @@ export default function WorkoutPage() {
             }
         }
         prevRepCountRef.current = repCount;
-    }, [repCount, targetReps, formQuality, speechCoach, stopDetection, captureSet]);
+    }, [repCount, targetReps, formQuality, speechCoach, stopDetection, captureSet, currentExercise.name]);
 
     // Hold exercises: complete the set when the hold target is reached.
     // Previously hold sets had no finish condition at all — the only way out
@@ -245,13 +279,16 @@ export default function WorkoutPage() {
             setTotalRepsThisWorkout(prev => prev + Math.max(1, Math.round(holdTime / 3)));
             captureSet(Math.max(1, Math.round(holdTime / 3)), holdTime);
 
+            setsDoneRef.current += 1;
+            recorderRef.current?.mark('set_complete', `${currentExercise.name} · ${Math.round(holdTime)}s hold`);
+
             setTimeout(() => {
                 stopDetection();
                 setShowSetComplete(true);
                 speechCoach.onSetComplete();
             }, 400);
         }
-    }, [isHoldExercise, isDetecting, holdTime, targetHoldSeconds, formQuality, speechCoach, stopDetection, captureSet]);
+    }, [isHoldExercise, isDetecting, holdTime, targetHoldSeconds, formQuality, speechCoach, stopDetection, captureSet, currentExercise.name]);
 
     // Feed coach tips to speech coach
     useEffect(() => {
@@ -259,6 +296,29 @@ export default function WorkoutPage() {
             speechCoach.onCoachTip(coachTip);
         }
     }, [coachTip, speechCoach]);
+
+    // Replay recorder follows the camera: record while detecting, pause
+    // between sets, clips accumulate across the whole workout
+    useEffect(() => {
+        if (!isDetecting) {
+            recorderRef.current?.stop();
+            return;
+        }
+        if (!replayEnabled) return;
+        const stream = videoRef.current?.srcObject as MediaStream | undefined;
+        if (!stream) return;
+        const isFirstSet = !recorderRef.current;
+        if (isFirstSet) recorderRef.current = new HighlightRecorder();
+        if (recorderRef.current!.start(stream) && isFirstSet) {
+            setTimeout(() => recorderRef.current?.mark('start', 'WARM-UP'), 1500);
+        }
+    }, [isDetecting, replayEnabled, videoRef]);
+
+    // Abandoned page → footage never leaves the device
+    useEffect(() => () => {
+        recorderRef.current?.discard();
+        recorderRef.current = null;
+    }, []);
 
     // Start with countdown
     const handleStart = useCallback(() => {
@@ -330,6 +390,9 @@ export default function WorkoutPage() {
         if (endingRef.current) return;
         endingRef.current = true;
 
+        // Pin the closing moment while the camera is still rolling
+        recorderRef.current?.mark('finish', 'FINAL PUSH');
+
         setShowSetComplete(false);
         endSession();
 
@@ -379,9 +442,36 @@ export default function WorkoutPage() {
                 toast.error('Workout not saved', 'Could not reach the server — your progress may be missing.');
             }
 
+            // Workout is saved — replay is a fully independent afterthought.
+            // Collect the pinned clips (works even if zero: stats-only recap).
+            const clips = recorderRef.current ? await recorderRef.current.finalize() : [];
+            recorderRef.current = null;
+            setReplayData({
+                clips,
+                stats: {
+                    title: recordName,
+                    workoutType: 'strength',
+                    durationSeconds: duration,
+                    dateISO: new Date().toISOString(),
+                    lines: [
+                        { value: String(Math.max(setsDoneRef.current, 1)), label: 'sets' },
+                        { value: String(effectiveReps), label: 'reps' },
+                        { value: `${formQuality}%`, label: 'avg form' },
+                        ...(xp > 0 ? [{ value: `+${xp}`, label: 'xp' }] : []),
+                    ],
+                },
+                workoutId: result.sessionId,
+            });
+            setsDoneRef.current = 0;
+            bestFormRef.current = 0;
+
             setShowSummary(true);
             speechCoach.speakSummary(ws.coachNotes);
         } else {
+            recorderRef.current?.discard();
+            recorderRef.current = null;
+            setsDoneRef.current = 0;
+            bestFormRef.current = 0;
             abandonSession();
         }
 
@@ -631,11 +721,29 @@ export default function WorkoutPage() {
                     isDetecting={isDetecting}
                 />
 
-                {/* Feedback overlays */}
-                {isDetecting && (
+                {/* Feedback overlays — the not-in-frame message gets its own
+                    LARGE centered banner (the user is across the room and
+                    can't read the small pill); everything else stays compact */}
+                {isDetecting && feedback !== NOT_IN_FRAME_FEEDBACK && (
                     <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
                         <FormFeedback feedback={feedback} isDetecting={isDetecting} />
                         <CoachMessage tip={coachTip} />
+                    </div>
+                )}
+                {isDetecting && feedback === NOT_IN_FRAME_FEEDBACK && (
+                    <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 z-20 flex justify-center pointer-events-none">
+                        <div className="bg-black/70 backdrop-blur-md border border-white/15 rounded-2xl px-6 py-5 text-center max-w-sm animate-fade-in">
+                            <svg className="w-10 h-10 mx-auto mb-3 text-[#22c55e] animate-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="12" cy="5" r="3" />
+                                <path d="M12 8v6m0 0l-4 6m4-6l4 6M5 11l7-2 7 2" />
+                            </svg>
+                            <p className="text-xl md:text-2xl font-black text-white leading-tight">
+                                Step back
+                            </p>
+                            <p className="text-sm text-white/70 mt-1.5 leading-snug">
+                                Make sure your whole body is visible in the frame
+                            </p>
+                        </div>
                     </div>
                 )}
 
@@ -758,6 +866,19 @@ export default function WorkoutPage() {
                                 {targetReps} reps
                             </span>
                         </div>
+                        {/* Replay opt-out — footage stays on-device either way */}
+                        {HighlightRecorder.supported() && (
+                            <button
+                                onClick={toggleReplay}
+                                className="flex items-center gap-1.5 mt-2 text-[10px] cursor-pointer"
+                                aria-pressed={replayEnabled}
+                            >
+                                <span className={`w-6 h-3.5 rounded-full transition-colors relative ${replayEnabled ? 'bg-[#22c55e]' : 'bg-white/15'}`}>
+                                    <span className={`absolute top-0.5 w-2.5 h-2.5 rounded-full bg-black transition-all ${replayEnabled ? 'left-3' : 'left-0.5'}`} />
+                                </span>
+                                <span className="text-white/40 uppercase tracking-wider">Replay</span>
+                            </button>
+                        )}
                     </div>
                 )}
             </div>
@@ -796,6 +917,13 @@ export default function WorkoutPage() {
                     xpGained={xpGained}
                     newBadges={newBadges}
                     onClose={() => setShowSummary(false)}
+                    replaySlot={replayData ? (
+                        <ReplayPanel
+                            clips={replayData.clips}
+                            stats={replayData.stats}
+                            links={{ workoutId: replayData.workoutId }}
+                        />
+                    ) : undefined}
                 />
             )}
         </div>

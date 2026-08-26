@@ -32,11 +32,13 @@ function ScoreRing({ score, label, color }: { score: number; label: string; colo
     );
 }
 
-export default function WorkoutSummaryDisplay({ summary, xpGained, newBadges, onClose }: {
+export default function WorkoutSummaryDisplay({ summary, xpGained, newBadges, onClose, replaySlot }: {
     summary: SummaryType;
     xpGained: number;
     newBadges: Badge[];
     onClose: () => void;
+    /** The Workout Replay panel (create/share) — rendered above the actions. */
+    replaySlot?: React.ReactNode;
 }) {
     return (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
@@ -105,6 +107,9 @@ export default function WorkoutSummaryDisplay({ summary, xpGained, newBadges, on
                         ))}
                     </div>
                 </div>
+
+                {/* Workout Replay — create/share the ~25s recap */}
+                {replaySlot && <div className="mb-4">{replaySlot}</div>}
 
                 {/* Close button */}
                 <button

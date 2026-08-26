@@ -26,7 +26,8 @@ import { FormCorrection } from '../lib/formCorrection';
  */
 let poseClassPromise: Promise<any> | null = null;
 
-function loadMediaPipePose(): Promise<any> {
+/** Exported so other camera flows (cardio tracking) reuse the same singleton. */
+export function loadMediaPipePose(): Promise<any> {
     if (poseClassPromise) return poseClassPromise;
 
     poseClassPromise = new Promise((resolve, reject) => {

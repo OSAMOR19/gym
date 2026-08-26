@@ -22,6 +22,8 @@ function NavIcon({ name, active }: { name: string; active: boolean }) {
             return <svg {...props}><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" /><rect x="9" y="3" width="6" height="4" rx="1" /><path d="M9 14l2 2 4-4" /></svg>;
         case 'workout':
             return <svg {...props}><path d="M6.5 6.5h-2a1 1 0 00-1 1v3a1 1 0 001 1h2" /><path d="M17.5 6.5h2a1 1 0 011 1v3a1 1 0 01-1 1h-2" /><rect x="6.5" y="4" width="11" height="10" rx="1" /><line x1="12" y1="14" x2="12" y2="20" /><line x1="9" y1="20" x2="15" y2="20" /></svg>;
+        case 'cardio':
+            return <svg {...props}><path d="M20.4 12.6a5.5 5.5 0 00-8.4-7 5.5 5.5 0 00-8.4 7L12 21l4.2-4.2" /><polyline points="7,12 10,12 12,8 14,15 16,12 21,12" /></svg>;
         case 'progress':
             return <svg {...props}><polyline points="22,12 18,12 15,21 9,3 6,12 2,12" /></svg>;
         case 'profile':
@@ -35,6 +37,7 @@ const NAV_ITEMS = [
     { href: '/dashboard', label: 'Dashboard', iconKey: 'dashboard' },
     { href: '/programs', label: 'Programs', iconKey: 'programs' },
     { href: '/workout', label: 'Workout', iconKey: 'workout' },
+    { href: '/cardio', label: 'Cardio', iconKey: 'cardio' },
     { href: '/progress', label: 'Progress', iconKey: 'progress' },
     { href: '/profile', label: 'Profile', iconKey: 'profile' },
 ];

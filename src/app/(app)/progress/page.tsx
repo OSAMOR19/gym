@@ -9,6 +9,7 @@
 import { useEffect, useState } from 'react';
 import { getProgressStats, ProgressStats, getAllWorkouts, WorkoutRecord } from '../../../lib/progressStore';
 import ProgressChart from '../../../components/ProgressChart';
+import Skeleton from '../../../components/Skeleton';
 
 export default function ProgressPage() {
     const [stats, setStats] = useState<ProgressStats | null>(null);
@@ -27,6 +28,19 @@ export default function ProgressPage() {
         if (mins > 60) return `${Math.floor(mins / 60)}h ${mins % 60}m`;
         return `${mins}m`;
     };
+
+    // Skeleton until the first stats load lands — no zeroed-out flash
+    if (stats === null) {
+        return (
+            <div className="max-w-5xl mx-auto p-4 md:p-6 space-y-6">
+                <Skeleton className="h-44 rounded-xl" />
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-24 rounded-xl" />)}
+                </div>
+                <Skeleton className="h-64 rounded-xl" />
+            </div>
+        );
+    }
 
     return (
         <div className="max-w-5xl mx-auto p-4 md:p-6">

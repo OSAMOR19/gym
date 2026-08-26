@@ -25,7 +25,9 @@ export type WorkoutEventType =
     | 'PR_RECORDED'
     | 'PROGRAM_DAY_COMPLETED'
     | 'PROGRAM_SELECTED'
-    | 'INTAKE_COMPLETED';
+    | 'INTAKE_COMPLETED'
+    | 'CARDIO_COMPLETED'
+    | 'REPLAY_CREATED';
 
 interface EventOptions {
     exerciseId?: ExerciseId;
