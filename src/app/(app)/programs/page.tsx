@@ -41,19 +41,43 @@ function ProgramTile({ program }: { program: Program }) {
     );
 }
 
-// ─── Shelf — a titled, swipeable row ─────────────────────────────────────────
+// ─── Shelf — a titled, swipeable row that can drift on its own ───────────────
+// Each auto-playing shelf runs its own clock (staggered so rows don't march
+// in sync); any touch pauses it, hidden tabs stop it, reduced-motion disables.
 
 function ProgramShelf({
     title,
     programs,
-    rowRef,
-    onInteract,
+    autoPlay = false,
+    autoPlayStaggerMs = 0,
 }: {
     title: string;
     programs: Program[];
-    rowRef?: React.RefObject<HTMLDivElement | null>;
-    onInteract?: () => void;
+    autoPlay?: boolean;
+    autoPlayStaggerMs?: number;
 }) {
+    const rowRef = useRef<HTMLDivElement>(null);
+    const pauseUntilRef = useRef(0);
+    const pause = useCallback(() => {
+        pauseUntilRef.current = Date.now() + 8000;
+    }, []);
+
+    useEffect(() => {
+        if (!autoPlay || programs.length < 2) return;
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        let intervalId: ReturnType<typeof setInterval> | undefined;
+        const timeoutId = setTimeout(() => {
+            intervalId = setInterval(() => {
+                const el = rowRef.current;
+                if (!el || document.hidden || Date.now() < pauseUntilRef.current) return;
+                const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 8;
+                if (atEnd) el.scrollTo({ left: 0, behavior: 'smooth' });
+                else el.scrollBy({ left: el.clientWidth * 0.5, behavior: 'smooth' });
+            }, 4500);
+        }, autoPlayStaggerMs);
+        return () => { clearTimeout(timeoutId); if (intervalId) clearInterval(intervalId); };
+    }, [autoPlay, autoPlayStaggerMs, programs.length]);
+
     if (programs.length === 0) return null;
     return (
         <div className="mb-7">
@@ -63,9 +87,9 @@ function ProgramShelf({
             </div>
             <div
                 ref={rowRef}
-                onTouchStart={onInteract}
-                onPointerDown={onInteract}
-                onWheel={onInteract}
+                onTouchStart={pause}
+                onPointerDown={pause}
+                onWheel={pause}
                 className="flex gap-3 overflow-x-auto snap-x scrollbar-hide -mx-4 px-4"
             >
                 {programs.map((p) => <ProgramTile key={p.id} program={p} />)}
@@ -77,7 +101,6 @@ function ProgramShelf({
 export default function ProgramsPage() {
     const [filter, setFilter] = useState<Filter>('all');
     const [plan, setPlan] = useState<CoachPlan | null>(null);
-    const pickedRowRef = useRef<HTMLDivElement>(null);
 
     // Local cache renders instantly; the server copy (which follows the user
     // across devices) reconciles in the background. The intake runs in the
@@ -92,43 +115,28 @@ export default function ProgramsPage() {
 
     const planProgram = plan ? getProgramById(plan.programId) : null;
 
-    // "Picked for you": the user's own intake answers rank the catalog (their
-    // chosen plan always leads). Without an intake yet, lead with the
-    // easiest ways in. Everything else lands in the explore shelf.
+    // Three shelves, no overlaps:
+    //  1. "Picked for you" — the user's own intake answers rank the catalog
+    //     (their chosen plan leads); easiest ways in when no intake yet.
+    //  2. "Quick starts" — short programs (≤ 2 weeks) from what's left.
+    //  3. "More to explore" — everything else.
     let picked: Program[];
     if (plan) {
         const ranked = scorePrograms(plan.answers).map((s) => s.program);
         picked = [
             ...(planProgram ? [planProgram] : []),
             ...ranked.filter((p) => p.id !== plan.programId),
-        ].slice(0, 7);
+        ].slice(0, 5);
     } else {
-        picked = PROGRAMS.filter((p) => p.level === 'beginner' || p.level === 'senior').slice(0, 7);
+        picked = PROGRAMS.filter((p) => p.level === 'beginner' || p.level === 'senior').slice(0, 5);
     }
     const pickedIds = new Set(picked.map((p) => p.id));
-    const explore = PROGRAMS.filter((p) => !pickedIds.has(p.id));
+    const remaining = PROGRAMS.filter((p) => !pickedIds.has(p.id));
+    const quick = remaining.filter((p) => p.weeks.length <= 2);
+    const quickIds = new Set(quick.map((p) => p.id));
+    const explore = remaining.filter((p) => !quickIds.has(p.id));
 
     const filteredOnly = PROGRAMS.filter((p) => p.level === filter);
-
-    // The picked shelf drifts one tile forward every few seconds; user input
-    // pauses it, hidden tabs stop it, reduced-motion disables it.
-    const pauseUntilRef = useRef(0);
-    const pauseAutoPlay = useCallback(() => {
-        pauseUntilRef.current = Date.now() + 8000;
-    }, []);
-
-    useEffect(() => {
-        if (filter !== 'all') return;
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-        const id = setInterval(() => {
-            const el = pickedRowRef.current;
-            if (!el || document.hidden || Date.now() < pauseUntilRef.current) return;
-            const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 8;
-            if (atEnd) el.scrollTo({ left: 0, behavior: 'smooth' });
-            else el.scrollBy({ left: el.clientWidth * 0.5, behavior: 'smooth' });
-        }, 4500);
-        return () => clearInterval(id);
-    }, [filter]);
 
     const filters: { key: Filter; label: string }[] = [
         { key: 'all', label: 'All Programs' },
@@ -231,16 +239,12 @@ export default function ProgramsPage() {
                 </button>
             )}
 
-            {/* Shelves */}
+            {/* Shelves — all three drift on their own, staggered */}
             {filter === 'all' ? (
                 <>
-                    <ProgramShelf
-                        title="Picked for you"
-                        programs={picked}
-                        rowRef={pickedRowRef}
-                        onInteract={pauseAutoPlay}
-                    />
-                    <ProgramShelf title="More to explore" programs={explore} />
+                    <ProgramShelf title="Picked for you" programs={picked} autoPlay />
+                    <ProgramShelf title="Quick starts" programs={quick} autoPlay autoPlayStaggerMs={1600} />
+                    <ProgramShelf title="More to explore" programs={explore} autoPlay autoPlayStaggerMs={3200} />
                 </>
             ) : (
                 <ProgramShelf

@@ -122,20 +122,28 @@ export default function DashboardPage() {
                     </h1>
                 </div>
                 {gameStats && (
-                    <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-[#22c55e] flex items-center justify-center">
-                            <span className="text-black text-xs font-black" style={{ fontFamily: 'Orbitron, monospace' }}>
+                    // Level as a compact progress ring — the XP toward the next
+                    // level is the arc around the number
+                    <div
+                        className="relative w-12 h-12 flex-shrink-0"
+                        title={`Level ${gameStats.level} — ${xpCurrent}/${xpRequired} XP to the next level`}
+                        aria-label={`Level ${gameStats.level}, ${xpCurrent} of ${xpRequired} XP`}
+                    >
+                        <svg viewBox="0 0 48 48" className="w-12 h-12 -rotate-90">
+                            <circle cx={24} cy={24} r={20} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={3.5} />
+                            <circle
+                                cx={24} cy={24} r={20} fill="none" stroke="#22c55e" strokeWidth={3.5}
+                                strokeLinecap="round"
+                                strokeDasharray={2 * Math.PI * 20}
+                                strokeDashoffset={(2 * Math.PI * 20) * (1 - xpPct / 100)}
+                                style={{ transition: 'stroke-dashoffset 0.8s ease', filter: 'drop-shadow(0 0 4px rgba(34,197,94,0.35))' }}
+                            />
+                        </svg>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                            <span className="text-sm font-black text-white leading-none" style={{ fontFamily: 'Orbitron, monospace' }}>
                                 {gameStats.level}
                             </span>
-                        </div>
-                        <div>
-                            <p className="text-[10px] text-white/25 tracking-wider uppercase">Level</p>
-                            <div className="w-20 h-1.5 bg-white/5 rounded-full overflow-hidden">
-                                <div
-                                    className="h-full rounded-full bg-[#22c55e]"
-                                    style={{ width: `${xpPct}%` }}
-                                />
-                            </div>
+                            <span className="text-[6px] text-white/30 tracking-widest uppercase mt-0.5">Lvl</span>
                         </div>
                     </div>
                 )}
