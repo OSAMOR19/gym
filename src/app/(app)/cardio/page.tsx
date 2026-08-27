@@ -20,6 +20,7 @@ import { HighlightRecorder, HighlightClip } from '../../../lib/replay/highlightR
 import { ReplayStats } from '../../../lib/replay/replayComposer';
 import ReplayPanel from '../../../components/ReplayPanel';
 import CameraFeed from '../../../components/CameraFeed';
+import CountdownOverlay from '../../../components/CountdownOverlay';
 
 type Step = 'select' | 'setup' | 'live' | 'summary';
 
@@ -79,6 +80,14 @@ export default function CardioPage() {
         }
     }, [steps, activity]);
 
+    // Every full minute is also a highlight — short sessions get real footage
+    // of the user, not just the start/finish bookends
+    useEffect(() => {
+        if (elapsed > 0 && elapsed % 60 === 0) {
+            recorderRef.current?.mark('milestone', `${Math.round(elapsed / 60)} MIN IN`);
+        }
+    }, [elapsed]);
+
     const begin = useCallback(async () => {
         setElapsed(0);
         lastMilestoneRef.current = 0;
@@ -86,21 +95,10 @@ export default function CardioPage() {
         await tracking.start();
     }, [tracking]);
 
-    // Start the camera only AFTER the live view has rendered — the <video>
-    // element doesn't exist until then, so calling begin() from the Start
-    // button's click handler found videoRef empty and silently did nothing
-    // (black feed, clock stuck at 0:00).
-    const beganRef = useRef(false);
-    useEffect(() => {
-        if (step !== 'live') {
-            beganRef.current = false;
-            return;
-        }
-        if (!beganRef.current) {
-            beganRef.current = true;
-            begin();
-        }
-    }, [step, begin]);
+    // Flow into a session: live view renders (mounting the <video> element),
+    // the 5-4-3-2-1 countdown gives the user time to walk back into frame,
+    // and the camera starts on GO.
+    const [counting, setCounting] = useState(false);
 
     // Attach the highlight recorder once the camera is live
     useEffect(() => {
@@ -127,9 +125,12 @@ export default function CardioPage() {
         if (finishingRef.current) return;
         finishingRef.current = true;
 
+        // Pin the closing moment and collect all clips BEFORE stopping the
+        // camera — a MediaRecorder on a dead stream can drop its last segment
         recorderRef.current?.mark('finish', 'STRONG FINISH');
         const recorder = recorderRef.current;
         recorderRef.current = null;
+        const collectedClips = recorder ? await recorder.finalize() : [];
 
         const final = tracking.stop();
         const durationSeconds = tracking.startedAt ? Math.floor((Date.now() - tracking.startedAt) / 1000) : elapsed;
@@ -150,15 +151,17 @@ export default function CardioPage() {
             estCalories: estimateCalories(activity, durationSeconds, final?.cadence ?? 0, profile.weightKg),
             formScore: final?.formScore ?? 0,
         };
+        // Clips MUST land in the same render as the summary — the ReplayPanel
+        // auto-generates on mount, so mounting it before setClips() composed
+        // a stats-only video with zero footage (the bug Isaac hit)
+        setClips(collectedClips);
         setSummary(s);
         setStep('summary');
 
-        // Save first (replay is optional and independent)
+        // Save after showing the summary (replay is optional and independent)
         const id = await saveCardioSession(s);
         setCardioSessionId(id);
         setSaveFailed(id === null);
-
-        if (recorder) setClips(await recorder.finalize());
         finishingRef.current = false;
     }, [tracking, elapsed, speedInput, activity, profile]);
 
@@ -252,7 +255,7 @@ export default function CardioPage() {
                         </div>
                     )}
                     <button
-                        onClick={() => setStep('live')}
+                        onClick={() => { setStep('live'); setCounting(true); }}
                         className="w-full py-3.5 rounded-xl bg-[#22c55e] text-black font-bold text-sm hover:bg-[#16a34a] transition-all cursor-pointer"
                     >
                         Start {CARDIO_ACTIVITIES[activity].name}
@@ -261,6 +264,13 @@ export default function CardioPage() {
             )}
 
             {/* ─── Live ────────────────────────────────────────────────────── */}
+            {step === 'live' && counting && (
+                <CountdownOverlay
+                    startFrom={5}
+                    voiceEnabled={false}
+                    onComplete={() => { setCounting(false); begin(); }}
+                />
+            )}
             {step === 'live' && (
                 <div className="space-y-4">
                     <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-black aspect-[3/4] sm:aspect-video">

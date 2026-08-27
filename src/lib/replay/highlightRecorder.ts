@@ -39,16 +39,18 @@ export function selectTopClips(clips: HighlightClip[], max: number = MAX_CLIPS):
         .sort((a, b) => a.at - b.at);
 }
 
-/** Best recording mime the browser offers (Safari → mp4, Chrome → webm). */
+/**
+ * Best recording mime for this browser. Each browser gets its NATIVE format
+ * first — Safari records mp4, everything else records webm — so the clips we
+ * record are always ones the same browser can flawlessly decode again during
+ * replay composition.
+ */
 export function pickRecordingMime(): string | null {
     if (typeof MediaRecorder === 'undefined') return null;
-    const candidates = [
-        'video/mp4;codecs=avc1',
-        'video/mp4',
-        'video/webm;codecs=vp9',
-        'video/webm;codecs=vp8',
-        'video/webm',
-    ];
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    const mp4 = ['video/mp4;codecs=avc1', 'video/mp4'];
+    const webm = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'];
+    const candidates = isSafari ? [...mp4, ...webm] : [...webm, ...mp4];
     return candidates.find((c) => MediaRecorder.isTypeSupported(c)) ?? null;
 }
 

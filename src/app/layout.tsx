@@ -40,6 +40,12 @@ export const metadata: Metadata = {
     ],
     shortcut: "/icon.png",
   },
+  // Installed-app (PWA) behavior on iOS: full-screen standalone chrome
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "IronTrack",
+  },
 };
 
 export default function RootLayout({

@@ -390,8 +390,10 @@ export default function WorkoutPage() {
         if (endingRef.current) return;
         endingRef.current = true;
 
-        // Pin the closing moment while the camera is still rolling
+        // Pin the closing moment and flush the in-flight segment BEFORE the
+        // camera stops — a MediaRecorder on a dead stream can drop its data
         recorderRef.current?.mark('finish', 'FINAL PUSH');
+        await recorderRef.current?.stop();
 
         setShowSetComplete(false);
         endSession();

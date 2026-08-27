@@ -14,6 +14,7 @@ import { syncCoachPlan } from '../../../lib/userProfile';
 import { getProgramById } from '../../../lib/programs';
 import AchievementBadge from '../../../components/AchievementBadge';
 import EditProfileModal from '../../../components/EditProfileModal';
+import InstallPrompt from '../../../components/InstallPrompt';
 import Skeleton from '../../../components/Skeleton';
 import { openCoachChat } from '../../../components/CoachChat';
 
@@ -46,6 +47,9 @@ export default function ProfilePage() {
 
     return (
         <div className="max-w-5xl mx-auto p-4 md:p-6">
+            {/* Install-the-app nudge (hidden once installed or dismissed) */}
+            <InstallPrompt />
+
             {/* ─── Profile header ───────────────────────────────────────────── */}
             <div className="relative border border-white/5 rounded-xl p-6 md:p-8 mb-6 overflow-hidden">
                 {/* Ghost level */}

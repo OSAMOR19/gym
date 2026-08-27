@@ -13,10 +13,13 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 interface CountdownOverlayProps {
     onComplete: () => void;
     voiceEnabled: boolean;
+    /** First number of the countdown. Default 3; cardio uses 5 so the user
+     *  has time to walk back from the phone into frame. */
+    startFrom?: number;
 }
 
-export default function CountdownOverlay({ onComplete, voiceEnabled }: CountdownOverlayProps) {
-    const [count, setCount] = useState(3);
+export default function CountdownOverlay({ onComplete, voiceEnabled, startFrom = 3 }: CountdownOverlayProps) {
+    const [count, setCount] = useState(startFrom);
     const [phase, setPhase] = useState<'number' | 'go' | 'done'>('number');
     const voiceRef = useRef<SpeechSynthesisVoice | null>(null);
 
