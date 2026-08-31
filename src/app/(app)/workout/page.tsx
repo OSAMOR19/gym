@@ -602,7 +602,9 @@ export default function WorkoutPage() {
             {/* ─── Top bar — two rows on phones so Start is never pushed
                  off-screen: row 1 = back / exercise / actions, row 2 = the
                  target stepper (inline again from sm up) ─────────────────── */}
-            <div className="flex-none bg-[#0a0a0a] border-b border-white/5 z-20 relative">
+            {/* safe-area padding: installed (PWA) mode draws under the iOS
+                status bar — without this the clock prints over the header */}
+            <div className="flex-none bg-[#0a0a0a] border-b border-white/5 z-20 relative" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
                 <div className="px-3 sm:px-4 py-2.5 space-y-2">
                     <div className="flex items-center gap-2">
                         {/* Back — the bottom nav is hidden on this immersive screen */}
@@ -774,8 +776,13 @@ export default function WorkoutPage() {
                     </div>
                 )}
 
-                {/* Exercise guide — always visible; shows modal pre-workout */}
-                <div className="absolute right-3 z-10" style={{ top: isDetecting ? '80px' : '12px' }}>
+                {/* Exercise guide — modal pre-workout; the live reference card
+                    is desktop-only (real-user tests: it buried the phone
+                    screen, and the preview + voice coach already covered it) */}
+                <div
+                    className={`absolute right-3 z-10 ${isDetecting ? 'hidden md:block' : ''}`}
+                    style={{ top: isDetecting ? '80px' : '12px' }}
+                >
                     <ExerciseGuide
                         exerciseId={exerciseId}
                         isDetecting={isDetecting}
@@ -788,8 +795,9 @@ export default function WorkoutPage() {
                     />
                 </div>
 
-                {/* Muscle indicator — always visible */}
-                <div className="absolute bottom-4 right-3 z-10">
+                {/* Muscle indicator — desktop-only: on phones it overlapped the
+                    set tracker and preview modal (muscles are in the preview) */}
+                <div className="absolute bottom-4 right-3 z-10 hidden md:block">
                     <MuscleIndicator exerciseId={exerciseId} isDetecting={isDetecting} />
                 </div>
 
@@ -805,10 +813,10 @@ export default function WorkoutPage() {
                     </div>
                 )}
 
-                {/* Form corrections — width-capped on mobile so they don't run
-                    under the muscle indicator */}
+                {/* Form corrections — full width on phones now that the muscle
+                    indicator is desktop-only; capped on md where it returns */}
                 {formCorrections.length > 0 && isDetecting && (
-                    <div className="absolute bottom-4 left-4 space-y-1.5 max-w-[62vw] md:max-w-sm">
+                    <div className="absolute bottom-4 left-4 space-y-1.5 max-w-[85vw] md:max-w-sm">
                         {formCorrections.map((fc) => (
                             <div key={fc.ruleId} className="flex items-center gap-2 bg-black/70 backdrop-blur-sm border border-amber-500/20 rounded-lg px-3 py-1.5 text-xs text-amber-400/80">
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="flex-shrink-0">
@@ -853,8 +861,9 @@ export default function WorkoutPage() {
                     </div>
                 )}
 
-                {/* Pre-camera stats */}
-                {!isDetecting && !showSetComplete && !showSummary && (
+                {/* Pre-camera stats — hidden while the exercise preview modal
+                    is up (it used to print over the modal's title) */}
+                {!isDetecting && !showSetComplete && !showSummary && !showVideoModal && (
                     <div className="absolute top-3 left-3 bg-black/50 backdrop-blur-sm rounded-lg border border-white/5 px-3 py-2 z-10">
                         <div className="flex items-center gap-2 text-[10px]">
                             <span className="text-white/25 uppercase tracking-wider">Set</span>

@@ -53,11 +53,17 @@ export function openCoachChat(mode: 'chat' | 'intake' = 'chat'): void {
 }
 
 function relativeDate(iso: string): string {
-    const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
-    if (days <= 0) return 'Today';
+    const date = new Date(iso);
+    // Compare CALENDAR days, not elapsed 24h blocks — otherwise yesterday
+    // evening reads as "Today" all morning
+    const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    const days = Math.round((startOfDay(new Date()) - startOfDay(date)) / 86_400_000);
+    if (days <= 0) {
+        return `Today · ${date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
+    }
     if (days === 1) return 'Yesterday';
     if (days < 7) return `${days} days ago`;
-    return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
 export default function CoachChat() {

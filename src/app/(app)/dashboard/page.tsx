@@ -467,7 +467,7 @@ export default function DashboardPage() {
                             href="/cardio"
                             className="flex items-center justify-center gap-2 py-3 px-2 rounded-xl border border-white/5 text-white/40 font-medium text-[13px] md:text-sm hover:bg-white/[0.02] hover:text-white/60 transition-all whitespace-nowrap"
                         >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0"><polyline points="2,12 7,12 10,5 14,19 17,12 22,12" /></svg>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0"><path d="M20.4 12.6a5.5 5.5 0 00-8.4-7 5.5 5.5 0 00-8.4 7L12 21l4.2-4.2" /><polyline points="7,12 10,12 12,8 14,15 16,12 21,12" /></svg>
                             Cardio
                         </Link>
                         <Link
