@@ -559,13 +559,13 @@ export default function WorkoutPage() {
             <span className="text-[8px] text-white/25 tracking-wider uppercase mr-1">Target</span>
             <button onClick={() => setTargetReps(Math.max(1, targetReps - 1))}
                 className="text-white/30 hover:text-white/60 w-6 h-6 sm:w-5 sm:h-5 flex items-center justify-center cursor-pointer">-</button>
-            <span className="text-[11px] font-bold text-[#22c55e] w-6 text-center" style={{ fontFamily: 'Orbitron, monospace' }}>{targetReps}</span>
+            <span className="text-[11px] font-bold text-[#22c55e] w-6 text-center" style={{ fontFamily: 'var(--font-orbitron), monospace' }}>{targetReps}</span>
             <button onClick={() => setTargetReps(targetReps + 1)}
                 className="text-white/30 hover:text-white/60 w-6 h-6 sm:w-5 sm:h-5 flex items-center justify-center cursor-pointer">+</button>
             <span className="text-[8px] text-white/15 mx-1">×</span>
             <button onClick={() => setTargetSets(Math.max(1, targetSets - 1))}
                 className="text-white/30 hover:text-white/60 w-6 h-6 sm:w-5 sm:h-5 flex items-center justify-center cursor-pointer">-</button>
-            <span className="text-[11px] font-bold text-[#38bdf8] w-4 text-center" style={{ fontFamily: 'Orbitron, monospace' }}>{targetSets}</span>
+            <span className="text-[11px] font-bold text-[#38bdf8] w-4 text-center" style={{ fontFamily: 'var(--font-orbitron), monospace' }}>{targetSets}</span>
             <button onClick={() => setTargetSets(targetSets + 1)}
                 className="text-white/30 hover:text-white/60 w-6 h-6 sm:w-5 sm:h-5 flex items-center justify-center cursor-pointer">+</button>
             <span className="text-[8px] text-white/25 tracking-wider uppercase ml-1">sets</span>
@@ -598,7 +598,7 @@ export default function WorkoutPage() {
     return (
         // 100dvh (not vh): on mobile browsers 100vh includes the collapsed
         // address bar, pushing the bottom controls off-screen
-        <div className="h-[100dvh] flex flex-col overflow-hidden">
+        <div className="force-dark h-[100dvh] flex flex-col overflow-hidden bg-app text-white">
             {/* ─── Top bar — two rows on phones so Start is never pushed
                  off-screen: row 1 = back / exercise / actions, row 2 = the
                  target stepper (inline again from sm up) ─────────────────── */}
@@ -631,7 +631,7 @@ export default function WorkoutPage() {
                         >
                             <span
                                 className="text-[10px] font-black tracking-wider bg-[#22c55e]/10 text-[#22c55e] border border-[#22c55e]/20 rounded-md px-2 py-1 flex-shrink-0"
-                                style={{ fontFamily: 'Orbitron, monospace' }}
+                                style={{ fontFamily: 'var(--font-orbitron), monospace' }}
                             >
                                 {currentExercise.icon}
                             </span>
@@ -805,7 +805,7 @@ export default function WorkoutPage() {
                     indicator (and the program banner, when one is shown) */}
                 {currentExercise.repMode === 'hold' && isDetecting && (
                     <div className={`absolute ${queue ? 'bottom-[8.25rem]' : 'bottom-20'} md:bottom-6 left-1/2 -translate-x-1/2 bg-black/70 backdrop-blur-sm rounded-full px-6 py-2.5 border border-white/10`}>
-                        <span className="font-bold text-xl flex items-center gap-2" style={{ fontFamily: 'Orbitron, monospace' }}>
+                        <span className="font-bold text-xl flex items-center gap-2" style={{ fontFamily: 'var(--font-orbitron), monospace' }}>
                             <span className={`w-2.5 h-2.5 rounded-full ${isHolding ? 'bg-[#22c55e] shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-red-400'}`} />
                             <span className={isHolding ? 'text-[#22c55e]' : 'text-red-400'}>{holdTime.toFixed(1)}s</span>
                             <span className="text-white/25 text-sm">/ {targetHoldSeconds}s</span>
@@ -835,13 +835,13 @@ export default function WorkoutPage() {
                         <div className="flex items-center gap-2 text-[10px]">
                             <span className="text-white/25 uppercase tracking-wider">Form</span>
                             <span className={`font-bold ${formQuality >= 80 ? 'text-[#22c55e]' : formQuality >= 60 ? 'text-amber-400' : 'text-red-400'}`}
-                                style={{ fontFamily: 'Orbitron, monospace' }}>
+                                style={{ fontFamily: 'var(--font-orbitron), monospace' }}>
                                 {formQuality}%
                             </span>
                         </div>
                         <div className="flex items-center gap-2 text-[10px]">
                             <span className="text-white/25 uppercase tracking-wider">TUT</span>
-                            <span className="text-white/60 font-bold" style={{ fontFamily: 'Orbitron, monospace' }}>
+                            <span className="text-white/60 font-bold" style={{ fontFamily: 'var(--font-orbitron), monospace' }}>
                                 {timeUnderTension}s
                             </span>
                         </div>
@@ -867,13 +867,13 @@ export default function WorkoutPage() {
                     <div className="absolute top-3 left-3 bg-black/50 backdrop-blur-sm rounded-lg border border-white/5 px-3 py-2 z-10">
                         <div className="flex items-center gap-2 text-[10px]">
                             <span className="text-white/25 uppercase tracking-wider">Set</span>
-                            <span className="text-[#38bdf8] font-bold" style={{ fontFamily: 'Orbitron, monospace' }}>
+                            <span className="text-[#38bdf8] font-bold" style={{ fontFamily: 'var(--font-orbitron), monospace' }}>
                                 {currentSet} / {targetSets}
                             </span>
                         </div>
                         <div className="flex items-center gap-2 text-[10px] mt-1">
                             <span className="text-white/25 uppercase tracking-wider">Target</span>
-                            <span className="text-[#22c55e] font-bold" style={{ fontFamily: 'Orbitron, monospace' }}>
+                            <span className="text-[#22c55e] font-bold" style={{ fontFamily: 'var(--font-orbitron), monospace' }}>
                                 {targetReps} reps
                             </span>
                         </div>

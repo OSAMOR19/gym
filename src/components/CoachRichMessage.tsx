@@ -67,23 +67,23 @@ export default function CoachRichMessage({ content, onStartExercises, onNavigate
                         <button
                             key={i}
                             onClick={() => onStartExercises([block.id])}
-                            className="w-64 max-w-full flex items-center gap-3 rounded-xl bg-black/30 border border-white/10 hover:border-[#22c55e]/40 p-2 text-left transition-all cursor-pointer group"
+                            className="w-64 max-w-full flex items-center gap-3 rounded-xl bg-ink/5 border border-ink/10 hover:border-accent/40 p-2 text-left transition-all cursor-pointer group"
                         >
                             {gif ? (
                                 // eslint-disable-next-line @next/next/no-img-element
                                 <img src={gif} alt="" className="w-12 h-12 rounded-lg object-cover bg-white flex-shrink-0" loading="lazy" />
                             ) : (
-                                <span className="w-12 h-12 rounded-lg bg-[#22c55e]/15 text-[#22c55e] text-xs font-black flex items-center justify-center flex-shrink-0">
+                                <span className="w-12 h-12 rounded-lg bg-accent/15 text-accent text-xs font-black flex items-center justify-center flex-shrink-0">
                                     {cfg.icon}
                                 </span>
                             )}
                             <span className="flex-1 min-w-0">
-                                <span className="block text-[13px] font-semibold text-white truncate">{cfg.name}</span>
-                                <span className="block text-[10px] text-white/30 truncate">
+                                <span className="block text-[13px] font-semibold text-ink truncate">{cfg.name}</span>
+                                <span className="block text-[10px] text-ink/30 truncate">
                                     {cfg.categoryLabel ?? cfg.category}
                                 </span>
                             </span>
-                            <span className="flex-shrink-0 text-[11px] font-bold text-[#22c55e] opacity-80 group-hover:opacity-100 pr-1">
+                            <span className="flex-shrink-0 text-[11px] font-bold text-accent opacity-80 group-hover:opacity-100 pr-1">
                                 Start →
                             </span>
                         </button>
@@ -96,13 +96,13 @@ export default function CoachRichMessage({ content, onStartExercises, onNavigate
                         <button
                             key={i}
                             onClick={() => onNavigate(`/programs/${program.id}`)}
-                            className="w-64 max-w-full flex items-center gap-3 rounded-xl bg-black/30 border border-white/10 hover:border-white/25 p-2 text-left transition-all cursor-pointer group"
+                            className="w-64 max-w-full flex items-center gap-3 rounded-xl bg-ink/5 border border-ink/10 hover:border-ink/25 p-2 text-left transition-all cursor-pointer group"
                         >
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={program.image} alt="" className="w-12 h-12 rounded-lg object-cover flex-shrink-0" loading="lazy" />
                             <span className="flex-1 min-w-0">
-                                <span className="block text-[13px] font-semibold text-white truncate">{program.name}</span>
-                                <span className="block text-[10px] text-white/30 truncate">
+                                <span className="block text-[13px] font-semibold text-ink truncate">{program.name}</span>
+                                <span className="block text-[10px] text-ink/30 truncate">
                                     {LEVEL_LABELS[program.level]} · {program.durationWeeks} weeks
                                 </span>
                             </span>
@@ -119,7 +119,7 @@ export default function CoachRichMessage({ content, onStartExercises, onNavigate
                         {block.ids.map((id) => {
                             const food = FOOD_LIBRARY[id];
                             return (
-                                <div key={id} className="relative rounded-xl overflow-hidden border border-white/10">
+                                <div key={id} className="relative rounded-xl overflow-hidden border border-ink/10">
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
                                     <img src={food.image} alt={food.name} className="w-full h-20 object-cover" loading="lazy" />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
@@ -137,7 +137,7 @@ export default function CoachRichMessage({ content, onStartExercises, onNavigate
             {allExerciseIds.length > 1 && (
                 <button
                     onClick={() => onStartExercises(allExerciseIds)}
-                    className="w-64 max-w-full py-2.5 rounded-xl bg-[#22c55e] text-black text-[13px] font-bold hover:bg-[#16a34a] transition-all cursor-pointer"
+                    className="w-64 max-w-full py-2.5 rounded-xl bg-accent text-black text-[13px] font-bold hover:bg-accent-strong transition-all cursor-pointer"
                 >
                     Start all {allExerciseIds.length} as a workout →
                 </button>

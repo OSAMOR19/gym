@@ -10,7 +10,7 @@ export default function Skeleton({ className = '' }: { className?: string }) {
     return (
         <div
             aria-hidden="true"
-            className={`animate-pulse bg-white/[0.04] border border-white/5 ${className}`}
+            className={`animate-pulse bg-ink/[0.04] border border-ink/5 ${className}`}
         />
     );
 }

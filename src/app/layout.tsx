@@ -1,8 +1,13 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Orbitron } from "next/font/google";
 import { AuthProvider } from "../lib/auth";
+import { ThemeProvider } from "../lib/theme";
 import { ToastProvider } from "../components/Toast";
 import "./globals.css";
+
+// Runs before first paint: stamps the saved theme + accent onto <html> so
+// there is no flash of the wrong theme. Keys mirror src/lib/theme.tsx.
+const THEME_BOOT_SCRIPT = `try{var e=document.documentElement,t=localStorage.getItem('irontrack_theme'),a=localStorage.getItem('irontrack_accent');e.dataset.theme=t==='light'?'light':'dark';if(a&&/^(green|pink|blue|purple|orange)$/.test(a))e.dataset.accent=a;}catch(_){}`;
 
 const inter = Inter({
   variable: "--font-inter",
@@ -54,15 +59,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    // suppressHydrationWarning: the boot script may legitimately change
+    // data-theme/data-accent before React hydrates.
+    <html lang="en" data-theme="dark" suppressHydrationWarning>
       <body
-        className={`${inter.variable} ${orbitron.variable} antialiased bg-[#0f0f0f] text-white`}
+        className={`${inter.variable} ${orbitron.variable} antialiased bg-app text-ink`}
       >
-        <AuthProvider>
-          <ToastProvider>
-            {children}
-          </ToastProvider>
-        </AuthProvider>
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
+        <ThemeProvider>
+          <AuthProvider>
+            <ToastProvider>
+              {children}
+            </ToastProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

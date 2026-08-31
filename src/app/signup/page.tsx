@@ -64,22 +64,22 @@ export default function SignupPage() {
         return (
             <AuthLayout>
                 <div className="text-center py-8">
-                    <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-[#22c55e]/10 border border-[#22c55e]/25 flex items-center justify-center">
-                        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round">
+                    <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-accent/10 border border-accent/25 flex items-center justify-center">
+                        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-accent" strokeWidth="2" strokeLinecap="round">
                             <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
                             <polyline points="22,6 12,13 2,6" />
                         </svg>
                     </div>
-                    <h2 className="text-2xl font-bold text-white mb-2">Confirm your email</h2>
-                    <p className="text-white/40 text-sm mb-1">We sent a confirmation link to</p>
-                    <p className="text-[#22c55e] font-medium mb-6">{email}</p>
-                    <p className="text-white/30 text-xs max-w-xs mx-auto mb-8">
+                    <h2 className="text-2xl font-bold text-ink mb-2">Confirm your email</h2>
+                    <p className="text-ink/40 text-sm mb-1">We sent a confirmation link to</p>
+                    <p className="text-accent font-medium mb-6">{email}</p>
+                    <p className="text-ink/30 text-xs max-w-xs mx-auto mb-8">
                         Click the link in that email to activate your account, then sign in.
                         For best results, open it on this device.
                     </p>
                     <Link
                         href="/login"
-                        className="inline-block px-6 py-3 rounded-xl bg-[#22c55e] text-black font-bold hover:bg-[#22c55e]/90 transition-all"
+                        className="inline-block px-6 py-3 rounded-xl bg-accent text-black font-bold hover:bg-accent/90 transition-all"
                     >
                         Go to Sign In
                     </Link>
@@ -90,13 +90,13 @@ export default function SignupPage() {
 
     return (
         <AuthLayout>
-            <h2 className="text-2xl font-bold text-white mb-1">Create Account</h2>
-            <p className="text-white/30 text-sm mb-8">Start your fitness journey with IronTrack</p>
+            <h2 className="text-2xl font-bold text-ink mb-1">Create Account</h2>
+            <p className="text-ink/30 text-sm mb-8">Start your fitness journey with IronTrack</p>
 
             {/* Google OAuth */}
             <button
                 onClick={handleGoogleSignUp}
-                className="w-full flex items-center justify-center gap-3 py-3 rounded-xl bg-white/[0.06] border border-white/10 text-white/80 font-medium hover:bg-white/[0.1] transition-all cursor-pointer mb-6"
+                className="w-full flex items-center justify-center gap-3 py-3 rounded-xl bg-ink/[0.06] border border-ink/10 text-ink/80 font-medium hover:bg-ink/[0.1] transition-all cursor-pointer mb-6"
             >
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
                     <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4" />
@@ -109,48 +109,48 @@ export default function SignupPage() {
 
             {/* Divider */}
             <div className="flex items-center gap-4 mb-6">
-                <div className="flex-1 h-px bg-white/10" />
-                <span className="text-xs text-white/20 tracking-wider uppercase">Or continue with email</span>
-                <div className="flex-1 h-px bg-white/10" />
+                <div className="flex-1 h-px bg-ink/10" />
+                <span className="text-xs text-ink/20 tracking-wider uppercase">Or continue with email</span>
+                <div className="flex-1 h-px bg-ink/10" />
             </div>
 
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                    <label className="text-xs text-white/40 tracking-wider uppercase mb-1.5 block">Full Name</label>
+                    <label className="text-xs text-ink/40 tracking-wider uppercase mb-1.5 block">Full Name</label>
                     <div className="relative">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-ink/20">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
                         </span>
                         <input type="text" value={name} onChange={(e) => setName(e.target.value)} required
-                            className="w-full pl-11 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/20 focus:outline-none focus:border-[#22c55e]/40 transition-all"
+                            className="w-full pl-11 pr-4 py-3 rounded-xl bg-ink/5 border border-ink/10 text-ink placeholder-ink/20 focus:outline-none focus:border-accent/40 transition-all"
                             placeholder="John Doe" />
                     </div>
                 </div>
 
                 <div>
-                    <label className="text-xs text-white/40 tracking-wider uppercase mb-1.5 block">Email</label>
+                    <label className="text-xs text-ink/40 tracking-wider uppercase mb-1.5 block">Email</label>
                     <div className="relative">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-ink/20">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" /></svg>
                         </span>
                         <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required
-                            className="w-full pl-11 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/20 focus:outline-none focus:border-[#22c55e]/40 transition-all"
+                            className="w-full pl-11 pr-4 py-3 rounded-xl bg-ink/5 border border-ink/10 text-ink placeholder-ink/20 focus:outline-none focus:border-accent/40 transition-all"
                             placeholder="you@example.com" />
                     </div>
                 </div>
 
                 <div>
-                    <label className="text-xs text-white/40 tracking-wider uppercase mb-1.5 block">Password</label>
+                    <label className="text-xs text-ink/40 tracking-wider uppercase mb-1.5 block">Password</label>
                     <div className="relative">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-ink/20">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0110 0v4" /></svg>
                         </span>
                         <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} required
-                            className="w-full pl-11 pr-12 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/20 focus:outline-none focus:border-[#22c55e]/40 transition-all"
+                            className="w-full pl-11 pr-12 py-3 rounded-xl bg-ink/5 border border-ink/10 text-ink placeholder-ink/20 focus:outline-none focus:border-accent/40 transition-all"
                             placeholder="Min 6 characters" />
                         <button type="button" onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-4 top-1/2 -translate-y-1/2 text-white/20 hover:text-white/40 transition-colors cursor-pointer">
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-ink/20 hover:text-ink/40 transition-colors cursor-pointer">
                             {showPassword ? (
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
                             ) : (
@@ -161,13 +161,13 @@ export default function SignupPage() {
                 </div>
 
                 <div>
-                    <label className="text-xs text-white/40 tracking-wider uppercase mb-1.5 block">Confirm Password</label>
+                    <label className="text-xs text-ink/40 tracking-wider uppercase mb-1.5 block">Confirm Password</label>
                     <div className="relative">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-ink/20">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0110 0v4" /></svg>
                         </span>
                         <input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} required
-                            className="w-full pl-11 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/20 focus:outline-none focus:border-[#22c55e]/40 transition-all"
+                            className="w-full pl-11 pr-4 py-3 rounded-xl bg-ink/5 border border-ink/10 text-ink placeholder-ink/20 focus:outline-none focus:border-accent/40 transition-all"
                             placeholder="••••••" />
                     </div>
                 </div>
@@ -177,14 +177,14 @@ export default function SignupPage() {
                 )}
 
                 <button type="submit" disabled={loading}
-                    className="w-full py-3 rounded-xl bg-[#22c55e] text-black font-bold hover:bg-[#22c55e]/90 shadow-[0_0_25px_rgba(34,197,94,0.3)] transition-all cursor-pointer disabled:opacity-50">
+                    className="w-full py-3 rounded-xl bg-accent text-black font-bold hover:bg-accent/90 shadow-[0_0_25px_rgba(var(--accent-glow),0.3)] transition-all cursor-pointer disabled:opacity-50">
                     {loading ? 'Creating account...' : 'Create Account'}
                 </button>
             </form>
 
-            <p className="mt-6 text-center text-sm text-white/20">
+            <p className="mt-6 text-center text-sm text-ink/20">
                 Already have an account?{' '}
-                <Link href="/login" className="text-[#22c55e] font-medium hover:underline">Sign in</Link>
+                <Link href="/login" className="text-accent font-medium hover:underline">Sign in</Link>
             </p>
         </AuthLayout>
     );

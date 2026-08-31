@@ -1,7 +1,8 @@
 /**
  * Sidebar — Fully collapsible. Collapsed = thin icon strip. Expanded = full nav.
  * State persisted in localStorage. Toggle button always visible.
- * Mobile: bottom nav (unchanged).
+ * Mobile: bottom nav (unchanged). Notifications live in the desktop sidebar
+ * only — on phones the bell sits in the shared top bar.
  */
 
 'use client';
@@ -10,10 +11,14 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '../lib/auth';
+import BrandLogo from './BrandLogo';
 
 function NavIcon({ name, active }: { name: string; active: boolean }) {
-    const stroke = active ? '#22c55e' : 'currentColor';
-    const props = { width: 20, height: 20, viewBox: '0 0 24 24', fill: 'none', stroke, strokeWidth: 1.5, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
+    const props = {
+        width: 20, height: 20, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor',
+        strokeWidth: 1.5, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const,
+        style: active ? { stroke: 'var(--accent)' } : undefined,
+    };
 
     switch (name) {
         case 'dashboard':
@@ -26,6 +31,8 @@ function NavIcon({ name, active }: { name: string; active: boolean }) {
             return <svg {...props}><path d="M20.4 12.6a5.5 5.5 0 00-8.4-7 5.5 5.5 0 00-8.4 7L12 21l4.2-4.2" /><polyline points="7,12 10,12 12,8 14,15 16,12 21,12" /></svg>;
         case 'progress':
             return <svg {...props}><polyline points="22,12 18,12 15,21 9,3 6,12 2,12" /></svg>;
+        case 'notifications':
+            return <svg {...props}><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 01-3.46 0" /></svg>;
         case 'profile':
             return <svg {...props}><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>;
         default:
@@ -39,10 +46,13 @@ const NAV_ITEMS = [
     { href: '/workout', label: 'Workout', iconKey: 'workout' },
     { href: '/cardio', label: 'Cardio', iconKey: 'cardio' },
     { href: '/progress', label: 'Progress', iconKey: 'progress' },
+    // Desktop-only: the mobile bottom pill stays at 6 icons — the bell
+    // lives in the mobile top bar instead.
+    { href: '/notifications', label: 'Notifications', iconKey: 'notifications', desktopOnly: true },
     { href: '/profile', label: 'Profile', iconKey: 'profile' },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ unseenNotifications = 0 }: { unseenNotifications?: number }) {
     const pathname = usePathname();
     const { user, logout } = useAuth();
     const [collapsed, setCollapsed] = useState(true);
@@ -66,28 +76,21 @@ export default function Sidebar() {
             {/* ─── Desktop Sidebar — collapsible ──────────────────────────── */}
             <aside
                 className={`
-                    hidden md:flex fixed left-0 top-0 bottom-0 flex-col bg-[#0a0a0a] border-r border-white/5 z-40
+                    hidden md:flex fixed left-0 top-0 bottom-0 flex-col bg-panel border-r border-ink/5 z-40
                     transition-all duration-300
                     ${collapsed ? 'w-[60px]' : 'w-56'}
                 `}
             >
                 {/* Logo + Toggle */}
-                <div className={`flex items-center border-b border-white/5 ${collapsed ? 'justify-center py-4' : 'justify-between px-4 py-4'}`}>
+                <div className={`flex items-center border-b border-ink/5 ${collapsed ? 'justify-center py-4' : 'justify-between px-4 py-4'}`}>
                     {!collapsed && (
-                        <Link href="/dashboard" className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-lg bg-[#22c55e] flex items-center justify-center shadow-[0_0_15px_rgba(34,197,94,0.25)]">
-                                <svg className="w-4 h-4 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                </svg>
-                            </div>
-                            <span className="text-sm font-bold tracking-wider" style={{ fontFamily: 'Orbitron, sans-serif' }}>
-                                IRON<span className="text-[#22c55e]">TRACK</span>
-                            </span>
+                        <Link href="/dashboard" aria-label="IronTrack home">
+                            <BrandLogo size="sm" />
                         </Link>
                     )}
                     <button
                         onClick={toggle}
-                        className="w-8 h-8 flex items-center justify-center rounded-lg text-white/25 hover:text-white/50 hover:bg-white/5 transition-all cursor-pointer"
+                        className="w-8 h-8 flex items-center justify-center rounded-lg text-ink/25 hover:text-ink/50 hover:bg-ink/5 transition-all cursor-pointer"
                         title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                     >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -104,42 +107,53 @@ export default function Sidebar() {
                 <nav className="flex-1 py-3 space-y-0.5">
                     {NAV_ITEMS.map((item) => {
                         const isActive = pathname.startsWith(item.href);
+                        const showBadge = item.iconKey === 'notifications' && unseenNotifications > 0;
                         return (
                             <Link
                                 key={item.href}
                                 href={item.href}
                                 title={collapsed ? item.label : undefined}
                                 className={`
-                                    flex items-center gap-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
+                                    relative flex items-center gap-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
                                     ${collapsed ? 'justify-center mx-2 px-0' : 'mx-2 px-3'}
                                     ${isActive
-                                        ? 'bg-[#22c55e]/10 text-[#22c55e] shadow-[0_0_12px_rgba(34,197,94,0.08)]'
-                                        : 'text-white/30 hover:text-white/60 hover:bg-white/5'
+                                        ? 'bg-accent/10 text-accent shadow-[0_0_12px_rgba(var(--accent-glow),0.08)]'
+                                        : 'text-ink/30 hover:text-ink/60 hover:bg-ink/5'
                                     }
                                 `}
                             >
-                                <NavIcon name={item.iconKey} active={isActive} />
-                                {!collapsed && <span>{item.label}</span>}
+                                <span className="relative">
+                                    <NavIcon name={item.iconKey} active={isActive} />
+                                    {showBadge && collapsed && (
+                                        <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-accent" aria-hidden="true" />
+                                    )}
+                                </span>
+                                {!collapsed && <span className="flex-1">{item.label}</span>}
+                                {!collapsed && showBadge && (
+                                    <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-accent text-black text-[10px] font-bold flex items-center justify-center">
+                                        {unseenNotifications > 9 ? '9+' : unseenNotifications}
+                                    </span>
+                                )}
                             </Link>
                         );
                     })}
                 </nav>
 
                 {/* User + Logout */}
-                <div className={`border-t border-white/5 py-3 ${collapsed ? 'px-2' : 'px-3'}`}>
+                <div className={`border-t border-ink/5 py-3 ${collapsed ? 'px-2' : 'px-3'}`}>
                     {!collapsed && (
                         <div className="flex items-center gap-2.5 mb-2 px-1">
                             {user?.avatarUrl ? (
                                 // eslint-disable-next-line @next/next/no-img-element
                                 <img src={user.avatarUrl} alt="" className="w-7 h-7 rounded-full object-cover flex-shrink-0" />
                             ) : (
-                                <div className="w-7 h-7 rounded-full bg-[#22c55e]/20 flex items-center justify-center text-[#22c55e] text-xs font-bold flex-shrink-0">
+                                <div className="w-7 h-7 rounded-full bg-accent/20 flex items-center justify-center text-accent text-xs font-bold flex-shrink-0">
                                     {user?.name?.charAt(0).toUpperCase() || '?'}
                                 </div>
                             )}
                             <div className="min-w-0">
-                                <p className="text-xs font-medium text-white/60 truncate">{user?.name}</p>
-                                <p className="text-[10px] text-white/20 truncate">{user?.email}</p>
+                                <p className="text-xs font-medium text-ink/60 truncate">{user?.name}</p>
+                                <p className="text-[10px] text-ink/20 truncate">{user?.email}</p>
                             </div>
                         </div>
                     )}
@@ -147,7 +161,7 @@ export default function Sidebar() {
                         onClick={logout}
                         title={collapsed ? 'Sign Out' : undefined}
                         className={`
-                            w-full text-xs text-white/20 hover:text-red-400 transition-colors py-2 cursor-pointer flex items-center gap-2
+                            w-full text-xs text-ink/20 hover:text-red-400 transition-colors py-2 cursor-pointer flex items-center gap-2
                             ${collapsed ? 'justify-center' : 'px-1'}
                         `}
                     >
@@ -168,7 +182,7 @@ export default function Sidebar() {
                 {/* Icons only — the glyphs are self-explanatory and labels
                     made the pill feel crowded; names stay as aria-labels */}
                 <div className="flex items-center justify-around px-2 py-2">
-                    {NAV_ITEMS.map((item) => {
+                    {NAV_ITEMS.filter((item) => !item.desktopOnly).map((item) => {
                         const isActive = pathname.startsWith(item.href);
                         return (
                             <Link
@@ -180,8 +194,8 @@ export default function Sidebar() {
                                     flex items-center justify-center w-12 h-11 rounded-2xl
                                     transition-all duration-200
                                     ${isActive
-                                        ? 'text-[#22c55e] bg-white/[0.08] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]'
-                                        : 'text-white/35 hover:text-white/60'}
+                                        ? 'text-accent bg-ink/[0.08] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]'
+                                        : 'text-ink/35 hover:text-ink/60'}
                                 `}
                             >
                                 <NavIcon name={item.iconKey} active={isActive} />

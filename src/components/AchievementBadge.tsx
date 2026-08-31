@@ -7,18 +7,20 @@
 import { Badge } from '../lib/gamification';
 
 function BadgeIcon({ iconKey, earned }: { iconKey: string; earned: boolean }) {
-    const color = earned ? '#22c55e' : 'rgba(255,255,255,0.15)';
-    const props = { width: 24, height: 24, viewBox: '0 0 24 24', fill: 'none', stroke: color, strokeWidth: 1.5, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
+    // var() only resolves via CSS `color`, never SVG presentation attributes,
+    // so paint with currentColor and set the color in style.
+    const color = earned ? 'var(--accent)' : 'rgba(128,128,128,0.35)';
+    const props = { width: 24, height: 24, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.5, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, style: { color } };
 
     switch (iconKey) {
         case 'target':
-            return <svg {...props}><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" fill={earned ? color : 'none'} /></svg>;
+            return <svg {...props}><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" fill={earned ? 'currentColor' : 'none'} /></svg>;
         case 'trophy':
             return <svg {...props}><path d="M6 9H4.5a2.5 2.5 0 010-5H6" /><path d="M18 9h1.5a2.5 2.5 0 000-5H18" /><path d="M4 22h16" /><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22" /><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22" /><path d="M18 2H6v7a6 6 0 006 6 6 6 0 006-6V2z" /></svg>;
         case 'medal':
             return <svg {...props}><path d="M7.21 15L2.66 7.14a2 2 0 01.13-2.2L4.4 2.8A2 2 0 016 2h12a2 2 0 011.6.8l1.6 2.14a2 2 0 01.14 2.2L16.79 15" /><path d="M11 12L5.12 2.2" /><path d="M13 12l5.88-9.8" /><circle cx="12" cy="17" r="5" /><path d="M12 14v6" /><path d="M9 17h6" /></svg>;
         case 'century':
-            return <svg {...props}><rect x="3" y="3" width="18" height="18" rx="2" /><text x="12" y="16" textAnchor="middle" fontSize="10" fontWeight="bold" fill={color} stroke="none" fontFamily="Orbitron, monospace">100</text></svg>;
+            return <svg {...props}><rect x="3" y="3" width="18" height="18" rx="2" /><text x="12" y="16" textAnchor="middle" fontSize="10" fontWeight="bold" fill="currentColor" stroke="none" style={{ fontFamily: 'var(--font-orbitron), monospace' }}>100</text></svg>;
         case 'gear':
             return <svg {...props}><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" /></svg>;
         case 'crown':
@@ -49,8 +51,8 @@ export default function AchievementBadge({ badge, earned }: AchievementBadgeProp
             className={`
                 flex items-center gap-3 p-3 rounded-lg border transition-all duration-300
                 ${earned
-                    ? 'border-[#22c55e]/15 bg-[#22c55e]/[0.03]'
-                    : 'border-white/5 opacity-35'
+                    ? 'border-accent/15 bg-accent/[0.03]'
+                    : 'border-ink/5 opacity-35'
                 }
             `}
         >
@@ -58,8 +60,8 @@ export default function AchievementBadge({ badge, earned }: AchievementBadgeProp
                 <BadgeIcon iconKey={badge.icon} earned={earned} />
             </div>
             <div className="min-w-0">
-                <h4 className="text-xs font-bold text-white/80 truncate">{badge.name}</h4>
-                <p className="text-[10px] text-white/25 leading-tight truncate">{badge.description}</p>
+                <h4 className="text-xs font-bold text-ink/80 truncate">{badge.name}</h4>
+                <p className="text-[10px] text-ink/25 leading-tight truncate">{badge.description}</p>
             </div>
         </div>
     );

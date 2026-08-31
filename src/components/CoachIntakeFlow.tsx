@@ -151,11 +151,11 @@ export default function CoachIntakeFlow({ onPlanChosen }: CoachIntakeFlowProps) 
     return (
         <>
             {/* Progress dots */}
-            <div className="flex-none flex items-center justify-center gap-1 py-2 border-b border-white/5">
+            <div className="flex-none flex items-center justify-center gap-1 py-2 border-b border-ink/5">
                 {INTAKE_STEPS.map((s, i) => (
                     <span
                         key={s.id}
-                        className={`w-1.5 h-1.5 rounded-full transition-colors ${i < stepIndex ? 'bg-[#22c55e]' : i === stepIndex && !rec ? 'bg-white/40' : 'bg-white/10'}`}
+                        className={`w-1.5 h-1.5 rounded-full transition-colors ${i < stepIndex ? 'bg-accent' : i === stepIndex && !rec ? 'bg-ink/40' : 'bg-ink/10'}`}
                     />
                 ))}
             </div>
@@ -168,8 +168,8 @@ export default function CoachIntakeFlow({ onPlanChosen }: CoachIntakeFlowProps) 
                             className={`
                                 max-w-[80%] rounded-2xl px-3.5 py-2.5 text-[13px] leading-relaxed animate-fade-in
                                 ${m.from === 'user'
-                                    ? 'bg-[#22c55e]/15 text-[#a7f3c0] border border-[#22c55e]/20 rounded-br-md'
-                                    : 'bg-white/[0.05] text-white/80 border border-white/5 rounded-bl-md'}
+                                    ? 'bg-accent/15 text-ink/90 border border-accent/20 rounded-br-md'
+                                    : 'bg-ink/[0.05] text-ink/80 border border-ink/5 rounded-bl-md'}
                             `}
                         >
                             {m.text}
@@ -179,11 +179,11 @@ export default function CoachIntakeFlow({ onPlanChosen }: CoachIntakeFlowProps) 
 
                 {typing && (
                     <div className="flex justify-start">
-                        <div className="bg-white/[0.05] border border-white/5 rounded-2xl rounded-bl-md px-4 py-3 flex gap-1 items-center">
+                        <div className="bg-ink/[0.05] border border-ink/5 rounded-2xl rounded-bl-md px-4 py-3 flex gap-1 items-center">
                             {[0, 1, 2].map((i) => (
                                 <span
                                     key={i}
-                                    className="w-1.5 h-1.5 rounded-full bg-white/30 animate-pulse"
+                                    className="w-1.5 h-1.5 rounded-full bg-ink/30 animate-pulse"
                                     style={{ animationDelay: `${i * 180}ms` }}
                                 />
                             ))}
@@ -203,12 +203,12 @@ export default function CoachIntakeFlow({ onPlanChosen }: CoachIntakeFlowProps) 
                                     <p className="text-[9px] font-bold tracking-widest uppercase mb-0.5" style={{ color: rec.program.color }}>
                                         {LEVEL_LABELS[rec.program.level]} · {rec.program.weeks.length}w · {rec.program.weeks[0]?.days.length ?? 3} days/week
                                     </p>
-                                    <h3 className="text-lg font-bold text-white leading-tight">{rec.program.name}</h3>
+                                    <h3 className="text-lg font-bold text-ink leading-tight">{rec.program.name}</h3>
                                 </div>
                             </div>
                             <div className="p-3.5 space-y-1.5">
                                 {rec.reasons.map((r, i) => (
-                                    <div key={i} className="flex items-start gap-2 text-[11.5px] text-white/60">
+                                    <div key={i} className="flex items-start gap-2 text-[11.5px] text-ink/60">
                                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={rec.program.color} strokeWidth="2.5" strokeLinecap="round" className="flex-shrink-0 mt-0.5">
                                             <polyline points="20,6 9,17 4,12" />
                                         </svg>
@@ -228,23 +228,23 @@ export default function CoachIntakeFlow({ onPlanChosen }: CoachIntakeFlowProps) 
                         {rec.alternative && (
                             <button
                                 onClick={() => choosePlan(rec.alternative!.id)}
-                                className="w-full flex items-center justify-between rounded-xl border border-white/8 hover:border-white/20 px-3.5 py-2.5 transition-all cursor-pointer text-left"
+                                className="w-full flex items-center justify-between rounded-xl border border-ink/8 hover:border-ink/20 px-3.5 py-2.5 transition-all cursor-pointer text-left"
                             >
                                 <div>
-                                    <p className="text-[10px] text-white/30">{rec.alternativeReason}</p>
-                                    <p className="text-[13px] font-semibold text-white/75">{rec.alternative.name}</p>
+                                    <p className="text-[10px] text-ink/30">{rec.alternativeReason}</p>
+                                    <p className="text-[13px] font-semibold text-ink/75">{rec.alternative.name}</p>
                                 </div>
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="text-white/25">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="text-ink/25">
                                     <polyline points="9,18 15,12 9,6" />
                                 </svg>
                             </button>
                         )}
 
-                        <p className="text-[9.5px] text-white/20 leading-relaxed px-1">{SAFETY_NOTE}</p>
+                        <p className="text-[9.5px] text-ink/20 leading-relaxed px-1">{SAFETY_NOTE}</p>
 
                         <button
                             onClick={restart}
-                            className="text-[11px] text-white/30 hover:text-white/60 transition-colors cursor-pointer px-1"
+                            className="text-[11px] text-ink/30 hover:text-ink/60 transition-colors cursor-pointer px-1"
                         >
                             ↺ Retake the questions
                         </button>
@@ -255,7 +255,7 @@ export default function CoachIntakeFlow({ onPlanChosen }: CoachIntakeFlowProps) 
             {/* Quick-reply chips */}
             {showChips && step && (
                 <div
-                    className="flex-none border-t border-white/5 px-4 py-3.5"
+                    className="flex-none border-t border-ink/5 px-4 py-3.5"
                     style={{ paddingBottom: 'max(0.875rem, env(safe-area-inset-bottom))' }}
                 >
                     <div className="flex flex-wrap gap-2 justify-end">
@@ -273,8 +273,8 @@ export default function CoachIntakeFlow({ onPlanChosen }: CoachIntakeFlowProps) 
                                     className={`
                                         px-3.5 py-2 rounded-full text-[12px] font-medium border transition-all cursor-pointer
                                         ${picked
-                                            ? 'bg-[#22c55e]/15 text-[#22c55e] border-[#22c55e]/40'
-                                            : 'text-white/60 border-white/10 hover:border-[#22c55e]/40 hover:text-white'}
+                                            ? 'bg-accent/15 text-accent border-accent/40'
+                                            : 'text-ink/60 border-ink/10 hover:border-accent/40 hover:text-ink'}
                                     `}
                                 >
                                     {opt.label}
@@ -284,7 +284,7 @@ export default function CoachIntakeFlow({ onPlanChosen }: CoachIntakeFlowProps) 
                         {step.multi && multiPicks.length > 0 && (
                             <button
                                 onClick={() => confirmMulti(step)}
-                                className="px-3.5 py-2 rounded-full text-[12px] font-bold bg-[#22c55e] text-black transition-all cursor-pointer"
+                                className="px-3.5 py-2 rounded-full text-[12px] font-bold bg-accent text-black transition-all cursor-pointer"
                             >
                                 That&apos;s everything →
                             </button>

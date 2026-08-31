@@ -17,9 +17,11 @@ import EditProfileModal from '../../../components/EditProfileModal';
 import InstallPrompt from '../../../components/InstallPrompt';
 import Skeleton from '../../../components/Skeleton';
 import { openCoachChat } from '../../../components/CoachChat';
+import { useTheme, ACCENTS } from '../../../lib/theme';
 
 export default function ProfilePage() {
     const { user, logout } = useAuth();
+    const { mode, accent, setMode, setAccent } = useTheme();
     const [stats, setStats] = useState<UserStats | null>(null);
     const [plan, setPlan] = useState<CoachPlan | null>(null);
     const [editing, setEditing] = useState(false);
@@ -51,12 +53,12 @@ export default function ProfilePage() {
             <InstallPrompt />
 
             {/* ─── Profile header ───────────────────────────────────────────── */}
-            <div className="relative border border-white/5 rounded-xl p-6 md:p-8 mb-6 overflow-hidden">
+            <div className="relative border border-ink/5 rounded-xl p-6 md:p-8 mb-6 overflow-hidden">
                 {/* Ghost level */}
                 <div className="absolute top-2 right-6 pointer-events-none select-none">
                     <span
-                        className="text-[160px] font-black leading-none text-white/[0.015]"
-                        style={{ fontFamily: 'Orbitron, monospace' }}
+                        className="text-[160px] font-black leading-none text-ink/[0.015]"
+                        style={{ fontFamily: 'var(--font-orbitron), monospace' }}
                     >
                         {stats?.level || 1}
                     </span>
@@ -75,17 +77,17 @@ export default function ProfilePage() {
                             <img
                                 src={user.avatarUrl}
                                 alt=""
-                                className="w-16 h-16 rounded-full object-cover border border-white/10 group-hover:border-[#22c55e]/40 transition-colors"
+                                className="w-16 h-16 rounded-full object-cover border border-ink/10 group-hover:border-accent/40 transition-colors"
                             />
                         ) : (
-                            <span className="w-16 h-16 rounded-full bg-[#22c55e] flex items-center justify-center shadow-[0_0_20px_rgba(34,197,94,0.15)]">
-                                <span className="text-black text-xl font-black" style={{ fontFamily: 'Orbitron, monospace' }}>
+                            <span className="w-16 h-16 rounded-full bg-accent flex items-center justify-center shadow-[0_0_20px_rgba(var(--accent-glow),0.15)]">
+                                <span className="text-black text-xl font-black" style={{ fontFamily: 'var(--font-orbitron), monospace' }}>
                                     {user?.name?.charAt(0).toUpperCase()}
                                 </span>
                             </span>
                         )}
                         {/* Camera chip — the edit affordance */}
-                        <span className="absolute -bottom-0.5 -right-0.5 w-6 h-6 rounded-full bg-[#0f0f0f] border border-white/15 flex items-center justify-center text-white/40 group-hover:text-[#22c55e] group-hover:border-[#22c55e]/40 transition-colors">
+                        <span className="absolute -bottom-0.5 -right-0.5 w-6 h-6 rounded-full bg-app border border-ink/15 flex items-center justify-center text-ink/40 group-hover:text-accent group-hover:border-accent/40 transition-colors">
                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
                                 <circle cx="12" cy="13" r="4" />
@@ -94,9 +96,9 @@ export default function ProfilePage() {
                     </button>
 
                     <div className="flex-1">
-                        <h1 className="text-xl font-bold text-white">{user?.name}</h1>
-                        <p className="text-xs text-white/25">{user?.email}</p>
-                        <p className="text-[10px] text-white/10 mt-0.5">
+                        <h1 className="text-xl font-bold text-ink">{user?.name}</h1>
+                        <p className="text-xs text-ink/25">{user?.email}</p>
+                        <p className="text-[10px] text-ink/10 mt-0.5">
                             Member since {user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'today'}
                         </p>
                     </div>
@@ -104,10 +106,10 @@ export default function ProfilePage() {
                     {/* Training plan */}
                     <button
                         onClick={() => openCoachChat('intake')}
-                        className="hidden sm:block text-right flex-shrink-0 rounded-lg border border-white/8 hover:border-[#22c55e]/40 px-3.5 py-2 transition-all cursor-pointer"
+                        className="hidden sm:block text-right flex-shrink-0 rounded-lg border border-ink/8 hover:border-accent/40 px-3.5 py-2 transition-all cursor-pointer"
                     >
-                        <p className="text-[9px] text-white/25 tracking-widest uppercase">Training plan</p>
-                        <p className="text-xs font-semibold text-[#22c55e]">
+                        <p className="text-[9px] text-ink/25 tracking-widest uppercase">Training plan</p>
+                        <p className="text-xs font-semibold text-accent">
                             {planProgram ? planProgram.name : 'Find my plan'}
                         </p>
                     </button>
@@ -122,26 +124,26 @@ export default function ProfilePage() {
                             aria-label={`Level ${stats.level}, ${xpInfo.current} of ${xpInfo.required} XP`}
                         >
                             <svg viewBox="0 0 64 64" className="w-16 h-16 -rotate-90">
-                                <circle cx={32} cy={32} r={28} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={4.5} />
+                                <circle cx={32} cy={32} r={28} fill="none" stroke="currentColor" className="text-ink/[0.08]" strokeWidth={4.5} />
                                 <circle
-                                    cx={32} cy={32} r={28} fill="none" stroke="#22c55e" strokeWidth={4.5}
+                                    cx={32} cy={32} r={28} fill="none" stroke="currentColor" className="text-accent" strokeWidth={4.5}
                                     strokeLinecap="round"
                                     strokeDasharray={2 * Math.PI * 28}
                                     strokeDashoffset={(2 * Math.PI * 28) * (1 - xpPct / 100)}
-                                    style={{ transition: 'stroke-dashoffset 0.8s ease', filter: 'drop-shadow(0 0 5px rgba(34,197,94,0.35))' }}
+                                    style={{ transition: 'stroke-dashoffset 0.8s ease', filter: 'drop-shadow(0 0 5px rgba(var(--accent-glow),0.35))' }}
                                 />
                             </svg>
                             <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                <span className="text-lg font-black text-white leading-none" style={{ fontFamily: 'Orbitron, monospace' }}>
+                                <span className="text-lg font-black text-ink leading-none" style={{ fontFamily: 'var(--font-orbitron), monospace' }}>
                                     {stats.level}
                                 </span>
-                                <span className="text-[7px] text-white/30 tracking-widest uppercase mt-0.5">Lvl</span>
+                                <span className="text-[7px] text-ink/30 tracking-widest uppercase mt-0.5">Lvl</span>
                             </div>
                         </div>
                         <div>
-                            <p className="text-sm font-bold text-white">Level {stats.level}</p>
-                            <p className="text-[11px] text-white/30 mt-0.5">{xpInfo.current} / {xpInfo.required} XP</p>
-                            <p className="text-[10px] text-white/15 mt-0.5">
+                            <p className="text-sm font-bold text-ink">Level {stats.level}</p>
+                            <p className="text-[11px] text-ink/30 mt-0.5">{xpInfo.current} / {xpInfo.required} XP</p>
+                            <p className="text-[10px] text-ink/15 mt-0.5">
                                 {xpInfo.required - xpInfo.current} XP to Level {stats.level + 1}
                             </p>
                         </div>
@@ -168,39 +170,92 @@ export default function ProfilePage() {
             {/* ─── Stats: asymmetric columns ────────────────────────────────── */}
             {stats && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-                    <div className="border border-white/5 rounded-xl p-4">
-                        <span className="text-[10px] text-white/15 tracking-widest uppercase block">Total XP</span>
-                        <span className="text-2xl font-black text-[#22c55e]" style={{ fontFamily: 'Orbitron, monospace' }}>
+                    <div className="border border-ink/5 rounded-xl p-4">
+                        <span className="text-[10px] text-ink/15 tracking-widest uppercase block">Total XP</span>
+                        <span className="text-2xl font-black text-accent" style={{ fontFamily: 'var(--font-orbitron), monospace' }}>
                             {stats.totalXP}
                         </span>
                     </div>
-                    <div className="border border-white/5 rounded-xl p-4">
-                        <span className="text-[10px] text-white/15 tracking-widest uppercase block">Workouts</span>
-                        <span className="text-2xl font-black text-[#38bdf8]" style={{ fontFamily: 'Orbitron, monospace' }}>
+                    <div className="border border-ink/5 rounded-xl p-4">
+                        <span className="text-[10px] text-ink/15 tracking-widest uppercase block">Workouts</span>
+                        <span className="text-2xl font-black text-info" style={{ fontFamily: 'var(--font-orbitron), monospace' }}>
                             {stats.totalWorkouts}
                         </span>
                     </div>
-                    <div className="border border-white/5 rounded-xl p-4">
-                        <span className="text-[10px] text-white/15 tracking-widest uppercase block">Total Reps</span>
-                        <span className="text-2xl font-black text-[#a855f7]" style={{ fontFamily: 'Orbitron, monospace' }}>
+                    <div className="border border-ink/5 rounded-xl p-4">
+                        <span className="text-[10px] text-ink/15 tracking-widest uppercase block">Total Reps</span>
+                        <span className="text-2xl font-black text-violet" style={{ fontFamily: 'var(--font-orbitron), monospace' }}>
                             {stats.totalReps}
                         </span>
                     </div>
-                    <div className="border border-white/5 rounded-xl p-4">
+                    <div className="border border-ink/5 rounded-xl p-4">
                         <div className="flex items-center justify-between">
-                            <span className="text-[10px] text-white/15 tracking-widest uppercase">Streak</span>
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="1.5"><path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z" /></svg>
+                            <span className="text-[10px] text-ink/15 tracking-widest uppercase">Streak</span>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-warm" strokeWidth="1.5"><path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z" /></svg>
                         </div>
-                        <span className="text-2xl font-black text-[#f59e0b]" style={{ fontFamily: 'Orbitron, monospace' }}>
+                        <span className="text-2xl font-black text-warm" style={{ fontFamily: 'var(--font-orbitron), monospace' }}>
                             {stats.currentStreak}
                         </span>
                     </div>
                 </div>
             )}
 
+            {/* ─── Appearance — theme mode + accent color ───────────────────── */}
+            <div className="border border-ink/5 rounded-xl p-4 md:p-5 mb-6">
+                <h2 className="text-[10px] text-ink/15 tracking-widest uppercase mb-3">Appearance</h2>
+                <div className="grid grid-cols-2 gap-2 mb-4">
+                    {(['dark', 'light'] as const).map((m) => (
+                        <button
+                            key={m}
+                            onClick={() => setMode(m)}
+                            aria-pressed={mode === m}
+                            className={`flex items-center justify-center gap-2 py-2.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${mode === m
+                                ? 'border-accent/40 bg-accent/10 text-accent'
+                                : 'border-ink/10 text-ink/40 hover:text-ink/70 hover:border-ink/20'}`}
+                        >
+                            {m === 'dark' ? (
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+                                </svg>
+                            ) : (
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                                    <circle cx="12" cy="12" r="4" /><line x1="12" y1="2" x2="12" y2="4" /><line x1="12" y1="20" x2="12" y2="22" /><line x1="4.5" y1="4.5" x2="5.9" y2="5.9" /><line x1="18.1" y1="18.1" x2="19.5" y2="19.5" /><line x1="2" y1="12" x2="4" y2="12" /><line x1="20" y1="12" x2="22" y2="12" /><line x1="4.5" y1="19.5" x2="5.9" y2="18.1" /><line x1="18.1" y1="5.9" x2="19.5" y2="4.5" />
+                                </svg>
+                            )}
+                            {m === 'dark' ? 'Dark' : 'Light'}
+                        </button>
+                    ))}
+                </div>
+                <p className="text-[10px] text-ink/25 tracking-wide uppercase mb-2.5">Accent color</p>
+                <div className="flex items-center gap-2.5 flex-wrap">
+                    {ACCENTS.map((a) => (
+                        <button
+                            key={a.id}
+                            onClick={() => setAccent(a.id)}
+                            aria-label={`${a.label} accent`}
+                            aria-pressed={accent === a.id}
+                            title={a.label}
+                            className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${accent === a.id
+                                ? 'ring-2 ring-offset-2 ring-ink/60 ring-offset-app scale-105'
+                                : 'hover:scale-110'}`}
+                            style={{ backgroundColor: mode === 'light' ? a.light : a.dark }}
+                        >
+                            {accent === a.id && (
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                    <polyline points="20,6 9,17 4,12" />
+                                </svg>
+                            )}
+                        </button>
+                    ))}
+                </div>
+                <p className="text-[10px] text-ink/20 mt-3 leading-relaxed">
+                    The workout and cardio camera screens always keep the dark look — the overlays sit on live video.
+                </p>
+            </div>
+
             {/* ─── Achievements as horizontal list ──────────────────────────── */}
             <div className="mb-6">
-                <h2 className="text-[10px] text-white/15 tracking-widest uppercase mb-3">
+                <h2 className="text-[10px] text-ink/15 tracking-widest uppercase mb-3">
                     Achievements — {stats?.earnedBadges.length || 0}/{BADGES.length}
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -217,7 +272,7 @@ export default function ProfilePage() {
             {/* Sign Out */}
             <button
                 onClick={logout}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-white/5 text-white/20 font-medium text-sm hover:border-red-500/20 hover:text-red-400 transition-all cursor-pointer"
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-ink/5 text-ink/20 font-medium text-sm hover:border-red-500/20 hover:text-red-400 transition-all cursor-pointer"
             >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" /><polyline points="16,17 21,12 16,7" /><line x1="21" y1="12" x2="9" y2="12" />

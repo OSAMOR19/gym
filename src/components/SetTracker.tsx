@@ -47,7 +47,7 @@ export default function SetTracker({
                 </div>
 
                 {/* Text info */}
-                <div className="flex items-center gap-1.5 text-[10px] font-bold tracking-wider" style={{ fontFamily: 'Orbitron, monospace' }}>
+                <div className="flex items-center gap-1.5 text-[10px] font-bold tracking-wider" style={{ fontFamily: 'var(--font-orbitron), monospace' }}>
                     <span className="text-white/40">SET</span>
                     <span className="text-[#38bdf8]">{currentSet}</span>
                     <span className="text-white/15">/</span>

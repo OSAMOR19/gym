@@ -1,17 +1,125 @@
 @import "tailwindcss";
 
 /* ─── Theme tokens ────────────────────────────────────────────────────────── */
+/* Dark is the default look. [data-theme="light"] on <html> flips the
+   neutrals; [data-accent="…"] picks the brand color. Everything themable
+   reads ONLY these variables (via the semantic utilities mapped below), so a
+   theme switch is pure CSS — no re-render needed. */
 
 :root {
   --background: #0f0f0f;
+  --panel: #0a0a0a;
+  --surface: #1a1a1a;
+  --ink: #ffffff;
   --foreground: #ededed;
+  --accent: #22c55e;
+  --accent-strong: #16a34a;
+  --accent-glow: 34, 197, 94;
+  /* r,g,b — for rgba() glows */
+  --info: #38bdf8;
+  --violet: #a855f7;
+  --warm: #f59e0b;
   --neon-green: #22c55e;
   --electric-blue: #38bdf8;
+  color-scheme: dark;
+}
+
+/* Accent choices — dark-theme values (bright, neon) */
+:root[data-accent="pink"] {
+  --accent: #ec4899;
+  --accent-strong: #db2777;
+  --accent-glow: 236, 72, 153;
+}
+
+:root[data-accent="blue"] {
+  --accent: #38bdf8;
+  --accent-strong: #0ea5e9;
+  --accent-glow: 56, 189, 248;
+}
+
+:root[data-accent="purple"] {
+  --accent: #a855f7;
+  --accent-strong: #9333ea;
+  --accent-glow: 168, 85, 247;
+}
+
+:root[data-accent="orange"] {
+  --accent: #f97316;
+  --accent-strong: #ea580c;
+  --accent-glow: 249, 115, 22;
+}
+
+/* Light theme — flipped neutrals + deeper accent tones that hold contrast
+   on white. Two-attribute selectors below beat the single-attribute ones. */
+:root[data-theme="light"] {
+  --background: #f4f5f2;
+  --panel: #ffffff;
+  --surface: #ffffff;
+  --ink: #141a17;
+  --foreground: #252d29;
+  --accent: #16a34a;
+  --accent-strong: #15803d;
+  --accent-glow: 22, 163, 74;
+  --info: #0284c7;
+  --violet: #7c3aed;
+  --warm: #d97706;
+  color-scheme: light;
+}
+
+:root[data-theme="light"][data-accent="pink"] {
+  --accent: #db2777;
+  --accent-strong: #be185d;
+  --accent-glow: 219, 39, 119;
+}
+
+:root[data-theme="light"][data-accent="blue"] {
+  --accent: #0284c7;
+  --accent-strong: #0369a1;
+  --accent-glow: 2, 132, 199;
+}
+
+:root[data-theme="light"][data-accent="purple"] {
+  --accent: #9333ea;
+  --accent-strong: #7e22ce;
+  --accent-glow: 147, 51, 234;
+}
+
+:root[data-theme="light"][data-accent="orange"] {
+  --accent: #ea580c;
+  --accent-strong: #c2410c;
+  --accent-glow: 234, 88, 12;
+}
+
+/* The camera screens (workout / cardio) are pinned to the dark look: the
+   overlays sit on live video and the neon skeleton is brand green, so the
+   whole subtree re-pins every token regardless of the chosen theme. */
+.force-dark {
+  --background: #0f0f0f;
+  --panel: #0a0a0a;
+  --surface: #1a1a1a;
+  --ink: #ffffff;
+  --foreground: #ededed;
+  --accent: #22c55e;
+  --accent-strong: #16a34a;
+  --accent-glow: 34, 197, 94;
+  --info: #38bdf8;
+  --violet: #a855f7;
+  --warm: #f59e0b;
+  color-scheme: dark;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-app: var(--background);
+  --color-panel: var(--panel);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-info: var(--info);
+  --color-violet: var(--violet);
+  --color-warm: var(--warm);
   --color-neon-green: var(--neon-green);
   --color-electric-blue: var(--electric-blue);
   --font-sans: var(--font-inter);
@@ -27,6 +135,30 @@ body {
   overflow-x: hidden;
 }
 
+/* ─── Brand logo (designer mark, one file per theme) ─────────────────────── */
+/* Both variants are always in the DOM; CSS picks the right one so the swap
+   is instant and hydration-safe. .force-dark subtrees keep the dark mark. */
+
+.brand-logo-light {
+  display: none;
+}
+
+:root[data-theme="light"] .brand-logo-dark {
+  display: none;
+}
+
+:root[data-theme="light"] .brand-logo-light {
+  display: inline-block;
+}
+
+.force-dark .brand-logo-dark {
+  display: inline-block !important;
+}
+
+.force-dark .brand-logo-light {
+  display: none !important;
+}
+
 /* ─── Glassmorphism panel ─────────────────────────────────────────────────── */
 
 .glass-panel {
@@ -36,12 +168,25 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+:root[data-theme="light"] .glass-panel {
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(20, 26, 23, 0.08);
+  box-shadow: 0 1px 2px rgba(20, 26, 23, 0.04), 0 8px 24px rgba(20, 26, 23, 0.05);
+}
+
+.force-dark .glass-panel {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: none;
+}
+
 /* ─── Neon glow utilities ─────────────────────────────────────────────────── */
+/* Green glows follow the chosen accent; blue stays the info color. */
 
 .glow-green {
   box-shadow:
-    0 0 15px rgba(34, 197, 94, 0.2),
-    0 0 40px rgba(34, 197, 94, 0.1);
+    0 0 15px rgba(var(--accent-glow), 0.2),
+    0 0 40px rgba(var(--accent-glow), 0.1);
 }
 
 .glow-blue {
@@ -52,8 +197,8 @@ body {
 
 .text-glow-green {
   text-shadow:
-    0 0 20px rgba(34, 197, 94, 0.5),
-    0 0 40px rgba(34, 197, 94, 0.25);
+    0 0 20px rgba(var(--accent-glow), 0.5),
+    0 0 40px rgba(var(--accent-glow), 0.25);
 }
 
 .text-glow-blue {
@@ -124,6 +269,14 @@ body {
     0 12px 40px rgba(0, 0, 0, 0.55);
 }
 
+:root[data-theme="light"] .liquid-glass {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.7));
+  border: 1px solid rgba(20, 26, 23, 0.1);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 12px 40px rgba(20, 26, 23, 0.16);
+}
+
 /* ─── Coach chat ─────────────────────────────────────────────────────────── */
 
 /* Panel entrance: slides up from the button's corner with a soft spring */
@@ -181,6 +334,12 @@ body {
   background-size: 60px 60px;
 }
 
+:root[data-theme="light"] .bg-grid {
+  background-image:
+    linear-gradient(rgba(20, 26, 23, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(20, 26, 23, 0.035) 1px, transparent 1px);
+}
+
 /* ─── Scrollbar styling ───────────────────────────────────────────────────── */
 
 ::-webkit-scrollbar {
@@ -198,6 +357,14 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.2);
+}
+
+:root[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: rgba(20, 26, 23, 0.18);
+}
+
+:root[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(20, 26, 23, 0.3);
 }
 
 /* ─── Scrollbar hide utility ─────────────────────────────────────────────── */

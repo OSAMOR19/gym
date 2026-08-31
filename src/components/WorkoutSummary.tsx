@@ -23,7 +23,7 @@ function ScoreRing({ score, label, color }: { score: number; label: string; colo
                         style={{ transition: 'stroke-dashoffset 1s ease', filter: `drop-shadow(0 0 4px ${color}80)` }}
                     />
                 </svg>
-                <span className="absolute inset-0 flex items-center justify-center text-lg font-bold text-white" style={{ fontFamily: 'Orbitron, sans-serif' }}>
+                <span className="absolute inset-0 flex items-center justify-center text-lg font-bold text-white" style={{ fontFamily: 'var(--font-orbitron), sans-serif' }}>
                     {score}
                 </span>
             </div>
@@ -45,7 +45,7 @@ export default function WorkoutSummaryDisplay({ summary, xpGained, newBadges, on
             <div className="bg-[#0f0f0f] border border-white/10 rounded-2xl p-6 sm:p-8 max-w-md w-full max-h-[88dvh] overflow-y-auto">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-bold text-white" style={{ fontFamily: 'Orbitron, sans-serif' }}>
+                    <h2 className="text-xl font-bold text-white" style={{ fontFamily: 'var(--font-orbitron), sans-serif' }}>
                         WORKOUT COMPLETE
                     </h2>
                     <button onClick={onClose} className="text-white/20 hover:text-white/50 transition-colors cursor-pointer">
@@ -53,7 +53,7 @@ export default function WorkoutSummaryDisplay({ summary, xpGained, newBadges, on
                     </button>
                 </div>
 
-                <p className="text-center text-[#22c55e] font-bold text-lg mb-6" style={{ fontFamily: 'Orbitron, monospace' }}>+{xpGained} XP</p>
+                <p className="text-center text-[#22c55e] font-bold text-lg mb-6" style={{ fontFamily: 'var(--font-orbitron), monospace' }}>+{xpGained} XP</p>
 
                 {/* Score rings */}
                 <div className="flex justify-around mb-8">
@@ -65,11 +65,11 @@ export default function WorkoutSummaryDisplay({ summary, xpGained, newBadges, on
                 {/* Stats */}
                 <div className="grid grid-cols-2 gap-3 mb-6">
                     <div className="border border-white/5 rounded-lg p-3 text-center">
-                        <p className="text-2xl font-bold text-[#22c55e]" style={{ fontFamily: 'Orbitron, monospace' }}>{summary.totalReps}</p>
+                        <p className="text-2xl font-bold text-[#22c55e]" style={{ fontFamily: 'var(--font-orbitron), monospace' }}>{summary.totalReps}</p>
                         <p className="text-[10px] text-white/25 tracking-wider uppercase">Reps</p>
                     </div>
                     <div className="border border-white/5 rounded-lg p-3 text-center">
-                        <p className="text-2xl font-bold text-[#38bdf8]" style={{ fontFamily: 'Orbitron, monospace' }}>
+                        <p className="text-2xl font-bold text-[#38bdf8]" style={{ fontFamily: 'var(--font-orbitron), monospace' }}>
                             {Math.floor(summary.duration / 60)}:{(summary.duration % 60).toString().padStart(2, '0')}
                         </p>
                         <p className="text-[10px] text-white/25 tracking-wider uppercase">Duration</p>

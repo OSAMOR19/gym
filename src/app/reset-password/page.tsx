@@ -50,16 +50,16 @@ export default function ResetPasswordPage() {
 
     return (
         <AuthLayout>
-            <h2 className="text-2xl font-bold text-white mb-1">Set New Password</h2>
-            <p className="text-white/30 text-sm mb-8">
+            <h2 className="text-2xl font-bold text-ink mb-1">Set New Password</h2>
+            <p className="text-ink/30 text-sm mb-8">
                 Choose a strong password for your IronTrack account.
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                    <label className="text-xs text-white/40 tracking-wider uppercase mb-1.5 block">New Password</label>
+                    <label className="text-xs text-ink/40 tracking-wider uppercase mb-1.5 block">New Password</label>
                     <div className="relative">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-ink/20">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0110 0v4" /></svg>
                         </span>
                         <input
@@ -67,13 +67,13 @@ export default function ResetPasswordPage() {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
-                            className="w-full pl-11 pr-12 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/20 focus:outline-none focus:border-[#22c55e]/40 focus:shadow-[0_0_15px_rgba(34,197,94,0.1)] transition-all"
+                            className="w-full pl-11 pr-12 py-3 rounded-xl bg-ink/5 border border-ink/10 text-ink placeholder-ink/20 focus:outline-none focus:border-accent/40 focus:shadow-[0_0_15px_rgba(var(--accent-glow),0.1)] transition-all"
                             placeholder="Min 6 characters"
                         />
                         <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-4 top-1/2 -translate-y-1/2 text-white/20 hover:text-white/40 transition-colors cursor-pointer"
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-ink/20 hover:text-ink/40 transition-colors cursor-pointer"
                         >
                             {showPassword ? (
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
@@ -85,9 +85,9 @@ export default function ResetPasswordPage() {
                 </div>
 
                 <div>
-                    <label className="text-xs text-white/40 tracking-wider uppercase mb-1.5 block">Confirm Password</label>
+                    <label className="text-xs text-ink/40 tracking-wider uppercase mb-1.5 block">Confirm Password</label>
                     <div className="relative">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-ink/20">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0110 0v4" /></svg>
                         </span>
                         <input
@@ -95,7 +95,7 @@ export default function ResetPasswordPage() {
                             value={confirm}
                             onChange={(e) => setConfirm(e.target.value)}
                             required
-                            className="w-full pl-11 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/20 focus:outline-none focus:border-[#22c55e]/40 transition-all"
+                            className="w-full pl-11 pr-4 py-3 rounded-xl bg-ink/5 border border-ink/10 text-ink placeholder-ink/20 focus:outline-none focus:border-accent/40 transition-all"
                             placeholder="••••••"
                         />
                     </div>
@@ -108,14 +108,14 @@ export default function ResetPasswordPage() {
                 <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-3 rounded-xl bg-[#22c55e] text-black font-bold hover:bg-[#22c55e]/90 shadow-[0_0_25px_rgba(34,197,94,0.3)] transition-all cursor-pointer disabled:opacity-50"
+                    className="w-full py-3 rounded-xl bg-accent text-black font-bold hover:bg-accent/90 shadow-[0_0_25px_rgba(var(--accent-glow),0.3)] transition-all cursor-pointer disabled:opacity-50"
                 >
                     {loading ? 'Updating...' : 'Update Password'}
                 </button>
             </form>
 
-            <p className="mt-6 text-center text-sm text-white/20">
-                <Link href="/login" className="text-[#38bdf8] font-medium hover:underline">← Back to login</Link>
+            <p className="mt-6 text-center text-sm text-ink/20">
+                <Link href="/login" className="text-info font-medium hover:underline">← Back to login</Link>
             </p>
         </AuthLayout>
     );

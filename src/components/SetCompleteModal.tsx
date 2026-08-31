@@ -57,7 +57,7 @@ export default function SetCompleteModal({
                 </div>
 
                 {/* Title */}
-                <h2 className="text-xl font-bold text-white mb-1" style={{ fontFamily: 'Orbitron, sans-serif' }}>
+                <h2 className="text-xl font-bold text-white mb-1" style={{ fontFamily: 'var(--font-orbitron), sans-serif' }}>
                     Set {currentSet} Complete
                 </h2>
                 <p className="text-sm text-white/30 mb-6">
@@ -71,14 +71,14 @@ export default function SetCompleteModal({
                 {/* Stats row */}
                 <div className="flex justify-center gap-6 mb-6">
                     <div className="text-center">
-                        <p className="text-2xl font-black text-white" style={{ fontFamily: 'Orbitron, monospace' }}>
+                        <p className="text-2xl font-black text-white" style={{ fontFamily: 'var(--font-orbitron), monospace' }}>
                             {repsCompleted}
                         </p>
                         <p className="text-[9px] text-white/25 tracking-widest uppercase mt-0.5">{mode === 'hold' ? 'Seconds Held' : 'Reps'}</p>
                     </div>
                     <div className="w-px bg-white/10" />
                     <div className="text-center">
-                        <p className="text-2xl font-black" style={{ fontFamily: 'Orbitron, monospace', color: formColor }}>
+                        <p className="text-2xl font-black" style={{ fontFamily: 'var(--font-orbitron), monospace', color: formColor }}>
                             {formQuality}%
                         </p>
                         <p className="text-[9px] tracking-widest uppercase mt-0.5" style={{ color: `${formColor}80` }}>
@@ -105,7 +105,7 @@ export default function SetCompleteModal({
                                             ? 'bg-[#22c55e] text-black'
                                             : 'bg-white/5 text-white/30 border border-white/5 hover:bg-white/10 hover:text-white/60'}
                                     `}
-                                    style={{ fontFamily: 'Orbitron, monospace' }}
+                                    style={{ fontFamily: 'var(--font-orbitron), monospace' }}
                                 >
                                     {n}
                                 </button>

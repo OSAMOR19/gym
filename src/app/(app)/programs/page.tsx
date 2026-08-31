@@ -22,7 +22,7 @@ function ProgramTile({ program }: { program: Program }) {
     const daysPerWeek = program.weeks[0]?.days.length ?? 3;
     return (
         <Link href={`/programs/${program.id}`} className="flex-shrink-0 snap-start w-[44vw] sm:w-52 group">
-            <div className="relative h-28 sm:h-32 rounded-xl overflow-hidden border border-white/5 group-hover:border-white/15 transition-all">
+            <div className="relative h-28 sm:h-32 rounded-xl overflow-hidden border border-ink/5 group-hover:border-ink/15 transition-all">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={program.image} alt="" className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
@@ -33,8 +33,8 @@ function ProgramTile({ program }: { program: Program }) {
                     {LEVEL_LABELS[program.level]}
                 </span>
             </div>
-            <p className="text-[13px] font-semibold text-white/85 mt-2 truncate">{program.name}</p>
-            <p className="text-[10px] text-white/25 mt-0.5">
+            <p className="text-[13px] font-semibold text-ink/85 mt-2 truncate">{program.name}</p>
+            <p className="text-[10px] text-ink/25 mt-0.5">
                 {program.weeks.length} wk · {daysPerWeek} days/week
             </p>
         </Link>
@@ -82,8 +82,8 @@ function ProgramShelf({
     return (
         <div className="mb-7">
             <div className="flex items-baseline justify-between mb-3">
-                <h2 className="text-sm font-bold text-white/80">{title}</h2>
-                <span className="text-[10px] text-white/20">{programs.length}</span>
+                <h2 className="text-sm font-bold text-ink/80">{title}</h2>
+                <span className="text-[10px] text-ink/20">{programs.length}</span>
             </div>
             <div
                 ref={rowRef}
@@ -152,8 +152,8 @@ export default function ProgramsPage() {
             <div className="mb-6">
                 <div className="md:flex md:items-end md:justify-between">
                     <div className="mb-4 md:mb-0">
-                        <p className="text-[10px] text-white/15 tracking-widest uppercase mb-1">{PROGRAMS.length} available</p>
-                        <h1 className="text-2xl font-bold text-white">Programs</h1>
+                        <p className="text-[10px] text-ink/15 tracking-widest uppercase mb-1">{PROGRAMS.length} available</p>
+                        <h1 className="text-2xl font-bold text-ink">Programs</h1>
                     </div>
 
                     {/* Mobile: scrollable filter chips */}
@@ -165,8 +165,8 @@ export default function ProgramsPage() {
                                 className={`
                                     flex-shrink-0 px-3.5 py-2 rounded-full text-[11px] font-bold tracking-wider uppercase border transition-all cursor-pointer
                                     ${filter === f.key
-                                        ? 'bg-[#22c55e]/10 text-[#22c55e] border-[#22c55e]/30'
-                                        : 'text-white/25 border-white/8 hover:text-white/40'
+                                        ? 'bg-accent/10 text-accent border-accent/30'
+                                        : 'text-ink/25 border-ink/8 hover:text-ink/40'
                                     }
                                 `}
                             >
@@ -176,7 +176,7 @@ export default function ProgramsPage() {
                     </div>
 
                     {/* Desktop: segmented control */}
-                    <div className="hidden md:flex items-center border border-white/5 rounded-lg overflow-hidden">
+                    <div className="hidden md:flex items-center border border-ink/5 rounded-lg overflow-hidden">
                         {filters.map((f) => (
                             <button
                                 key={f.key}
@@ -184,8 +184,8 @@ export default function ProgramsPage() {
                                 className={`
                                     px-4 py-2 text-[11px] font-bold tracking-wider uppercase transition-all cursor-pointer
                                     ${filter === f.key
-                                        ? 'bg-[#22c55e]/10 text-[#22c55e]'
-                                        : 'text-white/20 hover:text-white/40 hover:bg-white/[0.02]'
+                                        ? 'bg-accent/10 text-accent'
+                                        : 'text-ink/20 hover:text-ink/40 hover:bg-ink/[0.02]'
                                     }
                                 `}
                             >
@@ -206,12 +206,12 @@ export default function ProgramsPage() {
                         <p className="text-[9px] font-bold tracking-widest uppercase mb-0.5" style={{ color: planProgram.color }}>
                             Your plan
                         </p>
-                        <p className="text-sm font-semibold text-white truncate">{planProgram.name}</p>
+                        <p className="text-sm font-semibold text-ink truncate">{planProgram.name}</p>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                         <button
                             onClick={() => openCoachChat('intake')}
-                            className="text-[11px] text-white/30 hover:text-white/60 transition-colors cursor-pointer px-2 py-2"
+                            className="text-[11px] text-ink/30 hover:text-ink/60 transition-colors cursor-pointer px-2 py-2"
                         >
                             Retake
                         </button>
@@ -227,13 +227,13 @@ export default function ProgramsPage() {
             ) : (
                 <button
                     onClick={() => openCoachChat('intake')}
-                    className="w-full flex items-center justify-between gap-3 rounded-xl border border-[#22c55e]/25 bg-[#22c55e]/[0.06] hover:bg-[#22c55e]/10 px-4 py-4 mb-6 transition-all cursor-pointer text-left"
+                    className="w-full flex items-center justify-between gap-3 rounded-xl border border-accent/25 bg-accent/[0.06] hover:bg-accent/10 px-4 py-4 mb-6 transition-all cursor-pointer text-left"
                 >
                     <div>
-                        <p className="text-sm font-semibold text-white mb-0.5">Not sure where to start?</p>
-                        <p className="text-[11px] text-white/35">Answer five quick questions and get a plan matched to your goal, gear, and schedule.</p>
+                        <p className="text-sm font-semibold text-ink mb-0.5">Not sure where to start?</p>
+                        <p className="text-[11px] text-ink/35">Answer five quick questions and get a plan matched to your goal, gear, and schedule.</p>
                     </div>
-                    <span className="flex-shrink-0 text-xs font-bold px-4 py-2 rounded-lg bg-[#22c55e] text-black">
+                    <span className="flex-shrink-0 text-xs font-bold px-4 py-2 rounded-lg bg-accent text-black">
                         Find my plan
                     </span>
                 </button>

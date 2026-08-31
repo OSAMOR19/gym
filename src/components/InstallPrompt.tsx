@@ -69,22 +69,22 @@ export default function InstallPrompt() {
     if (hidden || (!showIOSSteps && !installEvent)) return null;
 
     return (
-        <div className="border border-[#22c55e]/20 bg-[#22c55e]/5 rounded-xl p-4 mb-6">
+        <div className="border border-accent/20 bg-accent/5 rounded-xl p-4 mb-6">
             <div className="flex items-start gap-3">
-                <div className="w-9 h-9 rounded-lg bg-[#22c55e] flex items-center justify-center flex-shrink-0">
+                <div className="w-9 h-9 rounded-lg bg-accent flex items-center justify-center flex-shrink-0">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <rect x="5" y="2" width="14" height="20" rx="2" /><line x1="12" y1="18" x2="12.01" y2="18" />
                     </svg>
                 </div>
                 <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-white">Install IronTrack</p>
+                    <p className="text-sm font-bold text-ink">Install IronTrack</p>
                     {showIOSSteps ? (
-                        <p className="text-xs text-white/45 mt-1 leading-relaxed">
-                            Get the full-screen app: tap the <span className="text-white/70 font-semibold">Share</span> button
-                            in Safari, then <span className="text-white/70 font-semibold">Add to Home Screen</span>.
+                        <p className="text-xs text-ink/45 mt-1 leading-relaxed">
+                            Get the full-screen app: tap the <span className="text-ink/70 font-semibold">Share</span> button
+                            in Safari, then <span className="text-ink/70 font-semibold">Add to Home Screen</span>.
                         </p>
                     ) : (
-                        <p className="text-xs text-white/45 mt-1 leading-relaxed">
+                        <p className="text-xs text-ink/45 mt-1 leading-relaxed">
                             Put IronTrack on your home screen — full-screen, one tap from your workout.
                         </p>
                     )}
@@ -92,14 +92,14 @@ export default function InstallPrompt() {
                         {!showIOSSteps && (
                             <button
                                 onClick={install}
-                                className="px-4 py-2 rounded-lg bg-[#22c55e] text-black text-xs font-bold hover:bg-[#16a34a] transition-all cursor-pointer"
+                                className="px-4 py-2 rounded-lg bg-accent text-black text-xs font-bold hover:bg-accent-strong transition-all cursor-pointer"
                             >
                                 Install app
                             </button>
                         )}
                         <button
                             onClick={dismiss}
-                            className="px-4 py-2 rounded-lg text-xs font-semibold text-white/40 hover:text-white/70 transition-colors cursor-pointer"
+                            className="px-4 py-2 rounded-lg text-xs font-semibold text-ink/40 hover:text-ink/70 transition-colors cursor-pointer"
                         >
                             {showIOSSteps ? 'Got it' : 'Not now'}
                         </button>

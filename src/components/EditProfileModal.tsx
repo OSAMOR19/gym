@@ -120,8 +120,8 @@ export default function EditProfileModal({ onClose }: EditProfileModalProps) {
         onClose();
     };
 
-    const inputClass = 'w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-base md:text-sm text-white/90 placeholder:text-white/20 focus:outline-none focus:border-[#22c55e]/40';
-    const labelClass = 'block text-[10px] text-white/30 tracking-widest uppercase mb-1.5';
+    const inputClass = 'w-full bg-ink/5 border border-ink/10 rounded-xl px-3.5 py-2.5 text-base md:text-sm text-ink/90 placeholder:text-ink/20 focus:outline-none focus:border-accent/40';
+    const labelClass = 'block text-[10px] text-ink/30 tracking-widest uppercase mb-1.5';
 
     return (
         <div
@@ -132,15 +132,15 @@ export default function EditProfileModal({ onClose }: EditProfileModalProps) {
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="edit-profile-title"
-                className="w-full max-w-md max-h-[90dvh] overflow-y-auto bg-[#141414] border border-white/10 rounded-2xl p-5 md:p-6 shadow-2xl animate-chat-in"
+                className="w-full max-w-md max-h-[90dvh] overflow-y-auto bg-surface border border-ink/10 rounded-2xl p-5 md:p-6 shadow-2xl animate-chat-in"
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="flex items-center justify-between mb-5">
-                    <h2 id="edit-profile-title" className="text-base font-bold text-white">Edit profile</h2>
+                    <h2 id="edit-profile-title" className="text-base font-bold text-ink">Edit profile</h2>
                     <button
                         onClick={onClose}
                         aria-label="Close"
-                        className="w-9 h-9 flex items-center justify-center rounded-lg text-white/30 hover:text-white/60 hover:bg-white/5 transition-all cursor-pointer"
+                        className="w-9 h-9 flex items-center justify-center rounded-lg text-ink/30 hover:text-ink/60 hover:bg-ink/5 transition-all cursor-pointer"
                     >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
                             <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
@@ -153,17 +153,17 @@ export default function EditProfileModal({ onClose }: EditProfileModalProps) {
                     <div className="relative w-16 h-16 flex-shrink-0">
                         {user?.avatarUrl ? (
                             // eslint-disable-next-line @next/next/no-img-element
-                            <img src={user.avatarUrl} alt="Profile photo" className="w-16 h-16 rounded-full object-cover border border-white/10" />
+                            <img src={user.avatarUrl} alt="Profile photo" className="w-16 h-16 rounded-full object-cover border border-ink/10" />
                         ) : (
-                            <div className="w-16 h-16 rounded-full bg-[#22c55e] flex items-center justify-center">
-                                <span className="text-black text-xl font-black" style={{ fontFamily: 'Orbitron, monospace' }}>
+                            <div className="w-16 h-16 rounded-full bg-accent flex items-center justify-center">
+                                <span className="text-black text-xl font-black" style={{ fontFamily: 'var(--font-orbitron), monospace' }}>
                                     {user?.name?.charAt(0).toUpperCase()}
                                 </span>
                             </div>
                         )}
                         {uploading && (
                             <div className="absolute inset-0 rounded-full bg-black/60 flex items-center justify-center">
-                                <span className="w-4 h-4 border-2 border-white/30 border-t-[#22c55e] rounded-full animate-spin" />
+                                <span className="w-4 h-4 border-2 border-ink/30 border-t-accent rounded-full animate-spin" />
                             </div>
                         )}
                     </div>
@@ -171,7 +171,7 @@ export default function EditProfileModal({ onClose }: EditProfileModalProps) {
                         <button
                             onClick={pickPhoto}
                             disabled={uploading}
-                            className="px-3.5 py-2 rounded-xl border border-white/10 text-xs font-semibold text-white/70 hover:border-[#22c55e]/40 hover:text-[#22c55e] transition-all cursor-pointer disabled:opacity-40"
+                            className="px-3.5 py-2 rounded-xl border border-ink/10 text-xs font-semibold text-ink/70 hover:border-accent/40 hover:text-accent transition-all cursor-pointer disabled:opacity-40"
                         >
                             {user?.avatarUrl ? 'Change photo' : 'Upload photo'}
                         </button>
@@ -179,7 +179,7 @@ export default function EditProfileModal({ onClose }: EditProfileModalProps) {
                             <button
                                 onClick={removePhoto}
                                 disabled={uploading}
-                                className="px-3.5 py-2 rounded-xl border border-white/10 text-xs font-semibold text-white/40 hover:border-red-500/30 hover:text-red-400 transition-all cursor-pointer disabled:opacity-40"
+                                className="px-3.5 py-2 rounded-xl border border-ink/10 text-xs font-semibold text-ink/40 hover:border-red-500/30 hover:text-red-400 transition-all cursor-pointer disabled:opacity-40"
                             >
                                 Remove
                             </button>
@@ -223,10 +223,10 @@ export default function EditProfileModal({ onClose }: EditProfileModalProps) {
                             id="profile-sex" value={sex} onChange={(e) => setSex(e.target.value)}
                             className={`${inputClass} appearance-none cursor-pointer`}
                         >
-                            <option value="" className="bg-[#141414]">Prefer not to say</option>
-                            <option value="male" className="bg-[#141414]">Male</option>
-                            <option value="female" className="bg-[#141414]">Female</option>
-                            <option value="other" className="bg-[#141414]">Other</option>
+                            <option value="" className="bg-surface">Prefer not to say</option>
+                            <option value="male" className="bg-surface">Male</option>
+                            <option value="female" className="bg-surface">Female</option>
+                            <option value="other" className="bg-surface">Other</option>
                         </select>
                     </div>
                     <div>
@@ -257,14 +257,14 @@ export default function EditProfileModal({ onClose }: EditProfileModalProps) {
                     <button
                         onClick={onClose}
                         disabled={saving}
-                        className="flex-1 py-2.5 rounded-xl border border-white/10 text-sm font-semibold text-white/60 hover:bg-white/5 transition-all cursor-pointer disabled:opacity-40"
+                        className="flex-1 py-2.5 rounded-xl border border-ink/10 text-sm font-semibold text-ink/60 hover:bg-ink/5 transition-all cursor-pointer disabled:opacity-40"
                     >
                         Cancel
                     </button>
                     <button
                         onClick={save}
                         disabled={saving || uploading}
-                        className="flex-1 py-2.5 rounded-xl bg-[#22c55e] text-sm font-bold text-black hover:bg-[#16a34a] transition-all cursor-pointer disabled:opacity-60"
+                        className="flex-1 py-2.5 rounded-xl bg-accent text-sm font-bold text-black hover:bg-accent-strong transition-all cursor-pointer disabled:opacity-60"
                     >
                         {saving ? 'Saving…' : 'Save changes'}
                     </button>

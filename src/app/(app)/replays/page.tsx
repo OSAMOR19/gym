@@ -65,8 +65,8 @@ export default function ReplaysPage() {
 
     return (
         <div className="max-w-5xl mx-auto p-4 md:p-6">
-            <h1 className="text-2xl font-bold text-white mb-1">My Replays</h1>
-            <p className="text-xs text-white/30 mb-6">Your workout highlights — private until you share them.</p>
+            <h1 className="text-2xl font-bold text-ink mb-1">My Replays</h1>
+            <p className="text-xs text-ink/30 mb-6">Your workout highlights — private until you share them.</p>
 
             {rows === null && (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -76,16 +76,16 @@ export default function ReplaysPage() {
 
             {rows !== null && rows.length === 0 && (
                 <div className="flex flex-col items-center text-center pt-16 pb-10 px-6">
-                    <div className="w-16 h-16 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center mb-4">
-                        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <div className="w-16 h-16 rounded-2xl bg-ink/[0.03] border border-ink/10 flex items-center justify-center mb-4">
+                        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-ink/25" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                             <polygon points="23,7 16,12 23,17" /><rect x="1" y="5" width="15" height="14" rx="2" />
                         </svg>
                     </div>
-                    <p className="text-sm font-semibold text-white/60 mb-1">No replays yet</p>
-                    <p className="text-xs text-white/25 leading-relaxed max-w-xs mb-5">
+                    <p className="text-sm font-semibold text-ink/60 mb-1">No replays yet</p>
+                    <p className="text-xs text-ink/25 leading-relaxed max-w-xs mb-5">
                         Finish a workout or cardio session and tap Create Replay — your ~25 second highlight reel lands here.
                     </p>
-                    <Link href="/workout" className="px-5 py-2.5 rounded-xl bg-[#22c55e] text-black text-xs font-bold hover:bg-[#16a34a] transition-all">
+                    <Link href="/workout" className="px-5 py-2.5 rounded-xl bg-accent text-black text-xs font-bold hover:bg-accent-strong transition-all">
                         Start a workout
                     </Link>
                 </div>
@@ -94,8 +94,8 @@ export default function ReplaysPage() {
             {rows !== null && rows.length > 0 && (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {rows.map((row) => (
-                        <div key={row.id} className="border border-white/5 rounded-xl overflow-hidden group">
-                            <button onClick={() => play(row)} className="relative block w-full aspect-[9/16] bg-black cursor-pointer">
+                        <div key={row.id} className="border border-ink/5 rounded-xl overflow-hidden group">
+                            <button onClick={() => play(row)} className="force-dark relative block w-full aspect-[9/16] bg-black cursor-pointer">
                                 {playing?.id === row.id ? (
                                     <video src={playing.url} controls autoPlay playsInline className="absolute inset-0 w-full h-full object-contain" />
                                 ) : (
@@ -104,20 +104,20 @@ export default function ReplaysPage() {
                                             // eslint-disable-next-line @next/next/no-img-element
                                             <img src={thumbs[row.id]} alt="" className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
                                         ) : (
-                                            <div className="absolute inset-0 bg-white/[0.03]" />
+                                            <div className="absolute inset-0 bg-ink/[0.03]" />
                                         )}
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30" />
                                         <span className="absolute inset-0 flex items-center justify-center">
-                                            <span className="w-12 h-12 rounded-full bg-black/50 border border-white/20 flex items-center justify-center group-hover:bg-[#22c55e] group-hover:text-black text-white transition-all">
+                                            <span className="w-12 h-12 rounded-full bg-black/50 border border-ink/20 flex items-center justify-center group-hover:bg-accent group-hover:text-black text-ink transition-all">
                                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="6,3 21,12 6,21" /></svg>
                                             </span>
                                         </span>
-                                        <span className="absolute top-2 right-2 text-[10px] font-bold text-white/80 bg-black/50 rounded-full px-2 py-0.5">
+                                        <span className="absolute top-2 right-2 text-[10px] font-bold text-ink/80 bg-black/50 rounded-full px-2 py-0.5">
                                             {fmtClock(Number(row.duration_seconds))}
                                         </span>
                                         <div className="absolute bottom-2 left-2.5 right-2.5">
-                                            <p className="text-xs font-bold text-white truncate">{row.metadata.title ?? 'Workout'}</p>
-                                            <p className="text-[10px] text-white/40">
+                                            <p className="text-xs font-bold text-ink truncate">{row.metadata.title ?? 'Workout'}</p>
+                                            <p className="text-[10px] text-ink/40">
                                                 {new Date(row.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                                 {' · '}{row.workout_type === 'cardio' ? 'Cardio' : 'Strength'}
                                                 {row.metadata.durationSeconds ? ` · ${fmtClock(row.metadata.durationSeconds)}` : ''}
@@ -126,18 +126,18 @@ export default function ReplaysPage() {
                                     </>
                                 )}
                             </button>
-                            <div className="flex divide-x divide-white/5 border-t border-white/5">
+                            <div className="flex divide-x divide-ink/5 border-t border-ink/5">
                                 <button
                                     onClick={() => share(row)}
                                     disabled={busy === row.id}
-                                    className="flex-1 py-2 text-[11px] font-semibold text-white/50 hover:text-[#22c55e] transition-colors cursor-pointer disabled:opacity-40"
+                                    className="flex-1 py-2 text-[11px] font-semibold text-ink/50 hover:text-accent transition-colors cursor-pointer disabled:opacity-40"
                                 >
                                     {busy === row.id ? '…' : 'Share'}
                                 </button>
                                 <button
                                     onClick={() => setPendingDelete(row)}
                                     disabled={busy === row.id}
-                                    className="flex-1 py-2 text-[11px] font-semibold text-white/50 hover:text-red-400 transition-colors cursor-pointer disabled:opacity-40"
+                                    className="flex-1 py-2 text-[11px] font-semibold text-ink/50 hover:text-red-400 transition-colors cursor-pointer disabled:opacity-40"
                                 >
                                     Delete
                                 </button>
@@ -155,25 +155,25 @@ export default function ReplaysPage() {
                 >
                     <div
                         role="alertdialog" aria-modal="true"
-                        className="w-full max-w-[320px] bg-[#161616] border border-white/10 rounded-2xl p-5 shadow-2xl animate-chat-in"
+                        className="w-full max-w-[320px] bg-surface border border-ink/10 rounded-2xl p-5 shadow-2xl animate-chat-in"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <h3 className="text-sm font-bold text-white mb-1.5">Delete this replay?</h3>
-                        <p className="text-xs text-white/40 leading-relaxed mb-5">
+                        <h3 className="text-sm font-bold text-ink mb-1.5">Delete this replay?</h3>
+                        <p className="text-xs text-ink/40 leading-relaxed mb-5">
                             The video will be permanently deleted from your library and storage. This can&apos;t be undone.
                         </p>
                         <div className="flex gap-2">
                             <button
                                 onClick={() => setPendingDelete(null)}
                                 disabled={busy !== null}
-                                className="flex-1 py-2.5 rounded-xl border border-white/10 text-sm font-semibold text-white/60 hover:bg-white/5 transition-all cursor-pointer disabled:opacity-40"
+                                className="flex-1 py-2.5 rounded-xl border border-ink/10 text-sm font-semibold text-ink/60 hover:bg-ink/5 transition-all cursor-pointer disabled:opacity-40"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={confirmDelete}
                                 disabled={busy !== null}
-                                className="flex-1 py-2.5 rounded-xl bg-red-500 text-sm font-bold text-white hover:bg-red-600 transition-all cursor-pointer disabled:opacity-60"
+                                className="flex-1 py-2.5 rounded-xl bg-red-500 text-sm font-bold text-ink hover:bg-red-600 transition-all cursor-pointer disabled:opacity-60"
                             >
                                 {busy !== null ? 'Deleting…' : 'Delete'}
                             </button>

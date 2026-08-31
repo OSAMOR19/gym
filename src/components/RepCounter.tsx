@@ -83,7 +83,7 @@ export default function RepCounterDisplay({ count, isDetecting, targetReps }: Re
                         transition-all duration-300
                     `}
                     style={{
-                        fontFamily: 'Orbitron, sans-serif',
+                        fontFamily: 'var(--font-orbitron), sans-serif',
                         textShadow: isDetecting
                             ? '0 0 40px rgba(34,197,94,0.5), 0 0 80px rgba(34,197,94,0.2)'
                             : 'none',
@@ -98,7 +98,7 @@ export default function RepCounterDisplay({ count, isDetecting, targetReps }: Re
                         text-[10px] font-bold tracking-[0.25em] uppercase mt-1
                         ${isDetecting ? 'text-[#22c55e]/50' : 'text-white/8'}
                     `}
-                    style={{ fontFamily: 'Orbitron, sans-serif' }}
+                    style={{ fontFamily: 'var(--font-orbitron), sans-serif' }}
                 >
                     {targetReps && targetReps > 0 ? `${count} / ${targetReps}` : 'REPS'}
                 </span>

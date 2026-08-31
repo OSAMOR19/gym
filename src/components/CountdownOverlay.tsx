@@ -102,7 +102,7 @@ export default function CountdownOverlay({ onComplete, voiceEnabled, startFrom =
                         key={count}
                         className="text-[12rem] font-black text-white leading-none animate-countdown-pulse"
                         style={{
-                            fontFamily: 'Orbitron, sans-serif',
+                            fontFamily: 'var(--font-orbitron), sans-serif',
                             textShadow: '0 0 60px rgba(34,197,94,0.5), 0 0 120px rgba(34,197,94,0.2)',
                         }}
                     >
@@ -112,7 +112,7 @@ export default function CountdownOverlay({ onComplete, voiceEnabled, startFrom =
                     <span
                         className="text-[10rem] font-black text-[#22c55e] leading-none animate-countdown-pulse"
                         style={{
-                            fontFamily: 'Orbitron, sans-serif',
+                            fontFamily: 'var(--font-orbitron), sans-serif',
                             textShadow: '0 0 80px rgba(34,197,94,0.6), 0 0 160px rgba(34,197,94,0.3)',
                         }}
                     >

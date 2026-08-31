@@ -20,7 +20,7 @@ export default function ProgressChart({ data, height = 160 }: ProgressChartProps
 
     return (
         <div className="glass-panel rounded-2xl p-6">
-            <h3 className="text-sm font-semibold text-white/60 tracking-wider uppercase mb-4">
+            <h3 className="text-sm font-semibold text-ink/60 tracking-wider uppercase mb-4">
                 Weekly Activity
             </h3>
 
@@ -43,7 +43,7 @@ export default function ProgressChart({ data, height = 160 }: ProgressChartProps
                                     width={barWidth}
                                     height={height}
                                     rx={8}
-                                    fill="rgba(255,255,255,0.03)"
+                                    style={{ fill: "color-mix(in srgb, var(--ink) 3%, transparent)" }}
                                 />
 
                                 {/* Activity bar */}
@@ -55,7 +55,7 @@ export default function ProgressChart({ data, height = 160 }: ProgressChartProps
                                         height={barHeight}
                                         rx={8}
                                         fill="url(#barGradient)"
-                                        style={{ filter: 'drop-shadow(0 0 6px rgba(34,197,94,0.3))' }}
+                                        style={{ filter: 'drop-shadow(0 0 6px rgba(var(--accent-glow),0.3))' }}
                                     >
                                         <animate
                                             attributeName="height"
@@ -81,7 +81,7 @@ export default function ProgressChart({ data, height = 160 }: ProgressChartProps
                                         y={y - 8}
                                         textAnchor="middle"
                                         className="text-[10px] font-bold"
-                                        fill="#22c55e"
+                                        style={{ fill: "var(--accent)" }}
                                     >
                                         {d.reps}
                                     </text>
@@ -93,7 +93,7 @@ export default function ProgressChart({ data, height = 160 }: ProgressChartProps
                                     y={height + 20}
                                     textAnchor="middle"
                                     className="text-[10px]"
-                                    fill="rgba(255,255,255,0.3)"
+                                    style={{ fill: "color-mix(in srgb, var(--ink) 35%, transparent)" }}
                                 >
                                     {d.day}
                                 </text>
@@ -104,8 +104,8 @@ export default function ProgressChart({ data, height = 160 }: ProgressChartProps
                     {/* Gradient definition */}
                     <defs>
                         <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#22c55e" />
-                            <stop offset="100%" stopColor="#22c55e" stopOpacity="0.3" />
+                            <stop offset="0%" style={{ stopColor: "var(--accent)" }} />
+                            <stop offset="100%" style={{ stopColor: "var(--accent)", stopOpacity: 0.3 }} />
                         </linearGradient>
                     </defs>
                 </svg>

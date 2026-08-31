@@ -192,6 +192,7 @@ export default function CardioPage() {
     } : null;
 
     return (
+        <div className="force-dark bg-app min-h-[100dvh] text-white">
         <div className="max-w-2xl mx-auto p-4 md:p-6">
             {/* ─── Select activity ─────────────────────────────────────────── */}
             {step === 'select' && (
@@ -318,20 +319,20 @@ export default function CardioPage() {
                     {/* HUD */}
                     <div className="grid grid-cols-2 gap-3">
                         <div className="border border-white/5 rounded-xl p-4 col-span-2 text-center">
-                            <p className="text-4xl font-black text-white" style={{ fontFamily: 'Orbitron, monospace' }}>{fmtClock(elapsed)}</p>
+                            <p className="text-4xl font-black text-white" style={{ fontFamily: 'var(--font-orbitron), monospace' }}>{fmtClock(elapsed)}</p>
                             <p className="text-[10px] text-white/25 tracking-widest uppercase mt-1">Time</p>
                         </div>
                         <div className="border border-white/5 rounded-xl p-4 text-center">
-                            <p className="text-2xl font-black text-[#22c55e]" style={{ fontFamily: 'Orbitron, monospace' }}>{result?.steps ?? 0}</p>
+                            <p className="text-2xl font-black text-[#22c55e]" style={{ fontFamily: 'var(--font-orbitron), monospace' }}>{result?.steps ?? 0}</p>
                             <p className="text-[10px] text-white/25 tracking-widest uppercase mt-1">{unit} · est.</p>
                         </div>
                         <div className="border border-white/5 rounded-xl p-4 text-center">
-                            <p className="text-2xl font-black text-[#22c55e]" style={{ fontFamily: 'Orbitron, monospace' }}>{result?.cadence ?? 0}</p>
+                            <p className="text-2xl font-black text-[#22c55e]" style={{ fontFamily: 'var(--font-orbitron), monospace' }}>{result?.cadence ?? 0}</p>
                             <p className="text-[10px] text-white/25 tracking-widest uppercase mt-1">{unit}/min · est.</p>
                         </div>
                         {liveDistance?.distanceKm != null && (
                             <div className="border border-white/5 rounded-xl p-4 text-center col-span-2">
-                                <p className="text-2xl font-black text-white" style={{ fontFamily: 'Orbitron, monospace' }}>{liveDistance.distanceKm} km</p>
+                                <p className="text-2xl font-black text-white" style={{ fontFamily: 'var(--font-orbitron), monospace' }}>{liveDistance.distanceKm} km</p>
                                 <p className="text-[10px] text-white/25 tracking-widest uppercase mt-1">
                                     {liveDistance.source === 'treadmill_input' ? 'distance · from treadmill speed' : 'distance · estimated'}
                                 </p>
@@ -354,7 +355,7 @@ export default function CardioPage() {
                     <div className="text-center pt-4">
                         <p className="text-[10px] text-[#22c55e] tracking-[0.25em] uppercase font-bold">Session complete</p>
                         <h1 className="text-2xl font-bold text-white mt-1">{CARDIO_ACTIVITIES[summary.activity].name}</h1>
-                        <p className="text-5xl font-black text-white mt-4" style={{ fontFamily: 'Orbitron, monospace' }}>
+                        <p className="text-5xl font-black text-white mt-4" style={{ fontFamily: 'var(--font-orbitron), monospace' }}>
                             {fmtClock(summary.durationSeconds)}
                         </p>
                     </div>
@@ -365,16 +366,16 @@ export default function CardioPage() {
                     )}
                     <div className="grid grid-cols-2 gap-3">
                         <div className="border border-white/5 rounded-xl p-4">
-                            <p className="text-xl font-black text-[#22c55e]" style={{ fontFamily: 'Orbitron, monospace' }}>{summary.steps}</p>
+                            <p className="text-xl font-black text-[#22c55e]" style={{ fontFamily: 'var(--font-orbitron), monospace' }}>{summary.steps}</p>
                             <p className="text-[10px] text-white/25 tracking-widest uppercase mt-0.5">{unit} (estimated)</p>
                         </div>
                         <div className="border border-white/5 rounded-xl p-4">
-                            <p className="text-xl font-black text-[#22c55e]" style={{ fontFamily: 'Orbitron, monospace' }}>{summary.avgCadence || '—'}</p>
+                            <p className="text-xl font-black text-[#22c55e]" style={{ fontFamily: 'var(--font-orbitron), monospace' }}>{summary.avgCadence || '—'}</p>
                             <p className="text-[10px] text-white/25 tracking-widest uppercase mt-0.5">{unit}/min (estimated)</p>
                         </div>
                         {summary.distanceKm != null && (
                             <div className="border border-white/5 rounded-xl p-4">
-                                <p className="text-xl font-black text-white" style={{ fontFamily: 'Orbitron, monospace' }}>{summary.distanceKm} km</p>
+                                <p className="text-xl font-black text-white" style={{ fontFamily: 'var(--font-orbitron), monospace' }}>{summary.distanceKm} km</p>
                                 <p className="text-[10px] text-white/25 tracking-widest uppercase mt-0.5">
                                     {summary.distanceSource === 'treadmill_input' ? 'distance (from speed)' : 'distance (estimated)'}
                                 </p>
@@ -382,7 +383,7 @@ export default function CardioPage() {
                         )}
                         {summary.estCalories != null && (
                             <div className="border border-white/5 rounded-xl p-4">
-                                <p className="text-xl font-black text-white" style={{ fontFamily: 'Orbitron, monospace' }}>{summary.estCalories}</p>
+                                <p className="text-xl font-black text-white" style={{ fontFamily: 'var(--font-orbitron), monospace' }}>{summary.estCalories}</p>
                                 <p className="text-[10px] text-white/25 tracking-widest uppercase mt-0.5">kcal (estimated)</p>
                             </div>
                         )}
@@ -406,6 +407,7 @@ export default function CardioPage() {
                     </div>
                 </div>
             )}
+        </div>
         </div>
     );
 }
