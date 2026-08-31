@@ -121,7 +121,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
                 <div className="absolute top-6 left-6 z-10 force-dark">
                     <Link href="/" className="flex items-center gap-2">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src="/brand/logo-dark.png" alt="IronTrack" className="h-8 w-auto select-none" draggable={false} />
+                        <img src="/brand/logo-dark.png?v=2" alt="IronTrack" className="h-8 w-auto select-none" draggable={false} />
                         <span className="text-sm font-bold tracking-wider text-white/80 font-display">
                             IRON<span className="text-[#22c55e]">TRACK</span>
                         </span>

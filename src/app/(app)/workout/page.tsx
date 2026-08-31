@@ -19,6 +19,7 @@ import { getWorkoutQueue, clearWorkoutQueue, markDayCompleted, WorkoutQueue } fr
 import { getCameraGuide } from '../../../lib/cameraGuide';
 import { NOT_IN_FRAME_FEEDBACK } from '../../../lib/repEngine';
 import { HighlightRecorder, HighlightClip, canvasRecordingStream } from '../../../lib/replay/highlightRecorder';
+import { primeAudio } from '../../../lib/voice/speak';
 import { ReplayStats } from '../../../lib/replay/replayComposer';
 import ReplayPanel from '../../../components/ReplayPanel';
 import CameraFeed from '../../../components/CameraFeed';
@@ -328,7 +329,9 @@ export default function WorkoutPage() {
 
     // Start with countdown
     const handleStart = useCallback(() => {
-        // Warm up speech synthesis with a silent call (Chrome fix)
+        // Warm up speech synthesis with a silent call (Chrome fix) and unlock
+        // audio playback for the ElevenLabs coach voice (iOS gesture rule)
+        primeAudio();
         if (typeof window !== 'undefined' && window.speechSynthesis) {
             window.speechSynthesis.cancel();
         }

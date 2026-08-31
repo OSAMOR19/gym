@@ -17,6 +17,7 @@ import { CardioActivity, CARDIO_ACTIVITIES } from '../../../lib/cardio/cardioEng
 import { saveCardioSession, deriveDistance, estimateCalories, CardioSummary } from '../../../lib/cardio/cardioSession';
 import { getUserProfile } from '../../../lib/userProfile';
 import { HighlightRecorder, HighlightClip, canvasRecordingStream } from '../../../lib/replay/highlightRecorder';
+import { primeAudio } from '../../../lib/voice/speak';
 import { ReplayStats } from '../../../lib/replay/replayComposer';
 import ReplayPanel from '../../../components/ReplayPanel';
 import CameraFeed from '../../../components/CameraFeed';
@@ -257,7 +258,7 @@ export default function CardioPage() {
                         </div>
                     )}
                     <button
-                        onClick={() => { setStep('live'); setCounting(true); }}
+                        onClick={() => { primeAudio(); setStep('live'); setCounting(true); }}
                         className="w-full py-3.5 rounded-xl bg-accent text-black font-bold text-sm hover:bg-accent-strong transition-all cursor-pointer"
                     >
                         Start {CARDIO_ACTIVITIES[activity].name}

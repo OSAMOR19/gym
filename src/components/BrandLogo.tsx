@@ -31,14 +31,14 @@ export default function BrandLogo({
         <span className={`inline-flex items-center gap-2 ${className}`}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-                src="/brand/logo-dark.png"
+                src="/brand/logo-dark.png?v=2"
                 alt="IronTrack"
                 className={`brand-logo-dark ${SIZES[size]} w-auto select-none`}
                 draggable={false}
             />
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-                src="/brand/logo-light.png"
+                src="/brand/logo-light.png?v=2"
                 alt="IronTrack"
                 className={`brand-logo-light ${SIZES[size]} w-auto select-none`}
                 draggable={false}

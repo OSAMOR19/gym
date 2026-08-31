@@ -18,6 +18,7 @@
 
 import { useCallback, useMemo, useRef, useEffect, useState } from 'react';
 import type { CoachTip } from '../lib/aiCoach';
+import { speakEleven, stopEleven } from '../lib/voice/speak';
 
 interface SpeechCoachOptions {
     enabled: boolean;
@@ -81,36 +82,38 @@ export function useSpeechCoach(options: SpeechCoachOptions) {
         };
     }, []);
 
-    // Core speak function
+    // Core speak function — ElevenLabs coach voice first, browser
+    // SpeechSynthesis as the always-available fallback.
     const speak = useCallback((text: string, force: boolean = false) => {
         if (!enabled) return;
-        if (typeof window === 'undefined' || !window.speechSynthesis) return;
+        if (typeof window === 'undefined') return;
 
         const now = Date.now();
         // Rate limit: minimum 3 seconds between speeches (unless forced)
         if (!force && now - lastSpokenTimeRef.current < 3000) return;
         if (!force && isSpeakingRef.current) return;
 
-        // Cancel any pending speech first
-        window.speechSynthesis.cancel();
-
         lastSpokenTimeRef.current = now;
         isSpeakingRef.current = true;
 
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = 1.0;
-        utterance.pitch = 1.05;
-        utterance.volume = 1.0; // Max volume for clarity
+        const utterFallback = () => {
+            if (!window.speechSynthesis) { isSpeakingRef.current = false; return; }
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 1.0;
+            utterance.pitch = 1.05;
+            utterance.volume = 1.0; // Max volume for clarity
+            if (voiceRef.current) utterance.voice = voiceRef.current;
+            utterance.onend = () => { isSpeakingRef.current = false; };
+            utterance.onerror = () => { isSpeakingRef.current = false; };
+            window.speechSynthesis.speak(utterance);
+        };
 
-        // Use the preloaded voice
-        if (voiceRef.current) {
-            utterance.voice = voiceRef.current;
-        }
-
-        utterance.onend = () => { isSpeakingRef.current = false; };
-        utterance.onerror = () => { isSpeakingRef.current = false; };
-
-        window.speechSynthesis.speak(utterance);
+        // Interrupt whatever is playing, then try the branded voice
+        window.speechSynthesis?.cancel();
+        speakEleven(text, () => { isSpeakingRef.current = false; })
+            .then((started) => { if (!started) utterFallback(); })
+            .catch(() => utterFallback());
     }, [enabled]);
 
     // Speak exercise name (and camera positioning) when workout starts
@@ -189,6 +192,7 @@ export function useSpeechCoach(options: SpeechCoachOptions) {
         lastSpokenRepRef.current = 0;
         lastSpokenTimeRef.current = 0;
         isSpeakingRef.current = false;
+        stopEleven();
         if (typeof window !== 'undefined' && window.speechSynthesis) {
             window.speechSynthesis.cancel();
         }
@@ -197,6 +201,7 @@ export function useSpeechCoach(options: SpeechCoachOptions) {
     // Cleanup on unmount
     useEffect(() => {
         return () => {
+            stopEleven();
             if (typeof window !== 'undefined' && window.speechSynthesis) {
                 window.speechSynthesis.cancel();
             }

@@ -44,9 +44,9 @@ function Brand() {
     return (
         <div className="flex items-center gap-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/brand/logo-dark.png" alt="" className="brand-logo-dark h-7 w-auto select-none" draggable={false} />
+            <img src="/brand/logo-dark.png?v=2" alt="" className="brand-logo-dark h-7 w-auto select-none" draggable={false} />
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/brand/logo-light.png" alt="" className="brand-logo-light h-7 w-auto select-none" draggable={false} />
+            <img src="/brand/logo-light.png?v=2" alt="" className="brand-logo-light h-7 w-auto select-none" draggable={false} />
             <div className="leading-none">
                 <span className="text-xs font-bold tracking-wider text-ink block font-display">
                     IRON<span className="text-accent">TRACK</span>

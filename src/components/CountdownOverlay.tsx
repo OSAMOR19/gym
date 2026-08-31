@@ -9,6 +9,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
+import { speakEleven, prefetchPhrases } from '../lib/voice/speak';
 
 interface CountdownOverlayProps {
     onComplete: () => void;
@@ -50,21 +51,36 @@ export default function CountdownOverlay({ onComplete, voiceEnabled, startFrom =
     }, []);
 
     const speak = useCallback((text: string) => {
-        if (!voiceEnabled || typeof window === 'undefined' || !window.speechSynthesis) return;
+        if (!voiceEnabled || typeof window === 'undefined') return;
 
-        // Cancel previous and speak immediately
-        window.speechSynthesis.cancel();
+        const utterFallback = () => {
+            if (!window.speechSynthesis) return;
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 1.1;
+            utterance.pitch = 1.0;
+            utterance.volume = 1.0;
+            if (voiceRef.current) utterance.voice = voiceRef.current;
+            window.speechSynthesis.speak(utterance);
+        };
 
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = 1.1;
-        utterance.pitch = 1.0;
-        utterance.volume = 1.0;
+        // Branded voice when the phrase is already cached (or arrives fast);
+        // the countdown beat can't wait longer than 350ms.
+        window.speechSynthesis?.cancel();
+        speakEleven(text, undefined, 350)
+            .then((started) => { if (!started) utterFallback(); })
+            .catch(() => utterFallback());
+    }, [voiceEnabled]);
 
-        if (voiceRef.current) {
-            utterance.voice = voiceRef.current;
-        }
-
-        window.speechSynthesis.speak(utterance);
+    // Warm the phrase cache the moment the overlay appears, so every beat
+    // (and GO!) plays in the coach voice with zero added latency.
+    useEffect(() => {
+        if (!voiceEnabled) return;
+        prefetchPhrases([
+            ...Array.from({ length: startFrom }, (_, i) => String(startFrom - i)),
+            'Go!',
+        ]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [voiceEnabled]);
 
     // Keep the latest callbacks in refs so the countdown effect can depend on
