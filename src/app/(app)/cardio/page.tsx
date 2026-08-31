@@ -192,25 +192,24 @@ export default function CardioPage() {
     } : null;
 
     return (
-        <div className="force-dark bg-app min-h-[100dvh] text-white">
         <div className="max-w-2xl mx-auto p-4 md:p-6">
             {/* ─── Select activity ─────────────────────────────────────────── */}
             {step === 'select' && (
                 <>
-                    <h1 className="text-2xl font-bold text-white mb-1">Cardio</h1>
-                    <p className="text-xs text-white/30 mb-6">Camera-tracked aerobic training — pick your activity.</p>
+                    <h1 className="text-2xl font-bold text-ink mb-1 font-display">Cardio</h1>
+                    <p className="text-xs text-ink/30 mb-6">Camera-tracked aerobic training — pick your activity.</p>
                     <div className="grid grid-cols-2 gap-3">
                         {(Object.keys(CARDIO_ACTIVITIES) as CardioActivity[]).map((a) => (
                             <button
                                 key={a}
                                 onClick={() => { setActivity(a); setStep('setup'); }}
-                                className="border border-white/5 rounded-xl p-5 text-left hover:border-[#22c55e]/40 transition-all cursor-pointer group"
+                                className="border border-ink/5 rounded-xl p-5 text-left hover:border-accent/40 transition-all cursor-pointer group"
                             >
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="text-white/30 group-hover:text-[#22c55e] transition-colors mb-3">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="text-ink/30 group-hover:text-accent transition-colors mb-3">
                                     <path d={ACTIVITY_ICONS[a]} />
                                 </svg>
-                                <p className="text-sm font-bold text-white">{CARDIO_ACTIVITIES[a].name}</p>
-                                <p className="text-[10px] text-white/25 mt-0.5">
+                                <p className="text-sm font-bold text-ink">{CARDIO_ACTIVITIES[a].name}</p>
+                                <p className="text-[10px] text-ink/25 mt-0.5">
                                     {CARDIO_ACTIVITIES[a].treadmill ? 'Mount phone on treadmill' : 'Camera tracks your movement'}
                                 </p>
                             </button>
@@ -222,10 +221,10 @@ export default function CardioPage() {
             {/* ─── Setup ───────────────────────────────────────────────────── */}
             {step === 'setup' && (
                 <>
-                    <button onClick={() => setStep('select')} className="text-xs text-white/30 hover:text-white/60 mb-4 cursor-pointer">← Back</button>
-                    <h1 className="text-xl font-bold text-white mb-4">{CARDIO_ACTIVITIES[activity].name}</h1>
-                    <div className="border border-white/5 rounded-xl p-4 mb-4 space-y-3">
-                        <p className="text-[10px] text-white/25 tracking-widest uppercase">Camera setup</p>
+                    <button onClick={() => setStep('select')} className="text-xs text-ink/30 hover:text-ink/60 mb-4 cursor-pointer">← Back</button>
+                    <h1 className="text-xl font-bold text-ink mb-4 font-display">{CARDIO_ACTIVITIES[activity].name}</h1>
+                    <div className="border border-ink/5 rounded-xl p-4 mb-4 space-y-3">
+                        <p className="text-[10px] text-ink/25 tracking-widest uppercase">Camera setup</p>
                         {[
                             CARDIO_ACTIVITIES[activity].treadmill
                                 ? 'Mount your phone securely on the treadmill console or a stand'
@@ -234,30 +233,30 @@ export default function CardioPage() {
                             'Good lighting helps tracking accuracy',
                         ].map((tip, i) => (
                             <div key={i} className="flex items-start gap-2.5">
-                                <span className="w-5 h-5 rounded-full bg-[#22c55e]/10 text-[#22c55e] text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">{i + 1}</span>
-                                <p className="text-xs text-white/60 leading-relaxed">{tip}</p>
+                                <span className="w-5 h-5 rounded-full bg-accent/10 text-accent text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">{i + 1}</span>
+                                <p className="text-xs text-ink/60 leading-relaxed">{tip}</p>
                             </div>
                         ))}
                     </div>
                     {CARDIO_ACTIVITIES[activity].treadmill && (
-                        <div className="border border-white/5 rounded-xl p-4 mb-4">
-                            <label htmlFor="treadmill-speed" className="block text-[10px] text-white/25 tracking-widest uppercase mb-1.5">
+                        <div className="border border-ink/5 rounded-xl p-4 mb-4">
+                            <label htmlFor="treadmill-speed" className="block text-[10px] text-ink/25 tracking-widest uppercase mb-1.5">
                                 Treadmill speed (km/h) — optional
                             </label>
                             <input
                                 id="treadmill-speed" type="number" inputMode="decimal" min={0.5} max={25} step={0.1}
                                 value={speedInput} onChange={(e) => setSpeedInput(e.target.value)}
                                 placeholder="e.g. 5.5"
-                                className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-base md:text-sm text-white/90 placeholder:text-white/20 focus:outline-none focus:border-[#22c55e]/40"
+                                className="w-full bg-ink/5 border border-ink/10 rounded-xl px-3.5 py-2.5 text-base md:text-sm text-ink/90 placeholder:text-ink/20 focus:outline-none focus:border-accent/40"
                             />
-                            <p className="text-[10px] text-white/25 mt-1.5">
+                            <p className="text-[10px] text-ink/25 mt-1.5">
                                 With your treadmill&apos;s speed, distance is calculated from it. Without it, distance is a camera-based estimate.
                             </p>
                         </div>
                     )}
                     <button
                         onClick={() => { setStep('live'); setCounting(true); }}
-                        className="w-full py-3.5 rounded-xl bg-[#22c55e] text-black font-bold text-sm hover:bg-[#16a34a] transition-all cursor-pointer"
+                        className="w-full py-3.5 rounded-xl bg-accent text-black font-bold text-sm hover:bg-accent-strong transition-all cursor-pointer"
                     >
                         Start {CARDIO_ACTIVITIES[activity].name}
                     </button>
@@ -274,7 +273,7 @@ export default function CardioPage() {
             )}
             {step === 'live' && (
                 <div className="space-y-4">
-                    <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-black aspect-[3/4] sm:aspect-video">
+                    <div className="force-dark relative rounded-2xl overflow-hidden border border-white/10 bg-black aspect-[3/4] sm:aspect-video">
                         {/* Same neon skeleton overlay as the strength workout —
                             the whole-body tracking IS the product */}
                         <CameraFeed
@@ -301,9 +300,9 @@ export default function CardioPage() {
                         )}
                         {tracking.isTracking && result && !result.bodyVisible && (
                             <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 flex justify-center pointer-events-none">
-                                <div className="bg-black/70 backdrop-blur-md border border-white/15 rounded-2xl px-6 py-5 text-center max-w-sm">
-                                    <p className="text-xl font-black text-white">Step back</p>
-                                    <p className="text-sm text-white/70 mt-1.5">Make sure your whole body is visible</p>
+                                <div className="bg-black/70 backdrop-blur-md border border-ink/15 rounded-2xl px-6 py-5 text-center max-w-sm">
+                                    <p className="text-xl font-black text-ink">Step back</p>
+                                    <p className="text-sm text-ink/70 mt-1.5">Make sure your whole body is visible</p>
                                 </div>
                             </div>
                         )}
@@ -318,22 +317,22 @@ export default function CardioPage() {
 
                     {/* HUD */}
                     <div className="grid grid-cols-2 gap-3">
-                        <div className="border border-white/5 rounded-xl p-4 col-span-2 text-center">
-                            <p className="text-4xl font-black text-white" style={{ fontFamily: 'var(--font-orbitron), monospace' }}>{fmtClock(elapsed)}</p>
-                            <p className="text-[10px] text-white/25 tracking-widest uppercase mt-1">Time</p>
+                        <div className="border border-ink/5 rounded-xl p-4 col-span-2 text-center">
+                            <p className="text-4xl font-black text-ink" style={{ fontFamily: 'var(--font-orbitron), monospace' }}>{fmtClock(elapsed)}</p>
+                            <p className="text-[10px] text-ink/25 tracking-widest uppercase mt-1">Time</p>
                         </div>
-                        <div className="border border-white/5 rounded-xl p-4 text-center">
-                            <p className="text-2xl font-black text-[#22c55e]" style={{ fontFamily: 'var(--font-orbitron), monospace' }}>{result?.steps ?? 0}</p>
-                            <p className="text-[10px] text-white/25 tracking-widest uppercase mt-1">{unit} · est.</p>
+                        <div className="border border-ink/5 rounded-xl p-4 text-center">
+                            <p className="text-2xl font-black text-accent" style={{ fontFamily: 'var(--font-orbitron), monospace' }}>{result?.steps ?? 0}</p>
+                            <p className="text-[10px] text-ink/25 tracking-widest uppercase mt-1">{unit} · est.</p>
                         </div>
-                        <div className="border border-white/5 rounded-xl p-4 text-center">
-                            <p className="text-2xl font-black text-[#22c55e]" style={{ fontFamily: 'var(--font-orbitron), monospace' }}>{result?.cadence ?? 0}</p>
-                            <p className="text-[10px] text-white/25 tracking-widest uppercase mt-1">{unit}/min · est.</p>
+                        <div className="border border-ink/5 rounded-xl p-4 text-center">
+                            <p className="text-2xl font-black text-accent" style={{ fontFamily: 'var(--font-orbitron), monospace' }}>{result?.cadence ?? 0}</p>
+                            <p className="text-[10px] text-ink/25 tracking-widest uppercase mt-1">{unit}/min · est.</p>
                         </div>
                         {liveDistance?.distanceKm != null && (
-                            <div className="border border-white/5 rounded-xl p-4 text-center col-span-2">
-                                <p className="text-2xl font-black text-white" style={{ fontFamily: 'var(--font-orbitron), monospace' }}>{liveDistance.distanceKm} km</p>
-                                <p className="text-[10px] text-white/25 tracking-widest uppercase mt-1">
+                            <div className="border border-ink/5 rounded-xl p-4 text-center col-span-2">
+                                <p className="text-2xl font-black text-ink" style={{ fontFamily: 'var(--font-orbitron), monospace' }}>{liveDistance.distanceKm} km</p>
+                                <p className="text-[10px] text-ink/25 tracking-widest uppercase mt-1">
                                     {liveDistance.source === 'treadmill_input' ? 'distance · from treadmill speed' : 'distance · estimated'}
                                 </p>
                             </div>
@@ -342,7 +341,7 @@ export default function CardioPage() {
 
                     <button
                         onClick={finish}
-                        className="w-full py-3.5 rounded-xl bg-red-500/90 text-white font-bold text-sm hover:bg-red-500 transition-all cursor-pointer"
+                        className="w-full py-3.5 rounded-xl bg-red-500/90 text-ink font-bold text-sm hover:bg-red-500 transition-all cursor-pointer"
                     >
                         Finish Session
                     </button>
@@ -353,9 +352,9 @@ export default function CardioPage() {
             {step === 'summary' && summary && (
                 <div className="space-y-4">
                     <div className="text-center pt-4">
-                        <p className="text-[10px] text-[#22c55e] tracking-[0.25em] uppercase font-bold">Session complete</p>
-                        <h1 className="text-2xl font-bold text-white mt-1">{CARDIO_ACTIVITIES[summary.activity].name}</h1>
-                        <p className="text-5xl font-black text-white mt-4" style={{ fontFamily: 'var(--font-orbitron), monospace' }}>
+                        <p className="text-[10px] text-accent tracking-[0.25em] uppercase font-bold">Session complete</p>
+                        <h1 className="text-2xl font-bold text-ink mt-1 font-display">{CARDIO_ACTIVITIES[summary.activity].name}</h1>
+                        <p className="text-5xl font-black text-ink mt-4" style={{ fontFamily: 'var(--font-orbitron), monospace' }}>
                             {fmtClock(summary.durationSeconds)}
                         </p>
                     </div>
@@ -365,26 +364,26 @@ export default function CardioPage() {
                         </p>
                     )}
                     <div className="grid grid-cols-2 gap-3">
-                        <div className="border border-white/5 rounded-xl p-4">
-                            <p className="text-xl font-black text-[#22c55e]" style={{ fontFamily: 'var(--font-orbitron), monospace' }}>{summary.steps}</p>
-                            <p className="text-[10px] text-white/25 tracking-widest uppercase mt-0.5">{unit} (estimated)</p>
+                        <div className="border border-ink/5 rounded-xl p-4">
+                            <p className="text-xl font-black text-accent" style={{ fontFamily: 'var(--font-orbitron), monospace' }}>{summary.steps}</p>
+                            <p className="text-[10px] text-ink/25 tracking-widest uppercase mt-0.5">{unit} (estimated)</p>
                         </div>
-                        <div className="border border-white/5 rounded-xl p-4">
-                            <p className="text-xl font-black text-[#22c55e]" style={{ fontFamily: 'var(--font-orbitron), monospace' }}>{summary.avgCadence || '—'}</p>
-                            <p className="text-[10px] text-white/25 tracking-widest uppercase mt-0.5">{unit}/min (estimated)</p>
+                        <div className="border border-ink/5 rounded-xl p-4">
+                            <p className="text-xl font-black text-accent" style={{ fontFamily: 'var(--font-orbitron), monospace' }}>{summary.avgCadence || '—'}</p>
+                            <p className="text-[10px] text-ink/25 tracking-widest uppercase mt-0.5">{unit}/min (estimated)</p>
                         </div>
                         {summary.distanceKm != null && (
-                            <div className="border border-white/5 rounded-xl p-4">
-                                <p className="text-xl font-black text-white" style={{ fontFamily: 'var(--font-orbitron), monospace' }}>{summary.distanceKm} km</p>
-                                <p className="text-[10px] text-white/25 tracking-widest uppercase mt-0.5">
+                            <div className="border border-ink/5 rounded-xl p-4">
+                                <p className="text-xl font-black text-ink" style={{ fontFamily: 'var(--font-orbitron), monospace' }}>{summary.distanceKm} km</p>
+                                <p className="text-[10px] text-ink/25 tracking-widest uppercase mt-0.5">
                                     {summary.distanceSource === 'treadmill_input' ? 'distance (from speed)' : 'distance (estimated)'}
                                 </p>
                             </div>
                         )}
                         {summary.estCalories != null && (
-                            <div className="border border-white/5 rounded-xl p-4">
-                                <p className="text-xl font-black text-white" style={{ fontFamily: 'var(--font-orbitron), monospace' }}>{summary.estCalories}</p>
-                                <p className="text-[10px] text-white/25 tracking-widest uppercase mt-0.5">kcal (estimated)</p>
+                            <div className="border border-ink/5 rounded-xl p-4">
+                                <p className="text-xl font-black text-ink" style={{ fontFamily: 'var(--font-orbitron), monospace' }}>{summary.estCalories}</p>
+                                <p className="text-[10px] text-ink/25 tracking-widest uppercase mt-0.5">kcal (estimated)</p>
                             </div>
                         )}
                     </div>
@@ -394,20 +393,19 @@ export default function CardioPage() {
                     <div className="grid grid-cols-2 gap-3">
                         <button
                             onClick={() => { setSummary(null); setClips([]); setCardioSessionId(null); setStep('select'); }}
-                            className="py-3 rounded-xl border border-white/10 text-sm font-semibold text-white/60 hover:bg-white/5 transition-all cursor-pointer"
+                            className="py-3 rounded-xl border border-ink/10 text-sm font-semibold text-ink/60 hover:bg-ink/5 transition-all cursor-pointer"
                         >
                             New Session
                         </button>
                         <Link
                             href="/dashboard"
-                            className="py-3 rounded-xl bg-[#22c55e] text-black text-sm font-bold text-center hover:bg-[#16a34a] transition-all"
+                            className="py-3 rounded-xl bg-accent text-black text-sm font-bold text-center hover:bg-accent-strong transition-all"
                         >
                             Done
                         </Link>
                     </div>
                 </div>
             )}
-        </div>
         </div>
     );
 }

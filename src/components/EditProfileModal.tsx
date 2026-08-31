@@ -136,7 +136,7 @@ export default function EditProfileModal({ onClose }: EditProfileModalProps) {
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="flex items-center justify-between mb-5">
-                    <h2 id="edit-profile-title" className="text-base font-bold text-ink">Edit profile</h2>
+                    <h2 id="edit-profile-title" className="text-base font-bold text-ink font-display">Edit profile</h2>
                     <button
                         onClick={onClose}
                         aria-label="Close"

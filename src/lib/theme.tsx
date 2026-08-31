@@ -97,3 +97,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 export function useTheme() {
     return useContext(ThemeContext);
 }
+
+/**
+ * Data-driven brand colors (per-program colors) are tuned for dark surfaces.
+ * Wrap them in vividColor() wherever they render as text/icons on a THEMED
+ * surface: dark mode keeps them as-is (--vivid: 100%), light mode mixes them
+ * toward black for contrast on white. Inside .force-dark they stay as-is.
+ */
+export function vividColor(color: string): string {
+    return `color-mix(in oklab, ${color} var(--vivid, 100%), black)`;
+}

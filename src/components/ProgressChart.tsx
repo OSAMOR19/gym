@@ -20,7 +20,7 @@ export default function ProgressChart({ data, height = 160 }: ProgressChartProps
 
     return (
         <div className="glass-panel rounded-2xl p-6">
-            <h3 className="text-sm font-semibold text-ink/60 tracking-wider uppercase mb-4">
+            <h3 className="text-sm font-semibold text-ink/60 tracking-wider uppercase mb-4 font-display">
                 Weekly Activity
             </h3>
 

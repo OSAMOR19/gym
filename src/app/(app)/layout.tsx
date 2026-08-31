@@ -1,5 +1,5 @@
 /**
- * Authenticated App Layout — wraps all /dashboard, /programs, /workout, /progress, /profile pages.
+ * Authenticated App Layout — wraps all /dashboard, /programs, /workout, /progress, /settings pages.
  * Redirects to /login if no active session.
  * Includes the Sidebar navigation. Main content offsets based on sidebar collapse state.
  * Owns the unseen-notification count: badge on the mobile top-bar bell and
@@ -24,8 +24,10 @@ const SECTION_TITLES: Array<[prefix: string, title: string]> = [
     ['/cardio', 'Cardio'],
     ['/replays', 'My Replays'],
     ['/progress', 'Progress'],
+    ['/calendar', 'Calendar'],
     ['/notifications', 'Notifications'],
-    ['/profile', 'Profile'],
+    ['/settings', 'Settings'],
+    ['/profile', 'Settings'],
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {

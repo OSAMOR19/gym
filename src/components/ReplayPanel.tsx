@@ -84,23 +84,23 @@ export default function ReplayPanel({ clips, stats, links }: ReplayPanelProps) {
     }, []);
 
     return (
-        <div className="border border-white/10 rounded-xl p-4 bg-white/[0.02]">
+        <div className="border border-ink/10 rounded-xl p-4 bg-ink/[0.02]">
             {phase === 'idle' && (
                 <>
                     <div className="flex items-center gap-2 mb-1">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-accent" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <polygon points="23,7 16,12 23,17" /><rect x="1" y="5" width="15" height="14" rx="2" />
                         </svg>
-                        <p className="text-sm font-bold text-white">Workout Replay</p>
+                        <p className="text-sm font-bold text-ink">Workout Replay</p>
                     </div>
-                    <p className="text-xs text-white/40 leading-relaxed mb-3">
+                    <p className="text-xs text-ink/40 leading-relaxed mb-3">
                         {clips.length > 0
                             ? `Turn ${clips.length} highlight${clips.length > 1 ? 's' : ''} from this session into a ~25s recap you can share.`
                             : 'Create a short animated recap of this workout you can share.'}
                     </p>
                     <button
                         onClick={generate}
-                        className="w-full py-3 rounded-xl bg-[#22c55e] text-black text-sm font-bold hover:bg-[#16a34a] transition-all cursor-pointer"
+                        className="w-full py-3 rounded-xl bg-accent text-black text-sm font-bold hover:bg-accent-strong transition-all cursor-pointer"
                     >
                         Create Replay
                     </button>
@@ -109,17 +109,17 @@ export default function ReplayPanel({ clips, stats, links }: ReplayPanelProps) {
 
             {phase === 'generating' && (
                 <div className="flex items-center gap-3 py-2">
-                    <span className="w-5 h-5 border-2 border-white/15 border-t-[#22c55e] rounded-full animate-spin flex-shrink-0" />
+                    <span className="w-5 h-5 border-2 border-ink/15 border-t-accent rounded-full animate-spin flex-shrink-0" />
                     <div>
-                        <p className="text-sm font-semibold text-white">Creating your replay…</p>
-                        <p className="text-[11px] text-white/35">About half a minute — your workout is already saved.</p>
+                        <p className="text-sm font-semibold text-ink">Creating your replay…</p>
+                        <p className="text-[11px] text-ink/35">About half a minute — your workout is already saved.</p>
                     </div>
                 </div>
             )}
 
             {phase === 'ready' && (
                 <>
-                    <p className="text-sm font-bold text-white mb-1">Your Workout Replay is ready</p>
+                    <p className="text-sm font-bold text-ink mb-1">Your Workout Replay is ready</p>
                     {uploadNote && (
                         <p className="text-[11px] text-amber-400/90 mb-2">
                             {uploadNote} It&apos;s still available right here to watch and share.
@@ -137,19 +137,19 @@ export default function ReplayPanel({ clips, stats, links }: ReplayPanelProps) {
                     <div className="grid grid-cols-3 gap-2">
                         <button
                             onClick={() => setWatching((w) => !w)}
-                            className="py-2.5 rounded-xl border border-white/10 text-xs font-semibold text-white/70 hover:bg-white/5 transition-all cursor-pointer"
+                            className="py-2.5 rounded-xl border border-ink/10 text-xs font-semibold text-ink/70 hover:bg-ink/5 transition-all cursor-pointer"
                         >
                             {watching ? 'Hide' : 'Watch'}
                         </button>
                         <button
                             onClick={share}
-                            className="py-2.5 rounded-xl bg-[#22c55e] text-black text-xs font-bold hover:bg-[#16a34a] transition-all cursor-pointer"
+                            className="py-2.5 rounded-xl bg-accent text-black text-xs font-bold hover:bg-accent-strong transition-all cursor-pointer"
                         >
                             Share
                         </button>
                         <button
                             onClick={download}
-                            className="py-2.5 rounded-xl border border-white/10 text-xs font-semibold text-white/70 hover:bg-white/5 transition-all cursor-pointer"
+                            className="py-2.5 rounded-xl border border-ink/10 text-xs font-semibold text-ink/70 hover:bg-ink/5 transition-all cursor-pointer"
                         >
                             Save
                         </button>
@@ -162,7 +162,7 @@ export default function ReplayPanel({ clips, stats, links }: ReplayPanelProps) {
                     <p className="text-xs text-red-400 mb-3">{error}</p>
                     <button
                         onClick={generate}
-                        className="w-full py-2.5 rounded-xl border border-white/10 text-xs font-semibold text-white/70 hover:bg-white/5 transition-all cursor-pointer"
+                        className="w-full py-2.5 rounded-xl border border-ink/10 text-xs font-semibold text-ink/70 hover:bg-ink/5 transition-all cursor-pointer"
                     >
                         Try again
                     </button>

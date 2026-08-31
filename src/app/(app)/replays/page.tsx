@@ -65,7 +65,7 @@ export default function ReplaysPage() {
 
     return (
         <div className="max-w-5xl mx-auto p-4 md:p-6">
-            <h1 className="text-2xl font-bold text-ink mb-1">My Replays</h1>
+            <h1 className="text-2xl font-bold text-ink mb-1 font-display">My Replays</h1>
             <p className="text-xs text-ink/30 mb-6">Your workout highlights — private until you share them.</p>
 
             {rows === null && (
@@ -158,7 +158,7 @@ export default function ReplaysPage() {
                         className="w-full max-w-[320px] bg-surface border border-ink/10 rounded-2xl p-5 shadow-2xl animate-chat-in"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <h3 className="text-sm font-bold text-ink mb-1.5">Delete this replay?</h3>
+                        <h3 className="text-sm font-bold text-ink mb-1.5 font-display">Delete this replay?</h3>
                         <p className="text-xs text-ink/40 leading-relaxed mb-5">
                             The video will be permanently deleted from your library and storage. This can&apos;t be undone.
                         </p>

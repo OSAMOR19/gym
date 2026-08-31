@@ -203,7 +203,7 @@ export default function CoachIntakeFlow({ onPlanChosen }: CoachIntakeFlowProps) 
                                     <p className="text-[9px] font-bold tracking-widest uppercase mb-0.5" style={{ color: rec.program.color }}>
                                         {LEVEL_LABELS[rec.program.level]} · {rec.program.weeks.length}w · {rec.program.weeks[0]?.days.length ?? 3} days/week
                                     </p>
-                                    <h3 className="text-lg font-bold text-ink leading-tight">{rec.program.name}</h3>
+                                    <h3 className="text-lg font-bold text-ink leading-tight font-display">{rec.program.name}</h3>
                                 </div>
                             </div>
                             <div className="p-3.5 space-y-1.5">

@@ -297,7 +297,7 @@ export default function CoachChat() {
                         <div className="flex items-center gap-2.5 min-w-0">
                             <BrandLogo size="sm" withWordmark={false} className="flex-shrink-0" />
                             <div className="min-w-0">
-                                <h2 className="text-sm font-bold text-ink leading-none">Coach</h2>
+                                <h2 className="text-sm font-bold text-ink leading-none font-display">Coach</h2>
                                 <p className="text-[9px] text-ink/25 mt-1 tracking-wider uppercase truncate">
                                     {view === 'history' ? 'Conversations' : view === 'intake' ? 'Find your plan' : 'Knows your training'}
                                 </p>

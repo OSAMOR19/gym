@@ -15,6 +15,7 @@ import { syncProgramProgress } from '../../../../lib/programProgress';
 import { launchProgramDay } from '../../../../lib/workoutBuilder';
 import { getUserState, assessReadiness, Readiness } from '../../../../lib/userState';
 import { EXERCISE_VIDEOS } from '../../../../components/ExerciseGuide';
+import { vividColor } from '../../../../lib/theme';
 
 interface FlatDay {
     weekNumber: number;
@@ -128,19 +129,19 @@ export default function ProgramDetailPage({ params }: { params: Promise<{ id: st
                     >
                         <span
                             className="text-base font-black tracking-wider"
-                            style={{ color: program.color, fontFamily: 'var(--font-orbitron), monospace' }}
+                            style={{ color: vividColor(program.color), fontFamily: 'var(--font-orbitron), monospace' }}
                         >
                             {program.icon}
                         </span>
                     </div>
 
                     <div className="flex-1">
-                        <h1 className="text-xl md:text-2xl font-bold text-ink mb-1">{program.name}</h1>
+                        <h1 className="text-xl md:text-2xl font-bold text-ink mb-1 font-display">{program.name}</h1>
                         <p className="text-ink/25 text-sm mb-3">{program.description}</p>
                         <div className="flex items-center gap-3 text-[11px] text-ink/20">
                             <span
                                 className="px-2 py-0.5 rounded border font-bold uppercase tracking-widest text-[9px]"
-                                style={{ borderColor: `${program.color}25`, color: program.color }}
+                                style={{ borderColor: `${program.color}25`, color: vividColor(program.color) }}
                             >
                                 {LEVEL_LABELS[program.level]}
                             </span>
@@ -230,13 +231,13 @@ export default function ProgramDetailPage({ params }: { params: Promise<{ id: st
                                                     className="text-2xl font-black leading-none"
                                                     style={{
                                                         fontFamily: 'var(--font-orbitron), monospace',
-                                                        color: state === 'completed' ? program.color : 'var(--foreground)',
+                                                        color: state === 'completed' ? vividColor(program.color) : 'var(--foreground)',
                                                     }}
                                                 >
                                                     {String(day.dayIndex + 1).padStart(2, '0')}
                                                 </span>
                                                 {state === 'completed' && (
-                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={program.color} strokeWidth="2.5" strokeLinecap="round">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" style={{ color: vividColor(program.color) }} strokeWidth="2.5" strokeLinecap="round">
                                                         <polyline points="20,6 9,17 4,12" />
                                                     </svg>
                                                 )}
@@ -305,14 +306,14 @@ export default function ProgramDetailPage({ params }: { params: Promise<{ id: st
                                 className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black"
                                 style={{
                                     backgroundColor: `${program.color}15`,
-                                    color: program.color,
+                                    color: vividColor(program.color),
                                     fontFamily: 'var(--font-orbitron), monospace',
                                 }}
                             >
                                 {selectedDay + 1}
                             </div>
                             <div>
-                                <h3 className="text-sm font-semibold" style={{ color: program.color }}>
+                                <h3 className="text-sm font-semibold" style={{ color: vividColor(program.color) }}>
                                     {flatDays[selectedDay].dayName}
                                 </h3>
                                 <p className="text-[10px] text-ink/20">
@@ -377,7 +378,7 @@ export default function ProgramDetailPage({ params }: { params: Promise<{ id: st
                         style={{
                             backgroundColor: `${program.color}10`,
                             borderColor: `${program.color}25`,
-                            color: program.color,
+                            color: vividColor(program.color),
                         }}
                     >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

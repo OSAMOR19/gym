@@ -70,7 +70,7 @@ export default function SignupPage() {
                             <polyline points="22,6 12,13 2,6" />
                         </svg>
                     </div>
-                    <h2 className="text-2xl font-bold text-ink mb-2">Confirm your email</h2>
+                    <h2 className="text-2xl font-bold text-ink mb-2 font-display">Confirm your email</h2>
                     <p className="text-ink/40 text-sm mb-1">We sent a confirmation link to</p>
                     <p className="text-accent font-medium mb-6">{email}</p>
                     <p className="text-ink/30 text-xs max-w-xs mx-auto mb-8">
@@ -90,7 +90,7 @@ export default function SignupPage() {
 
     return (
         <AuthLayout>
-            <h2 className="text-2xl font-bold text-ink mb-1">Create Account</h2>
+            <h2 className="text-2xl font-bold text-ink mb-1 font-display">Create Account</h2>
             <p className="text-ink/30 text-sm mb-8">Start your fitness journey with IronTrack</p>
 
             {/* Google OAuth */}

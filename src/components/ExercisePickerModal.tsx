@@ -158,7 +158,7 @@ export default function ExercisePickerModal({
                 {/* Header */}
                 <div className="flex items-center justify-between px-5 pt-4 pb-3">
                     <div>
-                        <h2 className="text-base font-bold text-ink">Choose Exercise</h2>
+                        <h2 className="text-base font-bold text-ink font-display">Choose Exercise</h2>
                         <p className="text-[10px] text-ink/25 mt-0.5">Swipe through the cards, tap one to select</p>
                     </div>
                     <button

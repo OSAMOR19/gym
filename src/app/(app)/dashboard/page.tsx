@@ -17,6 +17,7 @@ import { getProgramById, Program, PROGRAMS, LEVEL_LABELS } from '../../../lib/pr
 import { listStartedPrograms, StartedProgram } from '../../../lib/programProgress';
 import { launchProgramDay } from '../../../lib/workoutBuilder';
 import { getUserState, assessReadiness, Readiness } from '../../../lib/userState';
+import { loadRecentSessions, RecentSession } from '../../../lib/recentSessions';
 import { openCoachChat } from '../../../components/CoachChat';
 import Skeleton from '../../../components/Skeleton';
 
@@ -52,6 +53,7 @@ export default function DashboardPage() {
     const [started, setStarted] = useState<StartedProgram[]>([]);
     const [plan, setPlan] = useState<CoachPlan | null>(null);
     const [readiness, setReadiness] = useState<Readiness | null>(null);
+    const [recent, setRecent] = useState<RecentSession[]>([]);
     const [launching, setLaunching] = useState(false);
     const [booting, setBooting] = useState(true);
 
@@ -72,6 +74,7 @@ export default function DashboardPage() {
         Promise.allSettled([
             fetchDashboardData(),
             listStartedPrograms().then(setStarted),
+            loadRecentSessions().then(setRecent),
         ]).then(() => setBooting(false));
         const onPlanSaved = () => setPlan(getCoachPlan());
         window.addEventListener('irontrack-plan-saved', onPlanSaved);
@@ -154,7 +157,7 @@ export default function DashboardPage() {
                     <p className="text-xs text-ink/20 tracking-widest uppercase mb-1">
                         {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
                     </p>
-                    <h1 className="text-2xl font-bold text-ink">
+                    <h1 className="text-2xl font-bold text-ink font-display">
                         {greeting()}, <span className="text-accent">{user?.name?.split(' ')[0]}</span>
                     </h1>
                 </div>
@@ -217,7 +220,7 @@ export default function DashboardPage() {
                                     <p className="text-[9px] font-bold tracking-[0.25em] uppercase" style={{ color: hero.program.color }}>
                                         {hero.completedDays.length > 0 ? 'Jump back in' : 'Picked for you'}
                                     </p>
-                                    <h2 className="text-xl md:text-2xl font-bold text-ink mt-1">{hero.program.name}</h2>
+                                    <h2 className="text-xl md:text-2xl font-bold text-ink mt-1 font-display">{hero.program.name}</h2>
                                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-[11px] text-ink/50">
                                         <span>{LEVEL_LABELS[hero.program.level]}</span>
                                         <span className="w-0.5 h-0.5 bg-ink/20 rounded-full" />
@@ -263,7 +266,7 @@ export default function DashboardPage() {
                                 <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-black/25" />
                                 <div className="relative p-5 md:p-7">
                                     <p className="text-[9px] font-bold tracking-[0.25em] uppercase text-accent">Let&apos;s get you started</p>
-                                    <h2 className="text-xl md:text-2xl font-bold text-ink mt-1">Find the plan that fits you</h2>
+                                    <h2 className="text-xl md:text-2xl font-bold text-ink mt-1 font-display">Find the plan that fits you</h2>
                                     <p className="text-xs text-ink/45 mt-1.5 max-w-sm leading-relaxed">
                                         Five quick questions — your goal, your gear, your schedule — and your coach picks the right program.
                                     </p>
@@ -288,7 +291,7 @@ export default function DashboardPage() {
                                         <p className="text-[9px] font-bold tracking-[0.25em] uppercase" style={{ color: p.color }}>
                                             Switch it up
                                         </p>
-                                        <h2 className="text-xl md:text-2xl font-bold text-ink mt-1">{p.name}</h2>
+                                        <h2 className="text-xl md:text-2xl font-bold text-ink mt-1 font-display">{p.name}</h2>
                                         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-[11px] text-ink/50">
                                             <span>{LEVEL_LABELS[p.level]}</span>
                                             <span className="w-0.5 h-0.5 bg-ink/20 rounded-full" />
@@ -362,8 +365,13 @@ export default function DashboardPage() {
             {/* ─── Main cockpit: 60/40 split ────────────────────────────────── */}
             <div className="grid grid-cols-1 md:grid-cols-[1fr_320px] gap-6 mb-6">
                 {/* Left: dominant weekly ring — compact on phones, where the
-                    old fixed height left a screen-filling void */}
-                <div className="relative border border-ink/5 rounded-xl p-5 md:p-8 flex flex-col items-center justify-center md:min-h-[320px]">
+                    old fixed height left a screen-filling void. The whole
+                    card opens the training calendar. */}
+                <Link
+                    href="/calendar"
+                    aria-label="Open your training calendar"
+                    className="relative border border-ink/5 rounded-xl p-5 md:p-8 flex flex-col items-center justify-center md:min-h-[320px] group hover:border-ink/15 transition-all cursor-pointer"
+                >
                     {/* Background ghost number */}
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden">
                         <span
@@ -388,7 +396,10 @@ export default function DashboardPage() {
                             <span className="text-2xl md:text-4xl font-black text-ink" style={{ fontFamily: 'var(--font-orbitron), monospace' }}>
                                 {weeklyDone}/{weeklyTarget}
                             </span>
-                            <span className="text-[9px] md:text-[10px] text-ink/25 tracking-widest uppercase mt-1">
+                            {/* -mr cancels the trailing letter-space so the
+                                tracked uppercase line is truly centered; the
+                                max-w keeps it inside the ring on phones */}
+                            <span className="block text-center leading-snug max-w-[96px] md:max-w-[150px] text-[9px] md:text-[10px] text-ink/25 tracking-widest uppercase mt-1 -mr-[0.1em]">
                                 Workouts this week
                             </span>
                         </div>
@@ -408,7 +419,12 @@ export default function DashboardPage() {
                             </div>
                         ))}
                     </div>
-                </div>
+
+                    <span className="flex items-center gap-1 text-[10px] font-semibold text-ink/20 group-hover:text-accent transition-colors mt-3 md:mt-4">
+                        View calendar
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9,18 15,12 9,6" /></svg>
+                    </span>
+                </Link>
 
                 {/* Right: data panels — a compact 3-up row on phones (three
                     stacked full-width cards wasted a screen of scroll),
@@ -481,8 +497,66 @@ export default function DashboardPage() {
                 </div>
             </div>
 
-            {/* ─── Recent activity strip ────────────────────────────────────── */}
-            {progressStats && progressStats.recentWorkouts.length > 0 && (
+            {/* ─── Recent activity strip — image cards with completion % ────── */}
+            {recent.length > 0 ? (
+                <div className="border-t border-ink/5 pt-6">
+                    <h3 className="text-[10px] text-ink/20 tracking-widest uppercase mb-3">Recent</h3>
+                    <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 snap-x">
+                        {recent.map((s) => (
+                            <Link
+                                key={s.id}
+                                href={s.href}
+                                className="flex-shrink-0 snap-start w-44 border border-ink/5 rounded-xl overflow-hidden hover:border-ink/15 transition-all group"
+                            >
+                                {/* Image: program photo (dark art) or exercise
+                                    demo GIF (white canvas) */}
+                                <div className={`relative h-24 ${s.imageKind === 'gif' ? 'bg-white' : 'force-dark bg-surface'}`}>
+                                    {s.image ? (
+                                        // eslint-disable-next-line @next/next/no-img-element
+                                        <img src={s.image} alt="" loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
+                                    ) : (
+                                        <span className="absolute inset-0 flex items-center justify-center text-lg font-black text-accent/40 font-display">
+                                            {s.icon ?? '—'}
+                                        </span>
+                                    )}
+                                    {s.completionPct !== null && (
+                                        <span className={`absolute top-1.5 right-1.5 text-[10px] font-black rounded-full px-2 py-0.5 bg-black/65 backdrop-blur-sm ${s.completionPct >= 100 ? 'text-[#4ade80]' : 'text-white'}`} style={{ fontFamily: 'var(--font-orbitron), monospace' }}>
+                                            {s.completionPct}%
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="p-3">
+                                    <p className="text-xs font-semibold text-ink/80 truncate">{s.name}</p>
+                                    <p className="text-[10px] text-ink/25 truncate mt-0.5">
+                                        {s.detail ?? `${s.totalReps} reps`}
+                                    </p>
+                                    {/* Completion bar */}
+                                    {s.completionPct !== null && (
+                                        <div className="h-1 bg-ink/10 rounded-full overflow-hidden mt-2">
+                                            <div
+                                                className="h-full rounded-full bg-accent transition-all"
+                                                style={{ width: `${s.completionPct}%` }}
+                                            />
+                                        </div>
+                                    )}
+                                    <div className="flex items-center gap-1.5 mt-2 text-[10px] text-ink/20">
+                                        <span>{s.totalReps} reps</span>
+                                        {s.formScore !== null && (
+                                            <>
+                                                <span className="w-0.5 h-0.5 bg-ink/10 rounded-full" />
+                                                <span>form {s.formScore}%</span>
+                                            </>
+                                        )}
+                                        <span className="w-0.5 h-0.5 bg-ink/10 rounded-full" />
+                                        <span>{s.completedAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                                    </div>
+                                </div>
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+            ) : progressStats && progressStats.recentWorkouts.length > 0 ? (
+                /* Legacy fallback: accounts whose history predates session rows */
                 <div className="border-t border-ink/5 pt-6">
                     <h3 className="text-[10px] text-ink/20 tracking-widest uppercase mb-3">Recent</h3>
                     <div className="flex gap-3 overflow-x-auto pb-2">
@@ -504,7 +578,7 @@ export default function DashboardPage() {
                         ))}
                     </div>
                 </div>
-            )}
+            ) : null}
         </div>
     );
 }

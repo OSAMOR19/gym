@@ -234,7 +234,7 @@ export default function ExerciseGuide({ exerciseId, isDetecting, showModal = fal
                         <p className="text-[10px] font-bold tracking-[0.3em] uppercase text-[#22c55e]/60">
                             Exercise Preview
                         </p>
-                        <h2 className="text-2xl font-black text-white tracking-tight">{name}</h2>
+                        <h2 className="text-2xl font-black text-white tracking-tight font-display">{name}</h2>
                     </div>
 
                     {/* GIF frame */}

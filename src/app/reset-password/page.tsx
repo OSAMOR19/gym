@@ -50,7 +50,7 @@ export default function ResetPasswordPage() {
 
     return (
         <AuthLayout>
-            <h2 className="text-2xl font-bold text-ink mb-1">Set New Password</h2>
+            <h2 className="text-2xl font-bold text-ink mb-1 font-display">Set New Password</h2>
             <p className="text-ink/30 text-sm mb-8">
                 Choose a strong password for your IronTrack account.
             </p>
