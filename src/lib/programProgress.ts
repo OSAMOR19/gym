@@ -8,6 +8,7 @@
  */
 
 import { createClient } from '../utils/supabase/client';
+import { cached } from './dataCache';
 import { getCompletedDays, markDayCompleted, getAllCompletedDaysLocal } from './workoutQueue';
 
 export interface StartedProgram {
@@ -22,6 +23,10 @@ export interface StartedProgram {
  * (union), and it degrades to local-only when signed out or offline.
  */
 export async function listStartedPrograms(): Promise<StartedProgram[]> {
+    return cached('started-programs', 90_000, listStartedProgramsUncached);
+}
+
+async function listStartedProgramsUncached(): Promise<StartedProgram[]> {
     const merged = new Map<string, StartedProgram>();
     for (const [programId, days] of Object.entries(getAllCompletedDaysLocal())) {
         if (days.length > 0) {

@@ -11,6 +11,7 @@
  */
 
 import { createClient } from '../utils/supabase/client';
+import { cached } from './dataCache';
 import { EXERCISES, ExerciseId } from './exercises';
 import { EXERCISE_VIDEOS } from '../components/ExerciseGuide';
 import { getProgramById } from './programs';
@@ -53,6 +54,10 @@ interface SetRow {
 }
 
 export async function loadRecentSessions(limit = 6): Promise<RecentSession[]> {
+    return cached(`recent-sessions:${limit}`, 90_000, () => loadRecentSessionsUncached(limit));
+}
+
+async function loadRecentSessionsUncached(limit: number): Promise<RecentSession[]> {
     try {
         const supabase = createClient();
         const { data: { user } } = await supabase.auth.getUser();

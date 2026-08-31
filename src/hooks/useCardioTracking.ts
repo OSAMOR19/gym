@@ -13,6 +13,7 @@ import { useRef, useState, useCallback, useEffect } from 'react';
 import type { NormalizedLandmarkList } from '@mediapipe/pose';
 import { loadMediaPipePose } from './usePoseDetection';
 import { CardioEngine, CardioActivity, CardioFrameResult } from '../lib/cardio/cardioEngine';
+import { CameraFacing, cameraConstraints, getStoredFacing, storeFacing } from '../lib/cameraFacing';
 
 interface RawLandmark { x: number; y: number; visibility?: number }
 interface PoseInstance {
@@ -76,6 +77,35 @@ export function useCardioTracking(activity: CardioActivity) {
         });
     }, []);
 
+    const facingRef = useRef<CameraFacing>('user');
+    const [facing, setFacing] = useState<CameraFacing>('user');
+    useEffect(() => {
+        const stored = getStoredFacing();
+        facingRef.current = stored;
+        setFacing(stored);
+    }, []);
+
+    /** Flip front/back. Live-swaps the stream when the camera is running. */
+    const switchCamera = useCallback(async () => {
+        const next: CameraFacing = facingRef.current === 'user' ? 'environment' : 'user';
+        facingRef.current = next;
+        setFacing(next);
+        storeFacing(next);
+        const video = videoRef.current;
+        if (!video || !runningRef.current) return;
+        try {
+            const old = video.srcObject as MediaStream | null;
+            const stream = await navigator.mediaDevices.getUserMedia(cameraConstraints(next));
+            old?.getTracks().forEach((t) => t.stop());
+            video.srcObject = stream;
+            await video.play();
+        } catch {
+            facingRef.current = facingRef.current === 'user' ? 'environment' : 'user';
+            setFacing(facingRef.current);
+            storeFacing(facingRef.current);
+        }
+    }, []);
+
     const start = useCallback(async () => {
         const video = videoRef.current;
         if (!video || runningRef.current) return;
@@ -83,9 +113,7 @@ export function useCardioTracking(activity: CardioActivity) {
         setState((prev) => ({ ...prev, isLoading: true, error: null, result: null }));
 
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' },
-            });
+            const stream = await navigator.mediaDevices.getUserMedia(cameraConstraints(facingRef.current));
             video.srcObject = stream;
             await video.play();
             runningRef.current = true;
@@ -163,7 +191,7 @@ export function useCardioTracking(activity: CardioActivity) {
         };
     }, []);
 
-    return { videoRef, canvasRef, landmarksRef, angleRef, ...state, start, stop };
+    return { videoRef, canvasRef, landmarksRef, angleRef, ...state, start, stop, facing, switchCamera };
 }
 
 /** Read the engine's current totals without feeding it a frame. */

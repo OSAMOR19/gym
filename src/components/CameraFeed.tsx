@@ -25,6 +25,8 @@ interface CameraFeedProps {
     hasBody: boolean;
     /** Places the joint-angle label. Omit for flows with no tracked angle (cardio). */
     exercise?: ExerciseId;
+    /** Selfie-mirror the view. True for the front camera, false for the back. */
+    mirrored?: boolean;
     isDetecting: boolean;
     isLoading?: boolean;
     error?: string | null;
@@ -37,6 +39,7 @@ export default function CameraFeed({
     angleRef,
     hasBody,
     exercise,
+    mirrored = true,
     isDetecting,
     isLoading,
     error,
@@ -63,10 +66,15 @@ export default function CameraFeed({
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
-        // Match canvas size to its display size
+        // Match canvas size to its display size, at up to 2x density —
+        // sharper skeleton on retina screens and higher-res replay clips
+        // (highlight recording captures this canvas).
+        const scale = Math.min(window.devicePixelRatio || 1, 2);
         const rect = canvas.getBoundingClientRect();
-        canvas.width = rect.width;
-        canvas.height = rect.height;
+        const bw = Math.round(rect.width * scale);
+        const bh = Math.round(rect.height * scale);
+        if (canvas.width !== bw) canvas.width = bw;
+        if (canvas.height !== bh) canvas.height = bh;
 
         const w = canvas.width;
         const h = canvas.height;
@@ -93,15 +101,19 @@ export default function CameraFeed({
         }
 
         ctx.save();
-        ctx.translate(w, 0);
-        ctx.scale(-1, 1); // Mirror horizontally for a natural selfie view
+        if (mirrored) {
+            ctx.translate(w, 0);
+            ctx.scale(-1, 1); // Mirror horizontally for a natural selfie view
+        }
         ctx.drawImage(video, sx, sy, sw, sh, 0, 0, w, h);
         ctx.restore();
 
         // Landmarks are normalized to the FULL video frame, but the video is
-        // drawn cover-cropped. Apply the same crop + mirror so the skeleton
-        // actually sits on the body instead of drifting off it.
-        const mapX = (nx: number) => w - ((nx * vw - sx) / sw) * w;
+        // drawn cover-cropped. Apply the same crop (+ mirror, front camera
+        // only) so the skeleton actually sits on the body.
+        const mapX = mirrored
+            ? (nx: number) => w - ((nx * vw - sx) / sw) * w
+            : (nx: number) => ((nx * vw - sx) / sw) * w;
         const mapY = (ny: number) => ((ny * vh - sy) / sh) * h;
         // MediaPipe reports hallucinated positions for joints it can't see —
         // don't draw those.
@@ -123,10 +135,10 @@ export default function CameraFeed({
                 const y2 = mapY(end.y);
 
                 // Neon glow effect
-                ctx.shadowBlur = 15;
+                ctx.shadowBlur = 15 * scale;
                 ctx.shadowColor = '#22c55e'; // neon green
                 ctx.strokeStyle = '#22c55e';
-                ctx.lineWidth = 3;
+                ctx.lineWidth = 3 * scale;
 
                 ctx.beginPath();
                 ctx.moveTo(x1, y1);
@@ -145,18 +157,18 @@ export default function CameraFeed({
                 const y = mapY(point.y);
 
                 // Outer glow
-                ctx.shadowBlur = 20;
+                ctx.shadowBlur = 20 * scale;
                 ctx.shadowColor = '#38bdf8'; // electric blue
                 ctx.fillStyle = '#38bdf8';
                 ctx.beginPath();
-                ctx.arc(x, y, 6, 0, Math.PI * 2);
+                ctx.arc(x, y, 6 * scale, 0, Math.PI * 2);
                 ctx.fill();
 
                 // Inner bright dot
                 ctx.shadowBlur = 0;
                 ctx.fillStyle = '#ffffff';
                 ctx.beginPath();
-                ctx.arc(x, y, 3, 0, Math.PI * 2);
+                ctx.arc(x, y, 3 * scale, 0, Math.PI * 2);
                 ctx.fill();
             });
             ctx.restore();
@@ -171,17 +183,17 @@ export default function CameraFeed({
                     const y = mapY(joint.y);
 
                     ctx.save();
-                    ctx.font = 'bold 18px Inter, sans-serif';
+                    ctx.font = `bold ${18 * scale}px Inter, sans-serif`;
                     ctx.fillStyle = '#22c55e';
-                    ctx.shadowBlur = 10;
+                    ctx.shadowBlur = 10 * scale;
                     ctx.shadowColor = '#22c55e';
                     ctx.textAlign = 'center';
-                    ctx.fillText(`${currentAngle}°`, x, y - 20);
+                    ctx.fillText(`${currentAngle}°`, x, y - 20 * scale);
                     ctx.restore();
                 }
             }
         }
-    }, [canvasRef, videoRef, landmarksRef, angleRef, getAngleLandmarkIndex]);
+    }, [canvasRef, videoRef, landmarksRef, angleRef, mirrored, getAngleLandmarkIndex]);
 
     // Drive the draw loop from the effect (drawFrame renders one frame)
     useEffect(() => {
@@ -202,7 +214,7 @@ export default function CameraFeed({
             <video
                 ref={videoRef}
                 className="absolute inset-0 w-full h-full object-cover"
-                style={{ transform: 'scaleX(-1)' }}
+                style={{ transform: mirrored ? 'scaleX(-1)' : undefined }}
                 autoPlay
                 playsInline
                 muted

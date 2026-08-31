@@ -16,7 +16,7 @@ import { useCardioTracking } from '../../../hooks/useCardioTracking';
 import { CardioActivity, CARDIO_ACTIVITIES } from '../../../lib/cardio/cardioEngine';
 import { saveCardioSession, deriveDistance, estimateCalories, CardioSummary } from '../../../lib/cardio/cardioSession';
 import { getUserProfile } from '../../../lib/userProfile';
-import { HighlightRecorder, HighlightClip } from '../../../lib/replay/highlightRecorder';
+import { HighlightRecorder, HighlightClip, canvasRecordingStream } from '../../../lib/replay/highlightRecorder';
 import { ReplayStats } from '../../../lib/replay/replayComposer';
 import ReplayPanel from '../../../components/ReplayPanel';
 import CameraFeed from '../../../components/CameraFeed';
@@ -103,7 +103,9 @@ export default function CardioPage() {
     // Attach the highlight recorder once the camera is live
     useEffect(() => {
         if (!tracking.isTracking) return;
-        const stream = tracking.videoRef.current?.srcObject as MediaStream | undefined;
+        // Record the overlay canvas so clips carry the neon skeleton
+        const stream = canvasRecordingStream(tracking.canvasRef.current)
+            ?? (tracking.videoRef.current?.srcObject as MediaStream | undefined);
         if (stream && HighlightRecorder.supported()) {
             const recorder = new HighlightRecorder();
             if (recorder.start(stream)) {
@@ -282,10 +284,26 @@ export default function CardioPage() {
                             landmarksRef={tracking.landmarksRef}
                             angleRef={tracking.angleRef}
                             hasBody={true} /* the page has its own large not-in-frame overlay */
+                            mirrored={tracking.facing === 'user'}
                             isDetecting={tracking.isTracking}
                             isLoading={tracking.isLoading}
                             error={tracking.error}
                         />
+                        {/* Flip front/back camera */}
+                        {tracking.isTracking && (
+                            <button
+                                onClick={tracking.switchCamera}
+                                title={tracking.facing === 'user' ? 'Switch to back camera' : 'Switch to front camera'}
+                                aria-label={tracking.facing === 'user' ? 'Switch to back camera' : 'Switch to front camera'}
+                                className="absolute top-3 right-3 z-20 w-9 h-9 flex items-center justify-center rounded-xl bg-black/50 backdrop-blur-sm border border-white/15 text-white/70 hover:text-white transition-all cursor-pointer"
+                            >
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
+                                    <path d="M15 12.5a3 3 0 10-1 2.24" />
+                                    <polyline points="15.5,10.5 15,12.5 13,12" />
+                                </svg>
+                            </button>
+                        )}
                         {tracking.error && (
                             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10">
                                 <button onClick={begin} className="text-xs font-bold text-red-100 bg-red-500/30 border border-red-500/40 rounded-lg px-5 py-2.5 cursor-pointer">

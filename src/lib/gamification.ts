@@ -8,6 +8,7 @@
  */
 
 import { createClient } from '../utils/supabase/client';
+import { cached, invalidateDataCache } from './dataCache';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -137,6 +138,10 @@ function defaultStats(): UserStats {
 
 export async function loadStats(): Promise<UserStats> {
     if (typeof window === 'undefined') return defaultStats();
+    return cached('user-stats', 60_000, fetchStats);
+}
+
+async function fetchStats(): Promise<UserStats> {
     
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -186,6 +191,7 @@ export async function saveStats(stats: UserStats): Promise<boolean> {
             perfect_form_reps: stats.perfectFormReps,
         }, { onConflict: 'user_id' });
 
+    if (!error) invalidateDataCache();
     if (error) {
         console.error('[gamification] Failed to save stats:', error.message);
         return false;

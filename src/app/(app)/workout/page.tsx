@@ -18,7 +18,7 @@ import { logEvent } from '../../../lib/events';
 import { getWorkoutQueue, clearWorkoutQueue, markDayCompleted, WorkoutQueue } from '../../../lib/workoutQueue';
 import { getCameraGuide } from '../../../lib/cameraGuide';
 import { NOT_IN_FRAME_FEEDBACK } from '../../../lib/repEngine';
-import { HighlightRecorder, HighlightClip } from '../../../lib/replay/highlightRecorder';
+import { HighlightRecorder, HighlightClip, canvasRecordingStream } from '../../../lib/replay/highlightRecorder';
 import { ReplayStats } from '../../../lib/replay/replayComposer';
 import ReplayPanel from '../../../components/ReplayPanel';
 import CameraFeed from '../../../components/CameraFeed';
@@ -42,6 +42,7 @@ const GOOD_FORM_THRESHOLD = 70;
 export default function WorkoutPage() {
     const {
         videoRef, canvasRef, landmarksRef, angleRef, repCount, formQuality,
+        facing, switchCamera,
         feedback, timeUnderTension, isDetecting, isLoading, error, modelError, exerciseId,
         hasBody, formCorrections, positionHint, coachTip, holdTime, isHolding,
         setExercise, startDetection, stopDetection, endSession, retryModel, workoutStartTime,
@@ -305,14 +306,19 @@ export default function WorkoutPage() {
             return;
         }
         if (!replayEnabled) return;
-        const stream = videoRef.current?.srcObject as MediaStream | undefined;
+        // Record the overlay canvas: clips carry the neon skeleton, and the
+        // canvas track survives per-set camera stops (the raw camera stream
+        // dying mid-segment is what used to leave strength replays with no
+        // real footage).
+        const stream = canvasRecordingStream(canvasRef.current)
+            ?? (videoRef.current?.srcObject as MediaStream | undefined);
         if (!stream) return;
         const isFirstSet = !recorderRef.current;
         if (isFirstSet) recorderRef.current = new HighlightRecorder();
         if (recorderRef.current!.start(stream) && isFirstSet) {
             setTimeout(() => recorderRef.current?.mark('start', 'WARM-UP'), 1500);
         }
-    }, [isDetecting, replayEnabled, videoRef]);
+    }, [isDetecting, replayEnabled, videoRef, canvasRef]);
 
     // Abandoned page → footage never leaves the device
     useEffect(() => () => {
@@ -541,6 +547,21 @@ export default function WorkoutPage() {
         </button>
     );
 
+    const flipButton = (
+        <button
+            onClick={switchCamera}
+            className="p-2 rounded-lg transition-all cursor-pointer flex-shrink-0 bg-white/5 text-white/30 border border-white/5 hover:text-white/70 hover:bg-white/10"
+            title={facing === 'user' ? 'Switch to back camera' : 'Switch to front camera'}
+            aria-label={facing === 'user' ? 'Switch to back camera' : 'Switch to front camera'}
+        >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
+                <path d="M15 12.5a3 3 0 10-1 2.24" />
+                <polyline points="15.5,10.5 15,12.5 13,12" />
+            </svg>
+        </button>
+    );
+
     const resetButton = isDetecting ? (
         <button
             onClick={handleReset}
@@ -646,6 +667,7 @@ export default function WorkoutPage() {
 
                         {/* Actions — always on this row, so Start stays visible */}
                         <div className="ml-auto flex items-center gap-2 flex-shrink-0">
+                            {flipButton}
                             {voiceButton}
                             {resetButton}
                             {targetConfig && <div className="hidden sm:block">{targetConfig}</div>}
@@ -697,6 +719,7 @@ export default function WorkoutPage() {
                     angleRef={angleRef}
                     hasBody={hasBody}
                     exercise={exerciseId}
+                    mirrored={facing === 'user'}
                     isDetecting={isDetecting}
                     isLoading={isLoading}
                     error={error}

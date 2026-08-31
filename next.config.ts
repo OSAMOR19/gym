@@ -22,6 +22,23 @@ const nextConfig: NextConfig = {
   // Required in Next.js 16 when a webpack config exists
   turbopack: {},
 
+  // Static media (program photos, exercise GIFs, food photos, brand marks)
+  // ships from /public with revalidate-every-time defaults — on the GIF-heavy
+  // screens that meant re-checking dozens of files per visit. These change
+  // rarely and never per-user: cache for a day, serve stale for a week while
+  // revalidating. Icons are versioned via ?v=, so they can cache long too.
+  async headers() {
+    const media = { key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" };
+    return [
+      { source: "/programs/:file*", headers: [media] },
+      { source: "/foods/:file*", headers: [media] },
+      { source: "/videosillustrations/:file*", headers: [media] },
+      { source: "/images/:file*", headers: [media] },
+      { source: "/brand/:file*", headers: [media] },
+      { source: "/:icon(icon.*|apple-icon.*|icon-.*)", headers: [media] },
+    ];
+  },
+
   webpack: (config, { dev }) => {
     if (dev && isUsbDrive) {
       // Disable file watcher on USB drive (phantom FS events cause HMR loops)

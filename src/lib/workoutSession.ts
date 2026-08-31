@@ -16,6 +16,7 @@
  */
 
 import { createClient } from '../utils/supabase/client';
+import { invalidateDataCache } from './dataCache';
 import { ExerciseId } from './exercises';
 import { UserStats, saveStats } from './gamification';
 import { saveWorkout } from './progressStore';
@@ -172,5 +173,6 @@ export async function completeSession(args: CompleteSessionArgs): Promise<Comple
 
     const statsSaved = await saveStats(args.stats);
 
+    invalidateDataCache(); // stats/records/sessions all just changed
     return { saved, statsSaved, sessionId };
 }

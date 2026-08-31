@@ -15,6 +15,7 @@ import { useRef, useState, useCallback, useEffect } from 'react';
 import type { NormalizedLandmarkList } from '@mediapipe/pose';
 import { RepEngine, RepEngineResult } from '../lib/repEngine';
 import { ExerciseId, EXERCISES } from '../lib/exercises';
+import { CameraFacing, cameraConstraints, getStoredFacing, storeFacing } from '../lib/cameraFacing';
 import { LandmarkSmoother } from '../utils/smoothing';
 import { playBeep } from '../utils/audio';
 import { getCoachTip, CoachTip, resetCoach } from '../lib/aiCoach';
@@ -302,9 +303,7 @@ export function usePoseDetection() {
         }));
 
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' },
-            });
+            const stream = await navigator.mediaDevices.getUserMedia(cameraConstraints(facingRef.current));
             video.srcObject = stream;
             await video.play();
             isRunningRef.current = true;
@@ -337,6 +336,38 @@ export function usePoseDetection() {
             setState(prev => ({ ...prev, isLoading: false, isDetecting: false, error: errorMsg }));
         }
     }, [loadModel, startFrameLoop]);
+
+    // Front/back camera. A ref (not state) so the getUserMedia call always
+    // reads the live value; state mirrors it for the UI.
+    const facingRef = useRef<CameraFacing>('user');
+    const [facing, setFacing] = useState<CameraFacing>('user');
+    useEffect(() => {
+        const stored = getStoredFacing();
+        facingRef.current = stored;
+        setFacing(stored);
+    }, []);
+
+    /** Flip front/back. Live-swaps the stream when the camera is running. */
+    const switchCamera = useCallback(async () => {
+        const next: CameraFacing = facingRef.current === 'user' ? 'environment' : 'user';
+        facingRef.current = next;
+        setFacing(next);
+        storeFacing(next);
+        const video = videoRef.current;
+        if (!video || !isRunningRef.current) return;
+        try {
+            const old = video.srcObject as MediaStream | null;
+            const stream = await navigator.mediaDevices.getUserMedia(cameraConstraints(next));
+            old?.getTracks().forEach((t) => t.stop());
+            video.srcObject = stream;
+            await video.play();
+        } catch {
+            // Device has no second camera (or it is busy) — revert quietly.
+            facingRef.current = facingRef.current === 'user' ? 'environment' : 'user';
+            setFacing(facingRef.current);
+            storeFacing(facingRef.current);
+        }
+    }, []);
 
     const stopDetection = useCallback(() => {
         isRunningRef.current = false;
@@ -383,5 +414,7 @@ export function usePoseDetection() {
         stopDetection,
         endSession,
         retryModel,
+        facing,
+        switchCamera,
     };
 }

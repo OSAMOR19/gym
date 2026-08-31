@@ -37,13 +37,13 @@ export const metadata: Metadata = {
     "Real-time AI pose detection that counts your reps, tracks form quality, and monitors time under tension. Built with MediaPipe Pose.",
   icons: {
     icon: [
-      { url: "/icon.png?v=3", type: "image/png", sizes: "512x512" },
+      { url: "/icon.png?v=4", type: "image/png", sizes: "512x512" },
     ],
     // Full-square art — iOS masks its own rounded corners over it
     apple: [
-      { url: "/apple-icon.png?v=3", sizes: "512x512" },
+      { url: "/apple-icon.png?v=4", sizes: "512x512" },
     ],
-    shortcut: "/icon.png?v=3",
+    shortcut: "/icon.png?v=4",
   },
   // Installed-app (PWA) behavior on iOS: full-screen standalone chrome
   appleWebApp: {

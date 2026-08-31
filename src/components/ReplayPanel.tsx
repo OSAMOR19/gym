@@ -84,16 +84,18 @@ export default function ReplayPanel({ clips, stats, links }: ReplayPanelProps) {
     }, []);
 
     return (
-        <div className="border border-ink/10 rounded-xl p-4 bg-ink/[0.02]">
+        <div className="border border-ink/10 rounded-xl p-5 bg-ink/[0.02]">
             {phase === 'idle' && (
                 <>
-                    <div className="flex items-center gap-2 mb-1">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-accent" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <polygon points="23,7 16,12 23,17" /><rect x="1" y="5" width="15" height="14" rx="2" />
-                        </svg>
-                        <p className="text-sm font-bold text-ink">Workout Replay</p>
+                    <div className="flex items-center gap-2.5 mb-2">
+                        <span className="w-8 h-8 rounded-lg bg-accent/10 text-accent flex items-center justify-center flex-shrink-0">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <polygon points="23,7 16,12 23,17" /><rect x="1" y="5" width="15" height="14" rx="2" />
+                            </svg>
+                        </span>
+                        <p className="text-sm font-bold text-ink font-display">Workout Replay</p>
                     </div>
-                    <p className="text-xs text-ink/40 leading-relaxed mb-3">
+                    <p className="text-xs text-ink/40 leading-relaxed mb-4">
                         {clips.length > 0
                             ? `Turn ${clips.length} highlight${clips.length > 1 ? 's' : ''} from this session into a ~25s recap you can share.`
                             : 'Create a short animated recap of this workout you can share.'}
@@ -108,20 +110,30 @@ export default function ReplayPanel({ clips, stats, links }: ReplayPanelProps) {
             )}
 
             {phase === 'generating' && (
-                <div className="flex items-center gap-3 py-2">
-                    <span className="w-5 h-5 border-2 border-ink/15 border-t-accent rounded-full animate-spin flex-shrink-0" />
-                    <div>
+                <div className="flex items-center gap-3.5 py-3">
+                    <span className="w-6 h-6 border-2 border-ink/15 border-t-accent rounded-full animate-spin flex-shrink-0" />
+                    <div className="space-y-1">
                         <p className="text-sm font-semibold text-ink">Creating your replay…</p>
-                        <p className="text-[11px] text-ink/35">About half a minute — your workout is already saved.</p>
+                        <p className="text-[11px] text-ink/35 leading-relaxed">About half a minute — your workout is already saved.</p>
                     </div>
                 </div>
             )}
 
             {phase === 'ready' && (
                 <>
-                    <p className="text-sm font-bold text-ink mb-1">Your Workout Replay is ready</p>
+                    <div className="flex items-center gap-2.5">
+                        <span className="w-8 h-8 rounded-lg bg-accent/10 text-accent flex items-center justify-center flex-shrink-0">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <polygon points="23,7 16,12 23,17" /><rect x="1" y="5" width="15" height="14" rx="2" />
+                            </svg>
+                        </span>
+                        <div className="min-w-0">
+                            <p className="text-sm font-bold text-ink font-display">Your replay is ready</p>
+                            <p className="text-[11px] text-ink/35 mt-0.5">Watch it, share it, or save it to your device.</p>
+                        </div>
+                    </div>
                     {uploadNote && (
-                        <p className="text-[11px] text-amber-400/90 mb-2">
+                        <p className="text-[11px] text-amber-400/90 leading-relaxed bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2.5 mt-3.5">
                             {uploadNote} It&apos;s still available right here to watch and share.
                         </p>
                     )}
@@ -131,25 +143,25 @@ export default function ReplayPanel({ clips, stats, links }: ReplayPanelProps) {
                             controls
                             autoPlay
                             playsInline
-                            className="w-full rounded-lg mb-3 bg-black aspect-[9/16] max-h-80 object-contain"
+                            className="w-full rounded-lg mt-4 bg-black aspect-[9/16] max-h-80 object-contain"
                         />
                     )}
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-3 gap-2.5 mt-4">
                         <button
                             onClick={() => setWatching((w) => !w)}
-                            className="py-2.5 rounded-xl border border-ink/10 text-xs font-semibold text-ink/70 hover:bg-ink/5 transition-all cursor-pointer"
+                            className="py-3 rounded-xl border border-ink/10 text-xs font-semibold text-ink/70 hover:bg-ink/5 transition-all cursor-pointer"
                         >
                             {watching ? 'Hide' : 'Watch'}
                         </button>
                         <button
                             onClick={share}
-                            className="py-2.5 rounded-xl bg-accent text-black text-xs font-bold hover:bg-accent-strong transition-all cursor-pointer"
+                            className="py-3 rounded-xl bg-accent text-black text-xs font-bold hover:bg-accent-strong transition-all cursor-pointer"
                         >
                             Share
                         </button>
                         <button
                             onClick={download}
-                            className="py-2.5 rounded-xl border border-ink/10 text-xs font-semibold text-ink/70 hover:bg-ink/5 transition-all cursor-pointer"
+                            className="py-3 rounded-xl border border-ink/10 text-xs font-semibold text-ink/70 hover:bg-ink/5 transition-all cursor-pointer"
                         >
                             Save
                         </button>

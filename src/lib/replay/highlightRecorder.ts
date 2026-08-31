@@ -54,6 +54,31 @@ export function pickRecordingMime(): string | null {
     return candidates.find((c) => MediaRecorder.isTypeSupported(c)) ?? null;
 }
 
+/**
+ * Recording source: the CameraFeed overlay canvas, NOT the raw camera stream.
+ * The canvas already composites the mirrored video + neon skeleton every
+ * frame, so clips show exactly what the user sees — tracking overlay
+ * included. It also survives per-set camera stops (a canvas track never
+ * ends), which is what used to silently drop strength-workout segments.
+ *
+ * One stream per canvas, cached — captureStream() must not be called anew
+ * for every set.
+ */
+const canvasStreams = new WeakMap<HTMLCanvasElement, MediaStream>();
+
+export function canvasRecordingStream(canvas: HTMLCanvasElement | null): MediaStream | null {
+    if (!canvas || typeof canvas.captureStream !== 'function') return null;
+    const cached = canvasStreams.get(canvas);
+    if (cached && cached.getVideoTracks().some((t) => t.readyState === 'live')) return cached;
+    try {
+        const stream = canvas.captureStream(30);
+        canvasStreams.set(canvas, stream);
+        return stream;
+    } catch {
+        return null;
+    }
+}
+
 export class HighlightRecorder {
     private recorder: MediaRecorder | null = null;
     private timer: ReturnType<typeof setTimeout> | null = null;

@@ -9,6 +9,7 @@
 
 import { createClient } from '../../utils/supabase/client';
 import { logEvent } from '../events';
+import { invalidateDataCache } from '../dataCache';
 import { CardioActivity } from './cardioEngine';
 
 export interface CardioSummary {
@@ -94,6 +95,7 @@ export async function saveCardioSession(summary: CardioSummary): Promise<string 
         console.warn('[cardio] Could not save session:', error?.message);
         return null;
     }
+    invalidateDataCache();
     logEvent('CARDIO_COMPLETED', {
         metadata: {
             activity: summary.activity,

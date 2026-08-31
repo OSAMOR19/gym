@@ -4,6 +4,7 @@
 
 import { ExerciseId } from './exercises';
 import { createClient } from '../utils/supabase/client';
+import { cached, invalidateDataCache } from './dataCache';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -39,6 +40,10 @@ export interface ProgressStats {
 
 async function getRecords(): Promise<WorkoutRecord[]> {
     if (typeof window === 'undefined') return [];
+    return cached('workout-records', 60_000, fetchRecords);
+}
+
+async function fetchRecords(): Promise<WorkoutRecord[]> {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return [];
@@ -99,6 +104,7 @@ export async function saveWorkout(record: Omit<WorkoutRecord, 'id' | 'date'>): P
         return null;
     }
 
+    invalidateDataCache();
     return {
         id: data.id,
         date: data.date,

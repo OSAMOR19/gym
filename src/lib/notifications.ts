@@ -11,6 +11,7 @@
  */
 
 import { createClient } from '../utils/supabase/client';
+import { cached } from './dataCache';
 import { EXERCISES } from './exercises';
 import { getProgramById } from './programs';
 import type { WorkoutEventType } from './events';
@@ -164,6 +165,10 @@ function build(row: EventRow): AppNotification | null {
 
 /** Newest-first feed. Empty array when signed out / table missing. */
 export async function fetchNotifications(limit = 60): Promise<AppNotification[]> {
+    return cached(`notifications:${limit}`, 60_000, () => fetchNotificationsUncached(limit));
+}
+
+async function fetchNotificationsUncached(limit: number): Promise<AppNotification[]> {
     try {
         const supabase = createClient();
         const { data: { user } } = await supabase.auth.getUser();
